@@ -18,7 +18,7 @@ public class Reference {
     public static final String MOD_MC_VERSION = "@MC_VERSION@";
     public static final String MOD_FINGERPRINT = "@FINGERPRINT@";
     public static final String GA_TRACKING_ID = "UA-65307010-15";
-    public static final String VERSION_URL = "https://raw.githubusercontent.com/CyclopsMC/Versions/master/1.12/Integrated Crafting.txt";
+    public static final String VERSION_URL = "https://raw.githubusercontent.com/CyclopsMC/Versions/master/1.12/IntegratedCrafting.txt";
     
     // Paths
     public static final String TEXTURE_PATH_GUI = "textures/gui/";
