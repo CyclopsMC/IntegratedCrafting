@@ -1,0 +1,7 @@
+{
+  "forge_marker": 1,
+  "parent": "integratedcrafting:block/interface_crafting",
+  "textures": {
+    "texture": "integratedcrafting:parts/interface_crafting"
+  }
+}

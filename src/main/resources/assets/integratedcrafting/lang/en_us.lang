@@ -1,0 +1,7 @@
+# General
+itemGroup.integratedcrafting=Integrated Crafting
+general.integratedcrafting.description=Craft stuff in Integrated Dynamics networks.
+
+# Part types
+parttype.parttypes.integratedcrafting.interface_crafting.name=Crafting Interface
+parttype.parttypes.integratedcrafting.interface_crafting.info=Holds crafting variables for crafting in the target machine.

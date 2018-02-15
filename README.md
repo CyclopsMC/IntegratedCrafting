@@ -1,7 +1,7 @@
 ## Integrated Crafting
 
 [![Build Status](https://travis-ci.org/CyclopsMC/IntegratedCrafting.svg?branch=master-1.12)](https://travis-ci.org/CyclopsMC/IntegratedCrafting)
-[![Download](https://img.shields.io/maven-metadata/v/http/cyclopsmc.jfrog.io/cyclopsmc/libs-release/org/cyclops/integratedcrafting/Integrated Crafting/maven-metadata.xml.svg) ](https://oss.jfrog.org/artifactory/simple/libs-release/org/cyclops/integratedcrafting/Integrated Crafting/)
+[![Download](https://img.shields.io/maven-metadata/v/http/cyclopsmc.jfrog.io/cyclopsmc/libs-release/org/cyclops/integratedcrafting/IntegratedCrafting/maven-metadata.xml.svg) ](https://oss.jfrog.org/artifactory/simple/libs-release/org/cyclops/integratedcrafting/IntegratedCrafting/)
 [![CurseForge](http://cf.way2muchnoise.eu/full_287357_downloads.svg)](http://minecraft.curseforge.com/projects/287357)
 
 Craft stuff in Integrated Dynamics networks
