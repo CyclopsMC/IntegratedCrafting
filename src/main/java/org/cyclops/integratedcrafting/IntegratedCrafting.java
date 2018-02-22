@@ -3,6 +3,7 @@ package org.cyclops.integratedcrafting;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -19,6 +20,12 @@ import org.cyclops.cyclopscore.init.ItemCreativeTab;
 import org.cyclops.cyclopscore.init.ModBaseVersionable;
 import org.cyclops.cyclopscore.init.RecipeHandler;
 import org.cyclops.cyclopscore.proxy.ICommonProxy;
+import org.cyclops.integratedcrafting.api.recipe.IIngredientComponentIndexTypeRegistry;
+import org.cyclops.integratedcrafting.capability.network.CraftingInterfaceConfig;
+import org.cyclops.integratedcrafting.capability.network.CraftingNetworkCapabilityConstructors;
+import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
+import org.cyclops.integratedcrafting.core.recipe.IngredientComponentIndexTypeRegistry;
+import org.cyclops.integratedcrafting.core.recipe.IngredientComponentIndexTypes;
 import org.cyclops.integratedcrafting.part.PartTypes;
 
 /**
@@ -66,8 +73,14 @@ public class IntegratedCrafting extends ModBaseVersionable {
     @EventHandler
     @Override
     public void preInit(FMLPreInitializationEvent event) {
+        // Registries
+        getRegistryManager().addRegistry(IIngredientComponentIndexTypeRegistry.class, IngredientComponentIndexTypeRegistry.getInstance());
+
         PartTypes.load();
+        IngredientComponentIndexTypes.load();
         super.preInit(event);
+
+        MinecraftForge.EVENT_BUS.register(new CraftingNetworkCapabilityConstructors());
     }
     
     /**
@@ -129,6 +142,13 @@ public class IntegratedCrafting extends ModBaseVersionable {
     @Override
     public void onGeneralConfigsRegister(ConfigHandler configHandler) {
         configHandler.add(new GeneralConfig());
+    }
+
+    @Override
+    public void onMainConfigsRegister(ConfigHandler configHandler) {
+        super.onMainConfigsRegister(configHandler);
+        configHandler.add(new CraftingNetworkConfig());
+        configHandler.add(new CraftingInterfaceConfig());
     }
 
     @Override
