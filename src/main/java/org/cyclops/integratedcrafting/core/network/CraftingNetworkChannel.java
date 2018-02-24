@@ -41,7 +41,7 @@ public class CraftingNetworkChannel implements ICraftingNetworkChannel {
     }
 
     @Override
-    public <T, R, M> Set<PrioritizedRecipe> getRecipes(IngredientComponent<T, R, M> outputType, T output, M matchCondition, int limit) {
+    public <T, M> Set<PrioritizedRecipe> getRecipes(IngredientComponent<T, M> outputType, T output, M matchCondition, int limit) {
         return getRecipeIndex().getRecipes(outputType, output, matchCondition, limit);
     }
 

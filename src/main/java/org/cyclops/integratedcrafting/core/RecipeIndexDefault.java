@@ -19,7 +19,7 @@ import java.util.Set;
  */
 public class RecipeIndexDefault implements IRecipeIndexModifiable {
 
-    private final Map<IngredientComponent<?, ?, ?>, IIngredientComponentIndex<?, ?>> recipeComponentIndexes;
+    private final Map<IngredientComponent<?, ?>, IIngredientComponentIndex<?, ?>> recipeComponentIndexes;
     private final Set<PrioritizedRecipe> recipes;
 
     public RecipeIndexDefault() {
@@ -33,7 +33,7 @@ public class RecipeIndexDefault implements IRecipeIndexModifiable {
     }
 
     @Override
-    public <T, R, M> Set<PrioritizedRecipe> getRecipes(IngredientComponent<T, R, M> outputType, T output, M matchCondition, int limit) {
+    public <T, M> Set<PrioritizedRecipe> getRecipes(IngredientComponent<T, M> outputType, T output, M matchCondition, int limit) {
         IIngredientComponentIndex<?, ?> index = recipeComponentIndexes.get(outputType);
         if (index == null) {
             return Collections.emptySet();
@@ -42,7 +42,7 @@ public class RecipeIndexDefault implements IRecipeIndexModifiable {
     }
 
     @Nullable
-    protected <T, R, M> IIngredientComponentIndex<T, M> initializeIndex(IngredientComponent<T, R, M> recipeComponent) {
+    protected <T, M> IIngredientComponentIndex<T, M> initializeIndex(IngredientComponent<T, M> recipeComponent) {
         IIngredientComponentIndex.IFactory<T, M> factory = IngredientComponentIndexTypes.REGISTRY.getFactory(recipeComponent);
         if (factory != null) {
             return factory.newIndex();
@@ -53,7 +53,7 @@ public class RecipeIndexDefault implements IRecipeIndexModifiable {
     @Override
     public void addRecipe(PrioritizedRecipe prioritizedRecipe) {
         recipes.add(prioritizedRecipe);
-        for (IngredientComponent<?, ?, ?> recipeComponent : prioritizedRecipe.getRecipe().getOutput().getComponents()) {
+        for (IngredientComponent<?, ?> recipeComponent : prioritizedRecipe.getRecipe().getOutput().getComponents()) {
             IIngredientComponentIndex<?, ?> index = recipeComponentIndexes.computeIfAbsent(recipeComponent, this::initializeIndex);
             if (index != null) {
                 index.addRecipe(prioritizedRecipe);
@@ -64,7 +64,7 @@ public class RecipeIndexDefault implements IRecipeIndexModifiable {
     @Override
     public void removeRecipe(PrioritizedRecipe prioritizedRecipe) {
         recipes.remove(prioritizedRecipe);
-        for (IngredientComponent<?, ?, ?> recipeComponent : prioritizedRecipe.getRecipe().getOutput().getComponents()) {
+        for (IngredientComponent<?, ?> recipeComponent : prioritizedRecipe.getRecipe().getOutput().getComponents()) {
             IIngredientComponentIndex<?, ?> index = recipeComponentIndexes.get(recipeComponent);
             if (index != null) {
                 index.removeRecipe(prioritizedRecipe);

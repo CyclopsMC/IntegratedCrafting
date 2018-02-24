@@ -16,7 +16,7 @@ public class IngredientComponentIndexTypeRegistry implements IIngredientComponen
 
     private static final IngredientComponentIndexTypeRegistry INSTANCE = new IngredientComponentIndexTypeRegistry();
 
-    private final Map<IngredientComponent<?, ?, ?>, IIngredientComponentIndex.IFactory<?, ?>> FACTORIES = Maps.newIdentityHashMap();
+    private final Map<IngredientComponent<?, ?>, IIngredientComponentIndex.IFactory<?, ?>> FACTORIES = Maps.newIdentityHashMap();
 
 
     private IngredientComponentIndexTypeRegistry() {
@@ -28,14 +28,14 @@ public class IngredientComponentIndexTypeRegistry implements IIngredientComponen
     }
 
     @Override
-    public <T, M> IIngredientComponentIndex.IFactory<T, M> register(IngredientComponent<T, ?, M> recipeComponent, IIngredientComponentIndex.IFactory<T, M> indexFactory) {
+    public <T, M> IIngredientComponentIndex.IFactory<T, M> register(IngredientComponent<T, M> recipeComponent, IIngredientComponentIndex.IFactory<T, M> indexFactory) {
         FACTORIES.put(recipeComponent, indexFactory);
         return indexFactory;
     }
 
     @Nullable
     @Override
-    public <T, M> IIngredientComponentIndex.IFactory<T, M> getFactory(IngredientComponent<T, ?, M> recipeComponent) {
+    public <T, M> IIngredientComponentIndex.IFactory<T, M> getFactory(IngredientComponent<T, M> recipeComponent) {
         return (IIngredientComponentIndex.IFactory<T, M>) FACTORIES.get(recipeComponent);
     }
 }

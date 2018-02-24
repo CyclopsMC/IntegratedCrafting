@@ -25,6 +25,6 @@ public interface IRecipeIndex {
      *              This is only a suggestive parameter and can be used by the implementor for optimizations.
      * @return The recipes that have the given output.
      */
-    public <T, R, M> Set<PrioritizedRecipe> getRecipes(IngredientComponent<T, R, M> outputType, T output, M matchCondition, int limit);
+    public <T, M> Set<PrioritizedRecipe> getRecipes(IngredientComponent<T, M> outputType, T output, M matchCondition, int limit);
 
 }

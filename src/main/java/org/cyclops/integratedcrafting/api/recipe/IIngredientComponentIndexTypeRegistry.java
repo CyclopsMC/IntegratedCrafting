@@ -18,7 +18,7 @@ public interface IIngredientComponentIndexTypeRegistry extends IRegistry {
      * @param <T> The recipe component instance type.
      * @return The registered factory.
      */
-    public <T, M> IIngredientComponentIndex.IFactory<T, M> register(IngredientComponent<T, ?, M> recipeComponent, IIngredientComponentIndex.IFactory<T, M> indexFactory);
+    public <T, M> IIngredientComponentIndex.IFactory<T, M> register(IngredientComponent<T, M> recipeComponent, IIngredientComponentIndex.IFactory<T, M> indexFactory);
 
     /**
      * Get the factory for the given recipe component type.
@@ -27,6 +27,6 @@ public interface IIngredientComponentIndexTypeRegistry extends IRegistry {
      * @return The registered factory for the given type or null if none was registered before.
      */
     @Nullable
-    public <T, M> IIngredientComponentIndex.IFactory<T, M> getFactory(IngredientComponent<T, ?, M> recipeComponent);
+    public <T, M> IIngredientComponentIndex.IFactory<T, M> getFactory(IngredientComponent<T, M> recipeComponent);
 
 }
