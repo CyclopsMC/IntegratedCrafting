@@ -1,7 +1,7 @@
 package org.cyclops.integratedcrafting.core;
 
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.integratedcrafting.api.recipe.IIngredientComponentIndex;
+import org.cyclops.integratedcrafting.api.recipe.IIngredientComponentRecipeIndex;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 
 import java.util.Collections;
@@ -11,11 +11,11 @@ import java.util.Set;
  * A recipe component index for {@link IngredientComponent#ENERGY}.
  * @author rubensworks
  */
-public class IngredientComponentIndexEnergy implements IIngredientComponentIndex<Integer, Void> {
+public class IngredientComponentRecipeIndexEnergy implements IIngredientComponentRecipeIndex<Integer, Void> {
 
     private final Set<PrioritizedRecipe> recipes;
 
-    public IngredientComponentIndexEnergy() {
+    public IngredientComponentRecipeIndexEnergy() {
         this.recipes = PrioritizedRecipe.newOutputSortedSet();
     }
 

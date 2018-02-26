@@ -5,7 +5,7 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import org.cyclops.commoncapabilities.api.capability.fluidhandler.FluidMatch;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.integratedcrafting.api.recipe.IIngredientComponentIndex;
+import org.cyclops.integratedcrafting.api.recipe.IIngredientComponentRecipeIndex;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 
 import java.util.Map;
@@ -15,12 +15,12 @@ import java.util.Set;
  * A recipe component index for {@link IngredientComponent#FLUIDSTACK}.
  * @author rubensworks
  */
-public class IngredientComponentIndexFluidStack implements IIngredientComponentIndex<FluidStack, Integer> {
+public class IngredientComponentRecipeIndexFluidStack implements IIngredientComponentRecipeIndex<FluidStack, Integer> {
 
     private final Map<Fluid, Set<PrioritizedRecipe>> prototypedFluidRecipes;
     private final Set<PrioritizedRecipe> plainFluidRecipes;
 
-    public IngredientComponentIndexFluidStack() {
+    public IngredientComponentRecipeIndexFluidStack() {
         this.prototypedFluidRecipes = Maps.newIdentityHashMap();
         this.plainFluidRecipes = PrioritizedRecipe.newOutputSortedSet();
     }

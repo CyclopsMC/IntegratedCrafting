@@ -5,7 +5,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import org.cyclops.commoncapabilities.api.capability.itemhandler.ItemMatch;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.integratedcrafting.api.recipe.IIngredientComponentIndex;
+import org.cyclops.integratedcrafting.api.recipe.IIngredientComponentRecipeIndex;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 
 import java.util.Map;
@@ -15,12 +15,12 @@ import java.util.Set;
  * A recipe component index for {@link IngredientComponent#ITEMSTACK}.
  * @author rubensworks
  */
-public class IngredientComponentIndexItemStack implements IIngredientComponentIndex<ItemStack, Integer> {
+public class IngredientComponentRecipeIndexItemStack implements IIngredientComponentRecipeIndex<ItemStack, Integer> {
 
     private final Map<Item, Set<PrioritizedRecipe>> prototypedItemRecipes;
     private final Set<PrioritizedRecipe> plainItemRecipes;
 
-    public IngredientComponentIndexItemStack() {
+    public IngredientComponentRecipeIndexItemStack() {
         this.prototypedItemRecipes = Maps.newIdentityHashMap();
         this.plainItemRecipes = PrioritizedRecipe.newOutputSortedSet();
     }

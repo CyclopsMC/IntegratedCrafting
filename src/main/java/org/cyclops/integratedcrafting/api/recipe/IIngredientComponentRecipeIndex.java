@@ -8,7 +8,7 @@ import java.util.Set;
  * @param <M> The matching condition parameter, may be Void. Instances MUST properly implement the equals method.
  * @author rubensworks
  */
-public interface IIngredientComponentIndex<T, M> {
+public interface IIngredientComponentRecipeIndex<T, M> {
 
     /**
      * Add the given recipe to this index.
@@ -34,7 +34,7 @@ public interface IIngredientComponentIndex<T, M> {
     public Set<PrioritizedRecipe> getRecipes(T output, M matchCondition, int limit);
 
     /**
-     * Factory for {@link IIngredientComponentIndex}.
+     * Factory for {@link IIngredientComponentRecipeIndex}.
      * @param <T> The instance type.
      */
     public static interface IFactory<T, M> {
@@ -42,7 +42,7 @@ public interface IIngredientComponentIndex<T, M> {
         /**
          * @return A new recipe component index.
          */
-        public IIngredientComponentIndex<T, M> newIndex();
+        public IIngredientComponentRecipeIndex<T, M> newIndex();
 
     }
 

@@ -2,7 +2,7 @@ package org.cyclops.integratedcrafting.core;
 
 import com.google.common.collect.Maps;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.integratedcrafting.api.recipe.IIngredientComponentIndex;
+import org.cyclops.integratedcrafting.api.recipe.IIngredientComponentRecipeIndex;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndexModifiable;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
@@ -19,7 +19,7 @@ import java.util.Set;
  */
 public class RecipeIndexDefault implements IRecipeIndexModifiable {
 
-    private final Map<IngredientComponent<?, ?>, IIngredientComponentIndex<?, ?>> recipeComponentIndexes;
+    private final Map<IngredientComponent<?, ?>, IIngredientComponentRecipeIndex<?, ?>> recipeComponentIndexes;
     private final Set<PrioritizedRecipe> recipes;
 
     public RecipeIndexDefault() {
@@ -34,16 +34,16 @@ public class RecipeIndexDefault implements IRecipeIndexModifiable {
 
     @Override
     public <T, M> Set<PrioritizedRecipe> getRecipes(IngredientComponent<T, M> outputType, T output, M matchCondition, int limit) {
-        IIngredientComponentIndex<?, ?> index = recipeComponentIndexes.get(outputType);
+        IIngredientComponentRecipeIndex<?, ?> index = recipeComponentIndexes.get(outputType);
         if (index == null) {
             return Collections.emptySet();
         }
-        return ((IIngredientComponentIndex<T, M>) index).getRecipes(output, matchCondition, limit);
+        return ((IIngredientComponentRecipeIndex<T, M>) index).getRecipes(output, matchCondition, limit);
     }
 
     @Nullable
-    protected <T, M> IIngredientComponentIndex<T, M> initializeIndex(IngredientComponent<T, M> recipeComponent) {
-        IIngredientComponentIndex.IFactory<T, M> factory = IngredientComponentIndexTypes.REGISTRY.getFactory(recipeComponent);
+    protected <T, M> IIngredientComponentRecipeIndex<T, M> initializeIndex(IngredientComponent<T, M> recipeComponent) {
+        IIngredientComponentRecipeIndex.IFactory<T, M> factory = IngredientComponentIndexTypes.REGISTRY.getFactory(recipeComponent);
         if (factory != null) {
             return factory.newIndex();
         }
@@ -54,7 +54,7 @@ public class RecipeIndexDefault implements IRecipeIndexModifiable {
     public void addRecipe(PrioritizedRecipe prioritizedRecipe) {
         recipes.add(prioritizedRecipe);
         for (IngredientComponent<?, ?> recipeComponent : prioritizedRecipe.getRecipe().getOutput().getComponents()) {
-            IIngredientComponentIndex<?, ?> index = recipeComponentIndexes.computeIfAbsent(recipeComponent, this::initializeIndex);
+            IIngredientComponentRecipeIndex<?, ?> index = recipeComponentIndexes.computeIfAbsent(recipeComponent, this::initializeIndex);
             if (index != null) {
                 index.addRecipe(prioritizedRecipe);
             }
@@ -65,7 +65,7 @@ public class RecipeIndexDefault implements IRecipeIndexModifiable {
     public void removeRecipe(PrioritizedRecipe prioritizedRecipe) {
         recipes.remove(prioritizedRecipe);
         for (IngredientComponent<?, ?> recipeComponent : prioritizedRecipe.getRecipe().getOutput().getComponents()) {
-            IIngredientComponentIndex<?, ?> index = recipeComponentIndexes.get(recipeComponent);
+            IIngredientComponentRecipeIndex<?, ?> index = recipeComponentIndexes.get(recipeComponent);
             if (index != null) {
                 index.removeRecipe(prioritizedRecipe);
             }
