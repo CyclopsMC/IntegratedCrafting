@@ -2,6 +2,7 @@ package org.cyclops.integratedcrafting.api.recipe;
 
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -20,11 +21,8 @@ public interface IRecipeIndex {
      * @param outputType The recipe component type.
      * @param output An output ingredient instance.
      * @param matchCondition A condition under which the matching should be done.
-     * @param limit An upper limit for the number of limits that should be returned.
-     *              This is not strict, the implementor may choose to ignore this parameter.
-     *              This is only a suggestive parameter and can be used by the implementor for optimizations.
-     * @return The recipes that have the given output.
+     * @return An iterator of the recipes that have the given output.
      */
-    public <T, M> Set<PrioritizedRecipe> getRecipes(IngredientComponent<T, M> outputType, T output, M matchCondition, int limit);
+    public <T, M> Iterator<PrioritizedRecipe> getRecipes(IngredientComponent<T, M> outputType, T output, M matchCondition);
 
 }
