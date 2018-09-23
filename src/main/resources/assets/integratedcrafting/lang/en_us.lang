@@ -5,3 +5,6 @@ general.integratedcrafting.description=Craft stuff in Integrated Dynamics networ
 # Part types
 parttype.parttypes.integratedcrafting.interface_crafting.name=Crafting Interface
 parttype.parttypes.integratedcrafting.interface_crafting.info=Holds crafting variables for crafting in the target machine.
+
+parttype.parttypes.integratedcrafting.crafting_writer.name=Crafting Writer
+parttype.parttypes.integratedcrafting.crafting_writer.info=Starts crafting jobs

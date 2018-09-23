@@ -1,0 +1,8 @@
+{
+  "forge_marker": 1,
+  "parent": "integrateddynamics:block/writer",
+  "textures": {
+    "back" : "integratedcrafting:parts/crafting_writer_back",
+    "front": "integratedcrafting:parts/crafting_writer_front_inactive"
+  }
+}

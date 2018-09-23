@@ -13,6 +13,6 @@ public class PartTypes {
     public static void load() {}
 
     public static final PartTypeInterfaceCrafting INTERFACE_CRAFTING = REGISTRY.register(new PartTypeInterfaceCrafting("interface_crafting"));
-
+    public static final PartTypeCraftingWriter CRAFTING_WRITER = REGISTRY.register(new PartTypeCraftingWriter("crafting_writer"));
 
 }
