@@ -11,7 +11,7 @@ import java.util.Set;
  * A recipe component index for {@link IngredientComponent#ENERGY}.
  * @author rubensworks
  */
-public class IngredientComponentRecipeIndexEnergy implements IIngredientComponentRecipeIndex<Integer, Void> {
+public class IngredientComponentRecipeIndexEnergy implements IIngredientComponentRecipeIndex<Integer, Boolean> {
 
     private final Set<PrioritizedRecipe> recipes;
 
@@ -34,7 +34,7 @@ public class IngredientComponentRecipeIndexEnergy implements IIngredientComponen
     }
 
     @Override
-    public Set<PrioritizedRecipe> getRecipes(Integer output, Void matchCondition, int limit) {
+    public Set<PrioritizedRecipe> getRecipes(Integer output, Boolean matchCondition, int limit) {
         return Collections.unmodifiableSet(recipes);
     }
 }

@@ -23,6 +23,6 @@ public class IngredientComponentIndexTypes {
             IngredientComponent.ITEMSTACK, IngredientComponentRecipeIndexItemStack::new);
     public static final IIngredientComponentRecipeIndex.IFactory<FluidStack, Integer> FACTORY_FLUIDSTACK = REGISTRY.register(
             IngredientComponent.FLUIDSTACK, IngredientComponentRecipeIndexFluidStack::new);
-    public static final IIngredientComponentRecipeIndex.IFactory<Integer, Void> FACTORY_ENERGY = REGISTRY.register(
+    public static final IIngredientComponentRecipeIndex.IFactory<Integer, Boolean> FACTORY_ENERGY = REGISTRY.register(
             IngredientComponent.ENERGY, IngredientComponentRecipeIndexEnergy::new);
 }

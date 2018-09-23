@@ -13,7 +13,6 @@ import org.cyclops.cyclopscore.inventory.IGuiContainerProvider;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
-import org.cyclops.integratedcrafting.api.network.ICraftingNetworkChannel;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 import org.cyclops.integratedcrafting.capability.network.CraftingInterfaceConfig;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
@@ -111,17 +110,17 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
     protected void addTargetToNetwork(INetwork network, PartTarget pos, PartTypeInterfaceCrafting.State state) {
         if (network.hasCapability(getNetworkCapability())) {
             int channelCrafting = state.getChannelCrafting();
-            state.setNetworks(network.getCapability(getNetworkCapability()).getChannel(channelCrafting), NetworkHelpers.getPartNetwork(network));
+            state.setNetworks(network.getCapability(getNetworkCapability()), NetworkHelpers.getPartNetwork(network), channelCrafting);
             state.setTarget(pos);
         }
     }
 
     protected void removeTargetFromNetwork(INetwork network, PartPos pos, PartTypeInterfaceCrafting.State state) {
-        ICraftingNetworkChannel craftingNetworkChannel = state.getCraftingNetwork();
-        if (craftingNetworkChannel != null && network.hasCapability(getNetworkCapability())) {
-            network.getCapability(getNetworkCapability()).getChannel(craftingNetworkChannel.getChannel()).removeCraftingInterface(state);
+        ICraftingNetwork craftingNetwork = state.getCraftingNetwork();
+        if (craftingNetwork != null && network.hasCapability(getNetworkCapability())) {
+            network.getCapability(getNetworkCapability()).removeCraftingInterface(state.getChannelCrafting(), state);
         }
-        state.setNetworks(null, null);
+        state.setNetworks(null, null, -1);
         state.setTarget(null);
     }
 
@@ -131,8 +130,9 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private final List<PrioritizedRecipe> currentRecipes;
         private int channelCrafting = 0;
         private PartTarget target = null;
-        private ICraftingNetworkChannel craftingNetwork = null;
+        private ICraftingNetwork craftingNetwork = null;
         private IPartNetwork partNetwork = null;
+        private int channel = -1;
 
         public State() {
             this.inventory = new SimpleInventory(9, "variables", 1);
@@ -176,7 +176,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
             // Unregister from the network, when all old recipes are still in place
             if (craftingNetwork != null) {
-                craftingNetwork.removeCraftingInterface(this);
+                craftingNetwork.removeCraftingInterface(channelCrafting, this);
             }
 
             // Recalculate recipes
@@ -211,7 +211,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
             // Re-register to the network, to force an update for all new recipes
             if (craftingNetwork != null) {
-                craftingNetwork.addCraftingInterface(this);
+                craftingNetwork.addCraftingInterface(channelCrafting, this);
             }
         }
 
@@ -219,13 +219,19 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             this.target = target;
         }
 
-        public void setNetworks(ICraftingNetworkChannel craftingNetwork, IPartNetwork partNetwork) {
+        public void setNetworks(ICraftingNetwork craftingNetwork, IPartNetwork partNetwork, int channel) {
             this.craftingNetwork = craftingNetwork;
             this.partNetwork = partNetwork;
+            this.channel = channel;
         }
 
-        public ICraftingNetworkChannel getCraftingNetwork() {
+        public ICraftingNetwork getCraftingNetwork() {
             return craftingNetwork;
+        }
+
+        @Override
+        public int getChannel() {
+            return channel;
         }
 
         @Override
