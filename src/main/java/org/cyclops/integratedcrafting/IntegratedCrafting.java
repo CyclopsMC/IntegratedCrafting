@@ -24,6 +24,7 @@ import org.cyclops.integratedcrafting.capability.network.CraftingInterfaceConfig
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkCapabilityConstructors;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
 import org.cyclops.integratedcrafting.part.PartTypes;
+import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
 
 /**
  * The main mod class of this mod.
@@ -70,6 +71,7 @@ public class IntegratedCrafting extends ModBaseVersionable {
     @EventHandler
     @Override
     public void preInit(FMLPreInitializationEvent event) {
+        CraftingAspects.load();
         PartTypes.load();
         super.preInit(event);
 

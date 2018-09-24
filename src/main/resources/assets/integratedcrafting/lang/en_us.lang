@@ -8,3 +8,17 @@ parttype.parttypes.integratedcrafting.interface_crafting.info=Holds crafting var
 
 parttype.parttypes.integratedcrafting.crafting_writer.name=Crafting Writer
 parttype.parttypes.integratedcrafting.crafting_writer.info=Starts crafting jobs
+
+# Aspect property types
+aspect.aspecttypes.integratedcrafting.integer.ignorestorage.name=Ignore storage contents
+aspect.aspecttypes.integratedcrafting.integer.ignorecrafting.name=Ignore crafting jobs
+
+# Aspects
+
+## Energy
+aspect.aspects.integratedcrafting.write.itemstack.craft.name=Craft Item
+aspect.aspects.integratedcrafting.write.itemstack.craft.info=Craft the given item
+aspect.aspects.integratedcrafting.write.fluidstack.craft.name=Craft Fluid
+aspect.aspects.integratedcrafting.write.fluidstack.craft.info=Craft the given fluid
+aspect.aspects.integratedcrafting.write.integer.craft.name=Craft Energy
+aspect.aspects.integratedcrafting.write.integer.craft.info=Craft the given energy amount

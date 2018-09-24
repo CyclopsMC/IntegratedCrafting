@@ -5,12 +5,16 @@ import com.google.common.collect.Lists;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.Constants;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.cyclopscore.helper.Helpers;
 import org.cyclops.cyclopscore.inventory.IGuiContainerProvider;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
+import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
@@ -36,6 +40,7 @@ import org.cyclops.integrateddynamics.core.part.PartTypeConfigurable;
 import org.cyclops.integrateddynamics.item.ItemVariable;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -110,8 +115,10 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
     protected void addTargetToNetwork(INetwork network, PartTarget pos, PartTypeInterfaceCrafting.State state) {
         if (network.hasCapability(getNetworkCapability())) {
             int channelCrafting = state.getChannelCrafting();
-            state.setNetworks(network.getCapability(getNetworkCapability()), NetworkHelpers.getPartNetwork(network), channelCrafting);
+            ICraftingNetwork craftingNetwork = network.getCapability(getNetworkCapability());
+            state.setNetworks(craftingNetwork, NetworkHelpers.getPartNetwork(network), channelCrafting);
             state.setTarget(pos);
+            state.setShouldAddToCraftingNetwork(true);
         }
     }
 
@@ -124,19 +131,36 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         state.setTarget(null);
     }
 
+    @Override
+    public boolean isUpdate(State state) {
+        return true;
+    }
+
+    @Override
+    public void update(INetwork network, IPartNetwork partNetwork, PartTarget target, State state) {
+        super.update(network, partNetwork, target, state);
+
+        // TODO: handle crafting jobs
+        //state.getCraftingJobs()
+    }
+
     public static class State extends PartStateBase<PartTypeInterfaceCrafting> implements ICraftingInterface {
 
         private final SimpleInventory inventory;
-        private final List<PrioritizedRecipe> currentRecipes;
+        private final List<CraftingJob> craftingJobs;
         private int channelCrafting = 0;
+
+        private final List<PrioritizedRecipe> currentRecipes;
         private PartTarget target = null;
         private ICraftingNetwork craftingNetwork = null;
         private IPartNetwork partNetwork = null;
         private int channel = -1;
+        private boolean shouldAddToCraftingNetwork = false;
 
         public State() {
             this.inventory = new SimpleInventory(9, "variables", 1);
             this.inventory.addDirtyMarkListener(this);
+            this.craftingJobs = Lists.newArrayList();
             this.currentRecipes = Lists.newArrayList();
         }
 
@@ -151,6 +175,11 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         public void writeToNBT(NBTTagCompound tag) {
             super.writeToNBT(tag);
             inventory.writeToNBT(tag);
+            NBTTagList craftingJobs = new NBTTagList();
+            for (CraftingJob craftingJob : this.craftingJobs) {
+                craftingJobs.appendTag(CraftingJob.serialize(craftingJob));
+            }
+            tag.setTag("craftingJobs", craftingJobs);
             tag.setInteger("channelCrafting", channelCrafting);
         }
 
@@ -158,6 +187,10 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         public void readFromNBT(NBTTagCompound tag) {
             super.readFromNBT(tag);
             inventory.readFromNBT(tag);
+            NBTTagList craftingJobs = tag.getTagList("craftingJobs", Constants.NBT.TAG_COMPOUND);
+            for (NBTBase craftingJob : craftingJobs) {
+                this.craftingJobs.add(CraftingJob.deserialize((NBTTagCompound) craftingJob));
+            }
             this.channelCrafting = tag.getInteger("channelCrafting");
         }
 
@@ -170,16 +203,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             return channelCrafting;
         }
 
-        @Override
-        public void onDirty() {
-            super.onDirty();
-
-            // Unregister from the network, when all old recipes are still in place
-            if (craftingNetwork != null) {
-                craftingNetwork.removeCraftingInterface(channelCrafting, this);
-            }
-
-            // Recalculate recipes
+        public void reloadRecipes() {
             this.currentRecipes.clear();
             if (this.partNetwork != null) {
                 SimpleInventory inventory = getInventory();
@@ -208,6 +232,19 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 }
             }
             // TODO: show an error symbol for all variables that somehow failed?
+        }
+
+        @Override
+        public void onDirty() {
+            super.onDirty();
+
+            // Unregister from the network, when all old recipes are still in place
+            if (craftingNetwork != null) {
+                craftingNetwork.removeCraftingInterface(channelCrafting, this);
+            }
+
+            // Recalculate recipes
+            reloadRecipes();
 
             // Re-register to the network, to force an update for all new recipes
             if (craftingNetwork != null) {
@@ -237,6 +274,24 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         @Override
         public Collection<PrioritizedRecipe> getRecipes() {
             return this.currentRecipes;
+        }
+
+        @Override
+        public void scheduleCraftingJob(CraftingJob craftingJob) {
+            this.craftingJobs.add(craftingJob);
+        }
+
+        @Override
+        public Iterator<CraftingJob> getCraftingJobs() {
+            return this.craftingJobs.iterator();
+        }
+
+        public boolean shouldAddToCraftingNetwork() {
+            return shouldAddToCraftingNetwork;
+        }
+
+        public void setShouldAddToCraftingNetwork(boolean shouldAddToCraftingNetwork) {
+            this.shouldAddToCraftingNetwork = shouldAddToCraftingNetwork;
         }
 
         @Override

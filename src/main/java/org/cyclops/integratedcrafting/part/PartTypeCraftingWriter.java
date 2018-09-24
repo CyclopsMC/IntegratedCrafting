@@ -3,6 +3,7 @@ package org.cyclops.integratedcrafting.part;
 import com.google.common.collect.Lists;
 import org.cyclops.cyclopscore.init.ModBase;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
+import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
 import org.cyclops.integrateddynamics.IntegratedDynamics;
 import org.cyclops.integrateddynamics.api.part.aspect.IAspect;
 import org.cyclops.integrateddynamics.core.part.aspect.AspectRegistry;
@@ -18,7 +19,9 @@ public class PartTypeCraftingWriter extends PartTypeWriteBase<PartTypeCraftingWr
     public PartTypeCraftingWriter(String name) {
         super(name);
         AspectRegistry.getInstance().register(this, Lists.<IAspect>newArrayList(
-                // TODO: add aspects
+                CraftingAspects.Write.ITEMSTACK_CRAFT,
+                CraftingAspects.Write.FLUIDSTACK_CRAFT,
+                CraftingAspects.Write.ENERGY_CRAFT
         ));
     }
 

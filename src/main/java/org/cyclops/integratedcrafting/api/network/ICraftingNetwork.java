@@ -1,9 +1,12 @@
 package org.cyclops.integratedcrafting.api.network;
 
+import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -54,5 +57,36 @@ public interface ICraftingNetwork {
      * @return If the crafting interface existed.
      */
     public boolean removeCraftingInterface(int channel, ICraftingInterface craftingInterface);
+
+    /**
+     * Add the given crafting job to the list of crafting jobs.
+     * @param craftingJob The crafting job.
+     */
+    public void scheduleCraftingJob(CraftingJob craftingJob);
+
+    /**
+     * Called by crafting interfaces when the crafting job is finished and should be removed from all lists.
+     * @param craftingJob The crafting job.
+     */
+    public void onCraftingJobFinished(CraftingJob craftingJob);
+
+    /**
+     * @param channel A channel id.
+     * @return Get all present crafting jobs.
+     */
+    public Iterator<CraftingJob> getCraftingJobs(int channel);
+
+    /**
+     * Get present crafting jobs for the given (expected) output instance.
+     * @param channel The channel.
+     * @param ingredientComponent The ingredient component of the given output type.
+     * @param instance The expected output instance.
+     * @param matchCondition The matching condition under which the instance should be matched.
+     * @param <T> The instance type.
+     * @param <M> The matching condition parameter.
+     * @return The applicable crafting jobs, can be empty.
+     */
+    public <T, M> Iterator<CraftingJob> getCraftingJobs(int channel, IngredientComponent<T, M> ingredientComponent,
+                                                        T instance, M matchCondition);
 
 }
