@@ -15,7 +15,11 @@ aspect.aspecttypes.integratedcrafting.integer.ignorecrafting.name=Ignore craftin
 
 # Aspects
 
-## Energy
+## Network
+aspect.aspects.integratedcrafting.read.list.network.craftingjobs.name=Active Crafting Jobs
+aspect.aspects.integratedcrafting.read.list.network.craftingjobs.info=A list of all active crafting job as recipes
+
+## Crafting
 aspect.aspects.integratedcrafting.write.itemstack.craft.name=Craft Item
 aspect.aspects.integratedcrafting.write.itemstack.craft.info=Craft the given item
 aspect.aspects.integratedcrafting.write.fluidstack.craft.name=Craft Fluid
