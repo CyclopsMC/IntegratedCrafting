@@ -101,8 +101,8 @@ public class CraftingAspectWriteBuilders {
                     boolean ignoreStorage = properties.getValue(PROP_IGNORE_STORAGE).getRawValue();
                     boolean ignoreCrafting = properties.getValue(PROP_IGNORE_CRAFTING).getRawValue();
 
-                    if ((ignoreStorage || !CraftingHelpers.hasStorageInstance(network, channel, ingredientComponent,
-                            instance, ingredientComponent.getMatcher().getExactMatchCondition()))
+                    if ((ignoreStorage || !CraftingHelpers.hasStorageInstance(network, channel,
+                            ingredientComponent, instance, ingredientComponent.getMatcher().getExactMatchCondition()))
                             && (ignoreCrafting || !CraftingHelpers.isCrafting(craftingNetwork, channel, ingredientComponent,
                             instance, matchCondition))) {
                         CraftingHelpers.scheduleCraftingJob(craftingNetwork, channel, ingredientComponent, instance, matchCondition);
