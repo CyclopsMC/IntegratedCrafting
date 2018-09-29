@@ -1,9 +1,13 @@
 package org.cyclops.integratedcrafting.api.crafting;
 
+import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
+import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A handler for invoking crafting recipes.
@@ -26,5 +30,12 @@ public interface ICraftingInterface {
      * @return Get all present crafting jobs.
      */
     public Iterator<CraftingJob> getCraftingJobs();
+
+    /**
+     * Get the pending outputs for the given crafting job.
+     * @param craftingJob A crafting job.
+     * @return A collection of all pending prototype-based ingredients.
+     */
+    public Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> getPendingCraftingJobOutputs(CraftingJob craftingJob);
 
 }

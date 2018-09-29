@@ -3,12 +3,15 @@ package org.cyclops.integratedcrafting.part;
 import com.google.common.base.Optional;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.capabilities.Capability;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
+import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
+import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.helper.Helpers;
 import org.cyclops.cyclopscore.inventory.IGuiContainerProvider;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
@@ -42,6 +45,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Interface for item handlers.
@@ -296,6 +300,15 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                     this.craftingJobHandler.getProcessingCraftingJobs().iterator(),
                     this.craftingJobHandler.getPendingCraftingJobs().iterator()
             );
+        }
+
+        @Override
+        public Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> getPendingCraftingJobOutputs(CraftingJob craftingJob) {
+            Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pending = this.craftingJobHandler.getProcessingCraftingJobsPendingIngredients().get(craftingJob);
+            if (pending == null) {
+                pending = Maps.newIdentityHashMap();
+            }
+            return pending;
         }
 
         public CraftingJobHandler getCraftingJobHandler() {
