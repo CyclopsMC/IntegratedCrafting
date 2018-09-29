@@ -15,6 +15,7 @@ public class PartTypes {
 
     public static void load() {
         Aspects.REGISTRY.register(org.cyclops.integrateddynamics.core.part.PartTypes.NETWORK_READER, Lists.newArrayList(
+                CraftingAspects.Read.Network.RECIPES,
                 CraftingAspects.Read.Network.CRAFTING_JOBS,
                 CraftingAspects.Read.Network.CRAFTING_INGREDIENTS
         ));

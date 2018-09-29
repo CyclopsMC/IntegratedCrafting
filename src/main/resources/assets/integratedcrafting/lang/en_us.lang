@@ -16,10 +16,12 @@ aspect.aspecttypes.integratedcrafting.integer.ignorecrafting.name=Ignore craftin
 # Aspects
 
 ## Network
+aspect.aspects.integratedcrafting.read.list.network.recipes.name=Recipes
+aspect.aspects.integratedcrafting.read.list.network.recipes.info=A list of all available recipes.
 aspect.aspects.integratedcrafting.read.list.network.craftingjobs.name=Active Crafting Jobs
-aspect.aspects.integratedcrafting.read.list.network.craftingjobs.info=A list of all active crafting job as recipes
+aspect.aspects.integratedcrafting.read.list.network.craftingjobs.info=A list of all active crafting job as recipes.
 aspect.aspects.integratedcrafting.read.list.network.craftingingredients.name=Crafting Ingredients
-aspect.aspects.integratedcrafting.read.list.network.craftingingredients.info=A list of all ingredients that are being crafted
+aspect.aspects.integratedcrafting.read.list.network.craftingingredients.info=A list of all ingredients that are being crafted.
 
 ## Crafting
 aspect.aspects.integratedcrafting.write.itemstack.craft.name=Craft Item

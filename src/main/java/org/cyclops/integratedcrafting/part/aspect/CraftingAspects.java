@@ -8,6 +8,7 @@ import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
+import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 import org.cyclops.integrateddynamics.api.part.aspect.IAspectRead;
 import org.cyclops.integrateddynamics.api.part.aspect.IAspectWrite;
@@ -104,6 +105,23 @@ public class CraftingAspects {
                                 return ValueTypeList.ValueList.ofList(ValueTypes.OBJECT_INGREDIENTS, ingredients);
                             })
                             .appendKind("craftingingredients")
+                            .buildRead();
+
+            public static final IAspectRead<ValueTypeList.ValueList, ValueTypeList> RECIPES =
+                    CraftingAspectReadBuilders.CraftingNetwork.BUILDER_LIST
+                            .handle((data) -> {
+                                List<ValueObjectTypeRecipe.ValueRecipe> ingredients = Lists.newArrayList();
+                                if (data.getRight() != null) {
+                                    int channel = data.getLeft().getValue(AspectReadBuilders.Network.PROPERTY_CHANNEL).getRawValue();
+                                    ICraftingNetwork craftingNetwork = data.getRight();
+                                    IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
+                                    for (PrioritizedRecipe recipe : recipeIndex.getRecipes()) {
+                                        ingredients.add(ValueObjectTypeRecipe.ValueRecipe.of(recipe.getRecipe()));
+                                    }
+                                }
+                                return ValueTypeList.ValueList.ofList(ValueTypes.OBJECT_RECIPE, ingredients);
+                            })
+                            .appendKind("recipes")
                             .buildRead();
 
         }
