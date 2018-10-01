@@ -158,7 +158,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
     public static class State extends PartStateBase<PartTypeInterfaceCrafting> implements ICraftingInterface {
 
         private final CraftingJobHandler craftingJobHandler;
-        private final SimpleInventory inventory;
+        private final SimpleInventory inventoryVariables;
         private int channelCrafting = 0;
 
         private final List<PrioritizedRecipe> currentRecipes;
@@ -170,22 +170,22 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
         public State() {
             this.craftingJobHandler = new CraftingJobHandler(1);
-            this.inventory = new SimpleInventory(9, "variables", 1);
-            this.inventory.addDirtyMarkListener(this);
+            this.inventoryVariables = new SimpleInventory(9, "variables", 1);
+            this.inventoryVariables.addDirtyMarkListener(this);
             this.currentRecipes = Lists.newArrayList();
         }
 
         /**
-         * @return The inner inventory
+         * @return The inner variables inventory
          */
-        public SimpleInventory getInventory() {
-            return this.inventory;
+        public SimpleInventory getInventoryVariables() {
+            return this.inventoryVariables;
         }
 
         @Override
         public void writeToNBT(NBTTagCompound tag) {
             super.writeToNBT(tag);
-            inventory.writeToNBT(tag);
+            inventoryVariables.writeToNBT(tag);
             this.craftingJobHandler.writeToNBT(tag);
             tag.setInteger("channelCrafting", channelCrafting);
         }
@@ -193,7 +193,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         @Override
         public void readFromNBT(NBTTagCompound tag) {
             super.readFromNBT(tag);
-            inventory.readFromNBT(tag);
+            inventoryVariables.readFromNBT(tag);
             this.craftingJobHandler.readFromNBT(tag);
             this.channelCrafting = tag.getInteger("channelCrafting");
         }
@@ -210,7 +210,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         public void reloadRecipes() {
             this.currentRecipes.clear();
             if (this.partNetwork != null) {
-                SimpleInventory inventory = getInventory();
+                SimpleInventory inventory = getInventoryVariables();
                 for (int i = 0; i < inventory.getSizeInventory(); i++) {
                     ItemStack itemStack = inventory.getStackInSlot(i);
                     if (!itemStack.isEmpty()) {
@@ -223,7 +223,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                                     if (recipeWrapper.isPresent()) {
                                         IRecipeDefinition recipe = recipeWrapper.get();
 
-                                        // First priority is the part priority, after that, the index inside this inventory.
+                                        // First priority is the part priority, after that, the index inside this inventoryVariables.
                                         this.currentRecipes.add(new PrioritizedRecipe(recipe, getPriority(), i));
                                     }
 

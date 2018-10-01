@@ -51,7 +51,7 @@ public class ContainerPartInterfaceCrafting extends ContainerMultipart<PartTypeI
             }
         });
 
-        SimpleInventory inventory = getPartState().getInventory();
+        SimpleInventory inventory = getPartState().getInventoryVariables();
         addInventory(inventory, 0, 8, 22, 1, inventory.getSizeInventory());
         addPlayerInventory(player.inventory, 8, 52);
     }
@@ -74,7 +74,7 @@ public class ContainerPartInterfaceCrafting extends ContainerMultipart<PartTypeI
 
     @Override
     protected int getSizeInventory() {
-        return getPartState().getInventory().getSizeInventory();
+        return getPartState().getInventoryVariables().getSizeInventory();
     }
 
     @Override
