@@ -15,6 +15,8 @@ import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IngredientComponentStorageEmpty;
 import org.cyclops.cyclopscore.helper.TileHelpers;
+import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
+import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageCollectionWrapper;
 import org.cyclops.integratedcrafting.Capabilities;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
@@ -194,6 +196,9 @@ public class CraftingHelpers {
         IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
         List<List<IPrototypedIngredient<T, M>>> inputAlternativePrototypes = recipe.getInputs(ingredientComponent);
         List<T> inputInstances = Lists.newArrayList();
+        // The following map remembers all extracted instances in simulation mode.
+        // This is to make sure that instances can not be extracted multiple times when simulating.
+        IngredientCollectionPrototypeMap<T, M> simulatedExtractionMemory = simulate ? new IngredientCollectionPrototypeMap<>(ingredientComponent) : null;
         for (List<IPrototypedIngredient<T, M>> inputPrototypes : inputAlternativePrototypes) {
             T inputInstance = null;
             boolean hasInputInstance = false;
@@ -207,18 +212,47 @@ public class CraftingHelpers {
                     break;
                 }
 
-                T extracted = storage.extract(inputPrototype.getPrototype(), inputPrototype.getCondition(), simulate);
-                if (!matcher.isEmpty(extracted)) {
-                    inputInstance = extracted;
-                    hasInputInstance = true;
-                    break;
+                long memoryQuantity;
+                if (simulate && (memoryQuantity = simulatedExtractionMemory
+                        .getQuantity(inputPrototype.getPrototype())) > 0) {
+                    T newInstance = matcher.withQuantity(inputPrototype.getPrototype(),
+                            memoryQuantity + matcher.getQuantity(inputPrototype.getPrototype()));
+                    M matchCondition = matcher.withCondition(inputPrototype.getCondition(),
+                            ingredientComponent.getPrimaryQuantifier().getMatchCondition());
+                    T extracted = storage.extract(newInstance, matchCondition, true);
+                    if (!matcher.isEmpty(extracted)) {
+                        inputInstance = inputPrototype.getPrototype();
+                        hasInputInstance = true;
+                        simulatedExtractionMemory.add(inputPrototype.getPrototype());
+                        break;
+                    }
+                } else {
+                    T extracted = storage.extract(inputPrototype.getPrototype(), inputPrototype.getCondition(), simulate);
+                    if (!matcher.isEmpty(extracted)) {
+                        inputInstance = extracted;
+                        hasInputInstance = true;
+                        if (simulate) {
+                            simulatedExtractionMemory.add(extracted);
+                        }
+                        break;
+                    }
                 }
             }
 
             // If none of the alternatives were found, fail immediately
             if (!hasInputInstance) {
                 // This input failed, return immediately
-                // TODO: catch already-extracted items in non-simulation
+
+                // But first, re-insert all already-extracted instances
+                for (T instance : inputInstances) {
+                    T remaining = storage.insert(instance, false);
+                    if (!matcher.isEmpty(remaining)) {
+                        throw new IllegalStateException("Extraction for a crafting recipe failed" +
+                                "due to inconsistent insertion behaviour by destination in simulation " +
+                                "and non-simulation: " + storage + ". Lost: " + remaining);
+                    }
+                }
+
                 return null;
             }
 
@@ -363,8 +397,6 @@ public class CraftingHelpers {
      * @return If all instances could be inserted.
      */
     public static boolean insertCrafting(PartPos target, IMixedIngredients ingredients, boolean simulate) {
-        // TODO: handle custom I/O handler based on Block type
-
         EnumFacing side = target.getSide();
         TileEntity tile = TileHelpers.getSafeTile(target.getPos(), TileEntity.class);
         if (tile != null) {

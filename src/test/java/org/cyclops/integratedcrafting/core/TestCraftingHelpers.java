@@ -2,6 +2,7 @@ package org.cyclops.integratedcrafting.core;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
@@ -47,12 +48,15 @@ public class TestCraftingHelpers {
     private IIngredientComponentStorage<ComplexStack, Integer> storageEmpty;
     private IIngredientComponentStorage<ComplexStack, Integer> storageValid;
     private IIngredientComponentStorage<ComplexStack, Integer> storageValidB;
+    private IIngredientComponentStorage<ComplexStack, Integer> storageValidMore;
+    private IIngredientComponentStorage<ComplexStack, Integer> storageValidMany;
 
     private IRecipeDefinition recipeEmpty;
     private IRecipeDefinition recipeSimple1;
     private IRecipeDefinition recipeSimple3;
     private IRecipeDefinition recipeSimple1Alt;
     private IRecipeDefinition recipeComplex;
+    private IRecipeDefinition recipeEquals;
 
     @Before
     public void beforeEach() {
@@ -67,6 +71,14 @@ public class TestCraftingHelpers {
         storageValidB = new IngredientComponentStorageCollectionWrapper<>(
                 new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
         storageValidB.insert(CB02_, false);
+
+        storageValidMore = new IngredientComponentStorageCollectionWrapper<>(
+                new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+        storageValidMore.insert(CA03_, false);
+
+        storageValidMany = new IngredientComponentStorageCollectionWrapper<>(
+                new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+        storageValidMany.insert(CA09_, false);
 
         recipeEmpty = new RecipeDefinition(Maps.newIdentityHashMap(), new MixedIngredients(Maps.newIdentityHashMap()));
 
@@ -116,6 +128,23 @@ public class TestCraftingHelpers {
                 )
         ));
         recipeComplex = new RecipeDefinition(mapComplex, new MixedIngredients(Maps.newIdentityHashMap()));
+
+        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapEquals = Maps.newIdentityHashMap();
+        mapEquals.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
+                Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
+                ),
+                Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA02_, ComplexStack.Match.EXACT)
+                ),
+                Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
+                ),
+                Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
+                )
+        ));
+        recipeEquals = new RecipeDefinition(mapEquals, new MixedIngredients(Maps.newIdentityHashMap()));
     }
 
     /* ------------ getIngredientRecipeInputs ------------ */
@@ -160,6 +189,67 @@ public class TestCraftingHelpers {
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeComplexValid() {
         assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeComplex, true),
                 equalTo(Lists.newArrayList(null, CB02_, CA01_)));
+    }
+
+    @Test
+    public void testGetIngredientRecipeInputsValidStorageSimpleRecipeEqualInputsInvalid() {
+        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidMore, IngredientComponentStubs.COMPLEX, recipeEquals, true),
+                nullValue());
+    }
+
+    @Test
+    public void testGetIngredientRecipeInputsValidStorageSimpleRecipeEqualInputsVvalid() {
+        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidMany, IngredientComponentStubs.COMPLEX, recipeEquals, true),
+                equalTo(Lists.newArrayList(CA01_, CA02_, CA01_, CA01_)));
+    }
+
+    @Test
+    public void testGetIngredientRecipeInputsEmptyStorageEmptyRecipeActual() {
+        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeEmpty, false),
+                nullValue());
+        assertThat(Sets.newHashSet(storageEmpty.iterator()), equalTo(Sets.newHashSet()));
+    }
+
+    @Test
+    public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipe1Actual() {
+        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimple1, false),
+                nullValue());
+        assertThat(Sets.newHashSet(storageEmpty.iterator()), equalTo(Sets.newHashSet()));
+    }
+
+    @Test
+    public void testGetIngredientRecipeInputsValidStorageSimpleRecipe1Actual() {
+        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, false),
+                equalTo(Lists.newArrayList(CA01_)));
+        assertThat(Sets.newHashSet(storageValid.iterator()), equalTo(Sets.newHashSet(CB02_, CA91B)));
+    }
+
+    @Test
+    public void testGetIngredientRecipeInputsValidStorageSimpleRecipe3Actual() {
+        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimple3, false),
+                equalTo(Lists.newArrayList(CA01_, CB02_, CA91B)));
+        assertThat(Sets.newHashSet(storageValid.iterator()), equalTo(Sets.newHashSet()));
+    }
+
+    @Test
+    public void testGetIngredientRecipeInputsValidStorageSimpleRecipe1AltActual() {
+        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidB, IngredientComponentStubs.COMPLEX, recipeSimple1Alt, false),
+                equalTo(Lists.newArrayList(CB02_)));
+        assertThat(Sets.newHashSet(storageValidB.iterator()), equalTo(Sets.newHashSet()));
+    }
+
+    @Test
+    public void testGetIngredientRecipeInputsValidStorageSimpleRecipeComplexInvalidActual() {
+        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidB, IngredientComponentStubs.COMPLEX, recipeComplex, false),
+                nullValue());
+        assertThat(Sets.newHashSet(storageValidB.iterator()), equalTo(Sets.newHashSet(CB02_)));
+    }
+
+    @Test
+    public void testGetIngredientRecipeInputsValidStorageSimpleRecipeComplexValidActual() {
+        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeComplex, false),
+                equalTo(Lists.newArrayList(null, CB02_, CA01_)));
+        assertThat(Sets.newHashSet(storageValid.iterator()), equalTo(Sets.newHashSet(CA91B)));
     }
 
     /* ------------ getCompressedIngredients ------------ */
