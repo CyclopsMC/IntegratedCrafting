@@ -15,6 +15,8 @@ import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
+import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverride;
+import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integrateddynamics.api.ingredient.IIngredientComponentStorageObservable;
 import org.cyclops.integrateddynamics.api.network.INetwork;
@@ -37,6 +39,8 @@ import java.util.Map;
 public class CraftingJobHandler {
 
     private final int maxProcessingJobs;
+    private final ICraftingResultsSink resultsSink;
+    private final Collection<ICraftingProcessOverride> craftingProcessOverrides;
 
     private final Map<CraftingJob, Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> processingCraftingJobsPendingIngredients;
     private final List<CraftingJob> pendingCraftingJobs;
@@ -46,8 +50,12 @@ public class CraftingJobHandler {
     private final List<IngredientComponent<?, ?>> observersPendingDeletion;
     private final List<CraftingJob> finishedCraftingJobs;
 
-    public CraftingJobHandler(int maxProcessingJobs) {
+    public CraftingJobHandler(int maxProcessingJobs, Collection<ICraftingProcessOverride> craftingProcessOverrides,
+                              ICraftingResultsSink resultsSink) {
         this.maxProcessingJobs = maxProcessingJobs;
+        this.resultsSink = resultsSink;
+        this.craftingProcessOverrides = craftingProcessOverrides;
+
         this.pendingCraftingJobs = Lists.newArrayList();
         this.processingCraftingJobsPendingIngredients = Maps.newIdentityHashMap();
         this.ingredientObserverCounters = new Object2IntOpenHashMap<>();
@@ -257,7 +265,7 @@ public class CraftingJobHandler {
                 // This requires checking the available ingredients AND if the crafting handler can accept it.
                 IMixedIngredients ingredients = CraftingHelpers.getRecipeInputs(network, channel,
                         pendingCraftingJob.getRecipe().getRecipe(), true);
-                if (ingredients != null && CraftingHelpers.insertCrafting(targetPos, ingredients, true)) {
+                if (ingredients != null && insertCrafting(targetPos, ingredients, true)) {
                     startingCraftingJob = pendingCraftingJob;
                     break;
                 }
@@ -275,7 +283,7 @@ public class CraftingJobHandler {
                         CraftingHelpers.getRecipeOutputs(startingCraftingJob.getRecipe().getRecipe()));
 
                 // Push the ingredients to the crafting interface
-                CraftingHelpers.insertCrafting(targetPos, ingredients, false);
+                insertCrafting(targetPos, ingredients, false);
                 // TODO: handle failure
 
                 // Register listeners for pending ingredients
@@ -285,6 +293,18 @@ public class CraftingJobHandler {
 
             }
         }
+    }
+
+    protected boolean insertCrafting(PartPos target, IMixedIngredients ingredients, boolean simulate) {
+        // First check our crafting overrides
+        for (ICraftingProcessOverride craftingProcessOverride : this.craftingProcessOverrides) {
+            if (craftingProcessOverride.isApplicable(target)) {
+                return craftingProcessOverride.craft(target, ingredients, this.resultsSink, simulate);
+            }
+        }
+
+        // Fallback to default crafting insertion
+        return CraftingHelpers.insertCrafting(target, ingredients, simulate);
     }
 
 }

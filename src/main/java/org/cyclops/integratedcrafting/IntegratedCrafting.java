@@ -20,9 +20,12 @@ import org.cyclops.cyclopscore.init.ItemCreativeTab;
 import org.cyclops.cyclopscore.init.ModBaseVersionable;
 import org.cyclops.cyclopscore.init.RecipeHandler;
 import org.cyclops.cyclopscore.proxy.ICommonProxy;
+import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverrideRegistry;
 import org.cyclops.integratedcrafting.capability.network.CraftingInterfaceConfig;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkCapabilityConstructors;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
+import org.cyclops.integratedcrafting.core.CraftingProcessOverrideRegistry;
+import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
 
@@ -75,7 +78,10 @@ public class IntegratedCrafting extends ModBaseVersionable {
         PartTypes.load();
         super.preInit(event);
 
+        getRegistryManager().addRegistry(ICraftingProcessOverrideRegistry.class, CraftingProcessOverrideRegistry.getInstance());
+
         MinecraftForge.EVENT_BUS.register(new CraftingNetworkCapabilityConstructors());
+        CraftingProcessOverrides.load();
     }
     
     /**

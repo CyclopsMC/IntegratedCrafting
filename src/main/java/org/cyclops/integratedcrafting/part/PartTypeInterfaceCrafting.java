@@ -7,22 +7,30 @@ import com.google.common.collect.Maps;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.Constants;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
+import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.cyclopscore.helper.Helpers;
 import org.cyclops.cyclopscore.inventory.IGuiContainerProvider;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
+import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 import org.cyclops.integratedcrafting.capability.network.CraftingInterfaceConfig;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
 import org.cyclops.integratedcrafting.client.gui.GuiPartInterfaceCrafting;
 import org.cyclops.integratedcrafting.core.CraftingJobHandler;
+import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
 import org.cyclops.integratedcrafting.core.part.PartTypeCraftingBase;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCrafting;
 import org.cyclops.integrateddynamics.api.evaluate.EvaluationException;
@@ -30,8 +38,10 @@ import org.cyclops.integrateddynamics.api.evaluate.variable.IValue;
 import org.cyclops.integrateddynamics.api.item.IVariableFacade;
 import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.IPartNetwork;
+import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
+import org.cyclops.integrateddynamics.capability.network.PositionedAddonsNetworkIngredientsHandlerConfig;
 import org.cyclops.integrateddynamics.core.client.gui.ExtendedGuiHandler;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueHelpers;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
@@ -45,6 +55,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 /**
@@ -145,20 +156,70 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         super.update(network, partNetwork, target, state);
         int channel = state.getChannelCrafting();
 
+        // Update the network data in the part state
         if (state.shouldAddToCraftingNetwork()) {
             ICraftingNetwork craftingNetwork = network.getCapability(getNetworkCapability());
             craftingNetwork.addCraftingInterface(channel, state);
             state.setShouldAddToCraftingNetwork(false);
         }
 
-        PartPos targetPos = state.getTarget().getTarget();
-        state.getCraftingJobHandler().update(network, channel, targetPos);
+        // Push any pending output ingredients into the network
+        ListIterator<IngredientInstanceWrapper<?, ?>> outputBufferIt = state.getInventoryOutputBuffer().listIterator();
+        while (outputBufferIt.hasNext()) {
+            IngredientInstanceWrapper<?, ?> newWrapper = insertIntoNetwork(outputBufferIt.next(),
+                    network, state.getChannelCrafting());
+            if (newWrapper == null) {
+                outputBufferIt.remove();
+            } else {
+                outputBufferIt.set(newWrapper);
+            }
+        }
+
+        // Block job ticking if there still are outputs in our crafting result buffer.
+        if (state.getInventoryOutputBuffer().isEmpty()) {
+            // Tick the job handler
+            PartPos targetPos = state.getTarget().getTarget();
+            state.getCraftingJobHandler().update(network, channel, targetPos);
+        }
     }
 
-    public static class State extends PartStateBase<PartTypeInterfaceCrafting> implements ICraftingInterface {
+    @Nullable
+    protected static <T, M> IngredientInstanceWrapper<T, M> insertIntoNetwork(IngredientInstanceWrapper<T, M> wrapper,
+                                                                              INetwork network, int channel) {
+        IPositionedAddonsNetworkIngredients<T, M> storageNetwork = wrapper.getComponent()
+                .getCapability(PositionedAddonsNetworkIngredientsHandlerConfig.CAPABILITY)
+                .getStorage(network);
+        if (storageNetwork != null) {
+            IIngredientComponentStorage<T, M> storage = storageNetwork.getChannel(channel);
+            T remaining = storage.insert(wrapper.getInstance(), false);
+            if (wrapper.getComponent().getMatcher().isEmpty(remaining)) {
+                return null;
+            } else {
+                return new IngredientInstanceWrapper<>(wrapper.getComponent(), remaining);
+            }
+        }
+        return wrapper;
+    }
+
+    @Override
+    public void addDrops(PartTarget target, State state, List<ItemStack> itemStacks, boolean dropMainElement, boolean saveState) {
+        super.addDrops(target, state, itemStacks, dropMainElement, saveState);
+
+        // Drop any remaining output ingredients (only items)
+        for (IngredientInstanceWrapper<?, ?> ingredientInstanceWrapper : state.getInventoryOutputBuffer()) {
+            if (ingredientInstanceWrapper.getComponent() == IngredientComponent.ITEMSTACK) {
+                itemStacks.add((ItemStack) ingredientInstanceWrapper.getInstance());
+            }
+        }
+        state.getInventoryOutputBuffer().clear();
+    }
+
+    public static class State extends PartStateBase<PartTypeInterfaceCrafting>
+            implements ICraftingInterface, ICraftingResultsSink {
 
         private final CraftingJobHandler craftingJobHandler;
         private final SimpleInventory inventoryVariables;
+        private final List<IngredientInstanceWrapper<?, ?>> inventoryOutputBuffer;
         private int channelCrafting = 0;
 
         private final List<PrioritizedRecipe> currentRecipes;
@@ -169,9 +230,11 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private boolean shouldAddToCraftingNetwork = false;
 
         public State() {
-            this.craftingJobHandler = new CraftingJobHandler(1);
+            this.craftingJobHandler = new CraftingJobHandler(1,
+                    CraftingProcessOverrides.REGISTRY.getCraftingProcessOverrides(), this);
             this.inventoryVariables = new SimpleInventory(9, "variables", 1);
             this.inventoryVariables.addDirtyMarkListener(this);
+            this.inventoryOutputBuffer = Lists.newArrayList();
             this.currentRecipes = Lists.newArrayList();
         }
 
@@ -186,6 +249,15 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         public void writeToNBT(NBTTagCompound tag) {
             super.writeToNBT(tag);
             inventoryVariables.writeToNBT(tag);
+
+            NBTTagList instanceTags = new NBTTagList();
+            for (IngredientInstanceWrapper instanceWrapper : inventoryOutputBuffer) {
+                NBTTagCompound instanceTag = new NBTTagCompound();
+                instanceTag.setString("component", instanceWrapper.getComponent().getRegistryName().toString());
+                instanceTag.setTag("instance", instanceWrapper.getComponent().getSerializer().serializeInstance(instanceWrapper.getInstance()));
+            }
+            tag.setTag("inventoryOutputBuffer", instanceTags);
+
             this.craftingJobHandler.writeToNBT(tag);
             tag.setInteger("channelCrafting", channelCrafting);
         }
@@ -194,6 +266,16 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         public void readFromNBT(NBTTagCompound tag) {
             super.readFromNBT(tag);
             inventoryVariables.readFromNBT(tag);
+
+            this.inventoryOutputBuffer.clear();
+            for (NBTBase instanceTagRaw : tag.getTagList("inventoryOutputBuffer", Constants.NBT.TAG_COMPOUND)) {
+                NBTTagCompound instanceTag = (NBTTagCompound) instanceTagRaw;
+                String componentName = instanceTag.getString("component");
+                IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(new ResourceLocation(componentName));
+                this.inventoryOutputBuffer.add(new IngredientInstanceWrapper(component,
+                        component.getSerializer().deserializeCondition(instanceTag.getTag("instance"))));
+            }
+
             this.craftingJobHandler.readFromNBT(tag);
             this.channelCrafting = tag.getInteger("channelCrafting");
         }
@@ -323,6 +405,10 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             this.shouldAddToCraftingNetwork = shouldAddToCraftingNetwork;
         }
 
+        public List<IngredientInstanceWrapper<?, ?>> getInventoryOutputBuffer() {
+            return inventoryOutputBuffer;
+        }
+
         @Override
         public boolean hasCapability(Capability<?> capability, IPartNetwork network, PartTarget target) {
             return capability == CraftingInterfaceConfig.CAPABILITY || super.hasCapability(capability, network, target);
@@ -334,6 +420,11 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 return CraftingInterfaceConfig.CAPABILITY.cast(this);
             }
             return super.getCapability(capability, network, target);
+        }
+
+        @Override
+        public <T, M> void addResult(IngredientComponent<T, M> ingredientComponent, T instance) {
+            this.getInventoryOutputBuffer().add(new IngredientInstanceWrapper<>(ingredientComponent, instance));
         }
     }
 }
