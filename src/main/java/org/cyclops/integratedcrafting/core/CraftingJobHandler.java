@@ -276,7 +276,6 @@ public class CraftingJobHandler {
                 // Remove ingredients from network
                 IMixedIngredients ingredients = CraftingHelpers.getRecipeInputs(network, channel,
                         startingCraftingJob.getRecipe().getRecipe(), false);
-                // TODO: handle failure
 
                 // Update state with expected outputs
                 markCraftingJobProcessing(startingCraftingJob,
@@ -284,7 +283,6 @@ public class CraftingJobHandler {
 
                 // Push the ingredients to the crafting interface
                 insertCrafting(targetPos, ingredients, false);
-                // TODO: handle failure
 
                 // Register listeners for pending ingredients
                 for (IngredientComponent<?, ?> component : ingredients.getComponents()) {

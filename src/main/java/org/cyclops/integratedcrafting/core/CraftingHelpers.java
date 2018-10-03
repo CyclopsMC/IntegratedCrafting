@@ -16,7 +16,6 @@ import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponen
 import org.cyclops.commoncapabilities.api.ingredient.storage.IngredientComponentStorageEmpty;
 import org.cyclops.cyclopscore.helper.TileHelpers;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
-import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageCollectionWrapper;
 import org.cyclops.integratedcrafting.Capabilities;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
@@ -382,7 +381,11 @@ public class CraftingHelpers {
         for (T instance : instances) {
             T remaining = storage.insert(instance, simulate);
             if (!matcher.isEmpty(remaining)) {
-                // TODO: handle cases when not simulating?
+                if (!simulate) {
+                    throw new IllegalStateException("Insertion for a crafting recipe failed" +
+                            "due to inconsistent insertion behaviour by destination in simulation " +
+                            "and non-simulation: " + capabilityProvider + ". Lost: " + instances);
+                }
                 return false;
             }
         }
@@ -402,7 +405,6 @@ public class CraftingHelpers {
         if (tile != null) {
             for (IngredientComponent<?, ?> ingredientComponent : ingredients.getComponents()) {
                 if (!insertIngredientCrafting(ingredientComponent, tile, side, ingredients, simulate)) {
-                    // TODO: handle cases when not simulating?
                     return false;
                 }
             }
