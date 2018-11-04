@@ -33,8 +33,7 @@ public class PrioritizedRecipeOutputComparator implements Comparator<Prioritized
                     return comp;
                 }
             }
-            return 0;
         }
-        return o1.getRecipe().hashCode() - o2.getRecipe().hashCode();
+        return o1.getRecipe().compareTo(o2.getRecipe());
     }
 }
