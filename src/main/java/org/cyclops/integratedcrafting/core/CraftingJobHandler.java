@@ -15,6 +15,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
+import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverride;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
@@ -260,7 +261,14 @@ public class CraftingJobHandler {
         if (processingJobs < this.maxProcessingJobs) {
             // Handle crafting jobs
             CraftingJob startingCraftingJob = null;
+            ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetwork(network);
+            CraftingJobDependencyGraph dependencyGraph = craftingNetwork.getCraftingJobDependencyGraph();
             for (CraftingJob pendingCraftingJob : getPendingCraftingJobs()) {
+                // Make sure that this crafting job has no incomplete dependency jobs
+                if (dependencyGraph.hasDependencies(pendingCraftingJob)) {
+                    continue;
+                }
+
                 // Check if pendingCraftingJob can start and set as startingCraftingJob
                 // This requires checking the available ingredients AND if the crafting handler can accept it.
                 IMixedIngredients ingredients = CraftingHelpers.getRecipeInputs(network, channel,

@@ -2,6 +2,7 @@ package org.cyclops.integratedcrafting.api.network;
 
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
+import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
@@ -88,5 +89,10 @@ public interface ICraftingNetwork {
      */
     public <T, M> Iterator<CraftingJob> getCraftingJobs(int channel, IngredientComponent<T, M> ingredientComponent,
                                                         T instance, M matchCondition);
+
+    /**
+     * @return An overview of all crafting job dependencies in this network.
+     */
+    public CraftingJobDependencyGraph getCraftingJobDependencyGraph();
 
 }

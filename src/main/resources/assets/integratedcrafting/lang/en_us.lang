@@ -12,6 +12,7 @@ parttype.parttypes.integratedcrafting.crafting_writer.info=Starts crafting jobs
 # Aspect property types
 aspect.aspecttypes.integratedcrafting.integer.ignorestorage.name=Ignore storage contents
 aspect.aspecttypes.integratedcrafting.integer.ignorecrafting.name=Ignore crafting jobs
+aspect.aspecttypes.integratedcrafting.integer.craftmissing.name=Craft missing ingredients
 
 # Aspects
 

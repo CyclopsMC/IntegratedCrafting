@@ -19,6 +19,7 @@ import org.cyclops.cyclopscore.config.ConfigHandler;
 import org.cyclops.cyclopscore.init.ItemCreativeTab;
 import org.cyclops.cyclopscore.init.ModBaseVersionable;
 import org.cyclops.cyclopscore.init.RecipeHandler;
+import org.cyclops.cyclopscore.persist.world.GlobalCounters;
 import org.cyclops.cyclopscore.proxy.ICommonProxy;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverrideRegistry;
 import org.cyclops.integratedcrafting.capability.network.CraftingInterfaceConfig;
@@ -58,8 +59,13 @@ public class IntegratedCrafting extends ModBaseVersionable {
     @Instance(value = Reference.MOD_ID)
     public static IntegratedCrafting _instance;
 
+    public static GlobalCounters globalCounters = null;
+
     public IntegratedCrafting() {
         super(Reference.MOD_ID, Reference.MOD_NAME, Reference.MOD_VERSION);
+
+        // Register world storages
+        registerWorldStorage(globalCounters = new GlobalCounters(this));
     }
 
     @Override

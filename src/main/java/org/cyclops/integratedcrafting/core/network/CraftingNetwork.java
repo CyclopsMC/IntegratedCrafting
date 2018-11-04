@@ -6,10 +6,11 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.IntListIterator;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.datastructure.MultitransformIterator;
-import org.cyclops.cyclopscore.ingredient.collection.IIngredientMap;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
+import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.ICraftingJobIndexModifiable;
@@ -41,6 +42,8 @@ public class CraftingNetwork implements ICraftingNetwork {
 
     private final ICraftingJobIndexModifiable allIndexedCraftingJobs = new CraftingJobIndexDefault();
     private final TIntObjectMap<ICraftingJobIndexModifiable> indexedCraftingJobs = new TIntObjectHashMap<>();
+
+    private final CraftingJobDependencyGraph craftingJobDependencyGraph = new CraftingJobDependencyGraph();
 
     @Override
     public int[] getChannels() {
@@ -104,6 +107,18 @@ public class CraftingNetwork implements ICraftingNetwork {
 
             // Add the crafting jobs owned by the interface
             addCraftingJobs(channel, Lists.newArrayList(craftingInterface.getCraftingJobs()));
+
+            // Add the crafting job dependencies
+            Iterator<CraftingJob> craftingJobsIt = craftingInterface.getCraftingJobs();
+            while (craftingJobsIt.hasNext()) {
+                CraftingJob craftingJob = craftingJobsIt.next();
+                craftingJobDependencyGraph.addCraftingJobId(craftingJob);
+                IntListIterator dependencyIt = craftingJob.getDependencyCraftingJobs().iterator();
+                while (dependencyIt.hasNext()) {
+                    craftingJobDependencyGraph.addDependency(craftingJob, dependencyIt.nextInt());
+                }
+            }
+
             return true;
         }
         return false;
@@ -130,6 +145,14 @@ public class CraftingNetwork implements ICraftingNetwork {
 
             // Try cleaning up the channel
             cleanupChannelIfEmpty(channel);
+
+            // Remove the crafting job dependencies
+            Iterator<CraftingJob> craftingJobsIt = craftingInterface.getCraftingJobs();
+            while (craftingJobsIt.hasNext()) {
+                CraftingJob craftingJob = craftingJobsIt.next();
+                craftingJobDependencyGraph.removeCraftingJobId(craftingJob);
+            }
+
             return true;
         }
         return false;
@@ -146,6 +169,7 @@ public class CraftingNetwork implements ICraftingNetwork {
     @Override
     public void onCraftingJobFinished(CraftingJob craftingJob) {
         removeCraftingJobs(craftingJob.getChannel(), Lists.newArrayList(craftingJob));
+        getCraftingJobDependencyGraph().onCraftingJobFinished(craftingJob);
     }
 
     @Override
@@ -187,6 +211,11 @@ public class CraftingNetwork implements ICraftingNetwork {
             return craftingJobIndex.getCraftingJobs(ingredientComponent, instance, matchCondition);
         }
         return Iterators.forArray();
+    }
+
+    @Override
+    public CraftingJobDependencyGraph getCraftingJobDependencyGraph() {
+        return craftingJobDependencyGraph;
     }
 
     protected void cleanupChannelIfEmpty(int channel) {

@@ -37,15 +37,19 @@ public class CraftingAspectWriteBuilders {
             new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.integer.ignorestorage.name");
     public static final IAspectPropertyTypeInstance<ValueTypeBoolean, ValueTypeBoolean.ValueBoolean> PROP_IGNORE_CRAFTING =
             new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.integer.ignorecrafting.name");
+    public static final IAspectPropertyTypeInstance<ValueTypeBoolean, ValueTypeBoolean.ValueBoolean> PROP_CRAFT_MISSING =
+            new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.integer.craftmissing.name");
     public static final IAspectProperties PROPERTIES_CRAFTING = new AspectProperties(ImmutableList.<IAspectPropertyTypeInstance>of(
             PROP_CHANNEL,
             PROP_IGNORE_STORAGE,
-            PROP_IGNORE_CRAFTING
+            PROP_IGNORE_CRAFTING,
+            PROP_CRAFT_MISSING
     ));
     static {
         PROPERTIES_CRAFTING.setValue(PROP_CHANNEL, ValueTypeInteger.ValueInteger.of(IPositionedAddonsNetworkIngredients.DEFAULT_CHANNEL));
         PROPERTIES_CRAFTING.setValue(PROP_IGNORE_STORAGE, ValueTypeBoolean.ValueBoolean.of(false));
         PROPERTIES_CRAFTING.setValue(PROP_IGNORE_CRAFTING, ValueTypeBoolean.ValueBoolean.of(false));
+        PROPERTIES_CRAFTING.setValue(PROP_CRAFT_MISSING, ValueTypeBoolean.ValueBoolean.of(true));
     }
 
     public static final AspectBuilder<ValueObjectTypeItemStack.ValueItemStack, ValueObjectTypeItemStack, Triple<PartTarget, IAspectProperties, ItemStack>>
@@ -100,12 +104,15 @@ public class CraftingAspectWriteBuilders {
                     int channel = properties.getValue(PROP_CHANNEL).getRawValue();
                     boolean ignoreStorage = properties.getValue(PROP_IGNORE_STORAGE).getRawValue();
                     boolean ignoreCrafting = properties.getValue(PROP_IGNORE_CRAFTING).getRawValue();
+                    boolean craftMissing = properties.getValue(PROP_CRAFT_MISSING).getRawValue();
 
                     if ((ignoreStorage || !CraftingHelpers.hasStorageInstance(network, channel,
                             ingredientComponent, instance, ingredientComponent.getMatcher().getExactMatchCondition()))
                             && (ignoreCrafting || !CraftingHelpers.isCrafting(craftingNetwork, channel, ingredientComponent,
                             instance, matchCondition))) {
-                        CraftingHelpers.scheduleCraftingJob(craftingNetwork, channel, ingredientComponent, instance, matchCondition);
+                        CraftingHelpers.calculateAndScheduleCraftingJob(network, channel,
+                                ingredientComponent, instance, matchCondition, craftMissing,
+                                CraftingHelpers.getGlobalCraftingJobIdentifier());
                     }
                 }
             }
