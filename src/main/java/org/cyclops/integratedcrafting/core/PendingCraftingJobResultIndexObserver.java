@@ -23,13 +23,13 @@ import java.util.Map;
  *
  * @author rubensworks
  */
-public class PendingCraftingJobResult<T, M>
+public class PendingCraftingJobResultIndexObserver<T, M>
         implements IIngredientComponentStorageObservable.IIndexChangeObserver<T, M> {
 
     private final IngredientComponent<T, M> ingredientComponent;
     private final CraftingJobHandler handler;
 
-    public PendingCraftingJobResult(IngredientComponent<T, M> ingredientComponent, CraftingJobHandler handler) {
+    public PendingCraftingJobResultIndexObserver(IngredientComponent<T, M> ingredientComponent, CraftingJobHandler handler) {
         this.ingredientComponent = ingredientComponent;
         this.handler = handler;
     }

@@ -188,7 +188,7 @@ public class CraftingJobHandler {
         if (count == 0) {
             IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers
                     .getIngredientsNetwork(network, ingredientComponent);
-            PendingCraftingJobResult<T, M> observer = new PendingCraftingJobResult<>(ingredientComponent, this);
+            PendingCraftingJobResultIndexObserver<T, M> observer = new PendingCraftingJobResultIndexObserver<>(ingredientComponent, this);
             ingredientsNetwork.addObserver(observer);
             ingredientsNetwork.scheduleObservation();
             ingredientObservers.put(ingredientComponent, observer);
