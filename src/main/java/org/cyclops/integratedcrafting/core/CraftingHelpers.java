@@ -174,7 +174,9 @@ public class CraftingHelpers {
                                                               Set<IPrototypedIngredient> parentDependencies)
             throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         // Loop over all available recipes, and return the first valid one.
-        Iterator<PrioritizedRecipe> recipes = recipeIndex.getRecipes(ingredientComponent, instance, matchCondition);
+        IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
+        Iterator<PrioritizedRecipe> recipes = recipeIndex.getRecipes(ingredientComponent, instance,
+                matcher.withoutCondition(matchCondition, ingredientComponent.getPrimaryQuantifier().getMatchCondition()));
         while (recipes.hasNext()) {
             PrioritizedRecipe recipe = recipes.next();
 
