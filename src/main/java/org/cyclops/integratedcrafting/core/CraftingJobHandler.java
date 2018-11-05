@@ -287,7 +287,10 @@ public class CraftingJobHandler {
 
                 // Update state with expected outputs
                 markCraftingJobProcessing(startingCraftingJob,
-                        CraftingHelpers.getRecipeOutputs(startingCraftingJob.getRecipe().getRecipe()));
+                        CraftingHelpers.multiplyRecipeOutputs(
+                                CraftingHelpers.getRecipeOutputs(startingCraftingJob.getRecipe().getRecipe()),
+                                startingCraftingJob.getAmount()
+                        ));
 
                 // Push the ingredients to the crafting interface
                 insertCrafting(targetPos, ingredients, false);

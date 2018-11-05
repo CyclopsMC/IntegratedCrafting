@@ -3,10 +3,8 @@ package org.cyclops.integratedcrafting.core;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import it.unimi.dsi.fastutil.ints.IntListIterator;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.NonNullList;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
@@ -20,7 +18,6 @@ import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponen
 import org.cyclops.commoncapabilities.api.ingredient.storage.IngredientComponentStorageEmpty;
 import org.cyclops.cyclopscore.helper.TileHelpers;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
-import org.cyclops.cyclopscore.persist.world.GlobalCounters;
 import org.cyclops.integratedcrafting.Capabilities;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
@@ -43,6 +40,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Helpers related to handling crafting jobs.
@@ -173,10 +171,13 @@ public class CraftingHelpers {
                                                               CraftingJobDependencyGraph craftingJobsGraph,
                                                               Set<IPrototypedIngredient> parentDependencies)
             throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
-        // Loop over all available recipes, and return the first valid one.
         IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
-        Iterator<PrioritizedRecipe> recipes = recipeIndex.getRecipes(ingredientComponent, instance,
-                matcher.withoutCondition(matchCondition, ingredientComponent.getPrimaryQuantifier().getMatchCondition()));
+        // This matching condition makes it so that the recipe output does not have to match with the requested input by quantity.
+        M quantifierlessCondition = matcher.withoutCondition(matchCondition,
+                ingredientComponent.getPrimaryQuantifier().getMatchCondition());
+
+        // Loop over all available recipes, and return the first valid one.
+        Iterator<PrioritizedRecipe> recipes = recipeIndex.getRecipes(ingredientComponent, instance, quantifierlessCondition);
         while (recipes.hasNext()) {
             PrioritizedRecipe recipe = recipes.next();
 
@@ -234,7 +235,16 @@ public class CraftingHelpers {
                 continue;
             }
 
-            CraftingJob craftingJob = new CraftingJob(identifierGenerator.getNext(), channel, recipe);
+            // Calculate the quantity for the given instance that the recipe outputs
+            long recipeOutputQuantity = recipe.getRecipe().getOutput().getInstances(ingredientComponent)
+                    .stream()
+                    .filter(i -> matcher.matches(i, instance, quantifierlessCondition))
+                    .mapToLong(matcher::getQuantity)
+                    .sum();
+            // With this number, calculate the amount of required recipe jobs.
+            int amount = (int) Math.ceil(((float) matcher.getQuantity(instance)) / (float) recipeOutputQuantity);
+
+            CraftingJob craftingJob = new CraftingJob(identifierGenerator.getNext(), channel, recipe, amount);
             for (CraftingJob dependency : dependencies) {
                 craftingJob.addDependency(dependency);
                 craftingJobsGraph.addDependency(craftingJob, dependency);
@@ -654,6 +664,33 @@ public class CraftingHelpers {
         }
 
         return outputs;
+    }
+
+    /**
+     * Creates a new recipe outputs object with all ingredient quantities multiplied by the given amount.
+     * @param recipeOutputs A recipe objects holder.
+     * @param amount An amount to multiply all instances by.
+     * @return A new recipe objects holder.
+     */
+    public static Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> multiplyRecipeOutputs(
+            Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> recipeOutputs, int amount) {
+        if (amount == 1) {
+            return recipeOutputs;
+        }
+
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> newRecipeOutputs = Maps.newIdentityHashMap();
+        for (Map.Entry<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> entry : recipeOutputs.entrySet()) {
+            IngredientComponent<?, ?> ingredientComponent = entry.getKey();
+            IIngredientMatcher matcher = ingredientComponent.getMatcher();
+            List<IPrototypedIngredient<?, ?>> prototypes = entry.getValue()
+                    .stream()
+                    .map(p -> (PrototypedIngredient<?, ?>) new PrototypedIngredient(ingredientComponent,
+                            matcher.withQuantity(p.getPrototype(), matcher.getQuantity(p.getPrototype()) * amount),
+                            p.getCondition()))
+                    .collect(Collectors.toList());
+            newRecipeOutputs.put(ingredientComponent, prototypes);
+        }
+        return newRecipeOutputs;
     }
 
     /**

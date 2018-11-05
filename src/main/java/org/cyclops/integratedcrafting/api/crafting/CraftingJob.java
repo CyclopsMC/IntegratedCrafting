@@ -18,11 +18,13 @@ public class CraftingJob {
     private final PrioritizedRecipe recipe;
     private final IntList dependencyCraftingJobs;
     private final IntList dependentCraftingJobs;
+    private final int amount;
 
-    public CraftingJob(int id, int channel, PrioritizedRecipe recipe) {
+    public CraftingJob(int id, int channel, PrioritizedRecipe recipe, int amount) {
         this.id = id;
         this.channel = channel;
         this.recipe = recipe;
+        this.amount = amount;
         this.dependencyCraftingJobs = new IntArrayList();
         this.dependentCraftingJobs = new IntArrayList();
     }
@@ -47,6 +49,10 @@ public class CraftingJob {
         return dependentCraftingJobs;
     }
 
+    public int getAmount() {
+        return amount;
+    }
+
     public void addDependency(CraftingJob dependency) {
         dependencyCraftingJobs.add(dependency.getId());
         dependency.dependentCraftingJobs.add(this.getId());
@@ -60,6 +66,7 @@ public class CraftingJob {
         tag.setTag("recipeDefinition", IRecipeDefinition.serialize(craftingJob.recipe.getRecipe()));
         tag.setTag("dependencies", new NBTTagIntArray(craftingJob.getDependencyCraftingJobs()));
         tag.setTag("dependents", new NBTTagIntArray(craftingJob.getDependentCraftingJobs()));
+        tag.setInteger("amount", craftingJob.amount);
         return tag;
     }
 
@@ -82,11 +89,15 @@ public class CraftingJob {
         if (!tag.hasKey("dependents", Constants.NBT.TAG_INT_ARRAY)) {
             throw new IllegalArgumentException("Could not find a dependents entry in the given tag");
         }
+        if (!tag.hasKey("amount", Constants.NBT.TAG_INT)) {
+            throw new IllegalArgumentException("Could not find a amount entry in the given tag");
+        }
         int id = tag.getInteger("id");
         int channel = tag.getInteger("channel");
         int[] priorities = tag.getIntArray("priorities");
         IRecipeDefinition recipeDefinition = IRecipeDefinition.deserialize(tag.getCompoundTag("recipeDefinition"));
-        CraftingJob craftingJob = new CraftingJob(id, channel, new PrioritizedRecipe(recipeDefinition, priorities));
+        int amount = tag.getInteger("amount");
+        CraftingJob craftingJob = new CraftingJob(id, channel, new PrioritizedRecipe(recipeDefinition, priorities), amount);
         for (int dependency : tag.getIntArray("dependencies")) {
             craftingJob.dependencyCraftingJobs.add(dependency);
         }

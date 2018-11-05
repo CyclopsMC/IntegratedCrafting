@@ -12,11 +12,11 @@ import static org.junit.Assert.assertThat;
  */
 public class TestCraftingJobDependencyGraph {
 
-    private static final CraftingJob J0 = new CraftingJob(0, 0, null);
-    private static final CraftingJob J1 = new CraftingJob(1, 0, null);
-    private static final CraftingJob J2 = new CraftingJob(2, 0, null);
-    private static final CraftingJob J3 = new CraftingJob(3, 0, null);
-    private static final CraftingJob J4 = new CraftingJob(4, 0, null);
+    private static final CraftingJob J0 = new CraftingJob(0, 0, null, 1);
+    private static final CraftingJob J1 = new CraftingJob(1, 0, null, 1);
+    private static final CraftingJob J2 = new CraftingJob(2, 0, null, 1);
+    private static final CraftingJob J3 = new CraftingJob(3, 0, null, 1);
+    private static final CraftingJob J4 = new CraftingJob(4, 0, null, 1);
 
     private CraftingJobDependencyGraph g;
 

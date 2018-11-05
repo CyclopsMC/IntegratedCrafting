@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
+import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
@@ -53,6 +54,7 @@ public class TestCraftingHelpers {
     private static final ComplexStack CB01_ = new ComplexStack(ComplexStack.Group.B, 0, 1, null);
     private static final ComplexStack CB02_ = new ComplexStack(ComplexStack.Group.B, 0, 2, null);
     private static final ComplexStack CB03_ = new ComplexStack(ComplexStack.Group.B, 0, 3, null);
+    private static final ComplexStack CB0110_ = new ComplexStack(ComplexStack.Group.B, 0, 110, null);
     private static final ComplexStack CC01_ = new ComplexStack(ComplexStack.Group.C, 0, 1, null);
     private static final ComplexStack CA91B = new ComplexStack(ComplexStack.Group.A, 9, 1, ComplexStack.Tag.B);
     private static final ComplexStack CA01B = new ComplexStack(ComplexStack.Group.A, 0, 1, ComplexStack.Tag.B);
@@ -377,6 +379,47 @@ public class TestCraftingHelpers {
                 equalTo(expectedMap));
     }
 
+    /* ------------ multiplyRecipeOutputs ------------ */
+
+    @Test
+    public void testMultiplyRecipeOutputsOne() {
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> input = Maps.newIdentityHashMap();
+        input.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, 0),
+                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB01_, 0)
+        ));
+        input.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(
+                new PrototypedIngredient<>(IngredientComponentStubs.SIMPLE, 2, false)
+        ));
+
+        assertThat(CraftingHelpers.multiplyRecipeOutputs(input, 1),
+                equalTo(input));
+    }
+
+    @Test
+    public void testMultiplyRecipeOutputsTwo() {
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> input = Maps.newIdentityHashMap();
+        input.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, 0),
+                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB01_, 0)
+        ));
+        input.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(
+                new PrototypedIngredient<>(IngredientComponentStubs.SIMPLE, 2, false)
+        ));
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> output = Maps.newIdentityHashMap();
+        output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA02_, 0),
+                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, 0)
+        ));
+        output.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(
+                new PrototypedIngredient<>(IngredientComponentStubs.SIMPLE, 4, false)
+        ));
+
+        // Wrap in a HashMap because our IdentityMap does not like equals...
+        assertThat(Maps.newHashMap(CraftingHelpers.multiplyRecipeOutputs(input, 2)),
+                equalTo(Maps.newHashMap(output)));
+    }
+
     /* ------------ calculateCraftingJobs ------------ */
 
     private IRecipeDefinition recipeB;
@@ -592,6 +635,7 @@ public class TestCraftingHelpers {
 
         assertThat(j.getId(), equalTo(0));
         assertThat(j.getChannel(), equalTo(0));
+        assertThat(j.getAmount(), equalTo(1));
         assertThat(j.getRecipe().getRecipe(), equalTo(recipeB));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(0));
@@ -613,6 +657,7 @@ public class TestCraftingHelpers {
 
         assertThat(j.getId(), equalTo(0));
         assertThat(j.getChannel(), equalTo(0));
+        assertThat(j.getAmount(), equalTo(1));
         assertThat(j.getRecipe().getRecipe(), equalTo(recipeB));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(0));
@@ -634,6 +679,7 @@ public class TestCraftingHelpers {
 
         assertThat(j.getId(), equalTo(0));
         assertThat(j.getChannel(), equalTo(0));
+        assertThat(j.getAmount(), equalTo(1));
         assertThat(j.getRecipe().getRecipe(), equalTo(recipeB));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(0));
@@ -655,6 +701,7 @@ public class TestCraftingHelpers {
 
         assertThat(j.getId(), equalTo(0));
         assertThat(j.getChannel(), equalTo(0));
+        assertThat(j.getAmount(), equalTo(1));
         assertThat(j.getRecipe().getRecipe(), equalTo(recipeB));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(0));
@@ -693,6 +740,7 @@ public class TestCraftingHelpers {
 
         assertThat(j1.getId(), equalTo(1));
         assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(1));
         assertThat(j1.getRecipe().getRecipe(), equalTo(recipeB));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
@@ -722,6 +770,7 @@ public class TestCraftingHelpers {
 
         assertThat(j0.getId(), equalTo(0));
         assertThat(j0.getChannel(), equalTo(0));
+        assertThat(j0.getAmount(), equalTo(1));
         assertThat(j0.getRecipe().getRecipe(), equalTo(recipeBAlt));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(0));
@@ -745,6 +794,7 @@ public class TestCraftingHelpers {
 
         assertThat(j1.getId(), equalTo(1));
         assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(1));
         assertThat(j1.getRecipe().getRecipe(), equalTo(recipeB2));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
@@ -783,6 +833,7 @@ public class TestCraftingHelpers {
 
         assertThat(j1.getId(), equalTo(1));
         assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(1));
         assertThat(j1.getRecipe().getRecipe(), equalTo(recipeB3));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
@@ -849,6 +900,7 @@ public class TestCraftingHelpers {
 
         assertThat(j0.getId(), equalTo(0));
         assertThat(j0.getChannel(), equalTo(0));
+        assertThat(j0.getAmount(), equalTo(1));
         assertThat(j0.getRecipe().getRecipe(), equalTo(recipeBAlt2));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(0));
@@ -871,6 +923,7 @@ public class TestCraftingHelpers {
 
         assertThat(j0.getId(), equalTo(0));
         assertThat(j0.getChannel(), equalTo(0));
+        assertThat(j0.getAmount(), equalTo(1));
         assertThat(j0.getRecipe().getRecipe(), equalTo(recipeB));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(0));
@@ -903,6 +956,7 @@ public class TestCraftingHelpers {
 
         assertThat(j4.getId(), equalTo(4));
         assertThat(j4.getChannel(), equalTo(0));
+        assertThat(j4.getAmount(), equalTo(1));
         assertThat(j4.getRecipe().getRecipe(), equalTo(recipeB2Alt));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(5));
@@ -917,23 +971,75 @@ public class TestCraftingHelpers {
 
         assertThat(j0.getChannel(), equalTo(0));
         assertThat(j0.getRecipe().getRecipe(), equalTo(recipeA));
+        assertThat(j0.getAmount(), equalTo(1));
         assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
         assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j4)));
 
         assertThat(j1.getChannel(), equalTo(0));
         assertThat(j1.getRecipe().getRecipe(), equalTo(recipeA));
+        assertThat(j1.getAmount(), equalTo(1));
         assertThat(craftingJobDependencyGraph.getDependencies(j1).size(), equalTo(0));
         assertThat(craftingJobDependencyGraph.getDependents(j1), equalTo(Lists.newArrayList(j2)));
 
         assertThat(j2.getChannel(), equalTo(0));
         assertThat(j2.getRecipe().getRecipe(), equalTo(recipeAB));
+        assertThat(j2.getAmount(), equalTo(1));
         assertThat(craftingJobDependencyGraph.getDependencies(j2), equalTo(Lists.newArrayList(j1)));
         assertThat(craftingJobDependencyGraph.getDependents(j2), equalTo(Lists.newArrayList(j3)));
 
         assertThat(j3.getChannel(), equalTo(0));
         assertThat(j3.getRecipe().getRecipe(), equalTo(recipeC));
+        assertThat(j3.getAmount(), equalTo(1));
         assertThat(craftingJobDependencyGraph.getDependencies(j3), equalTo(Lists.newArrayList(j2)));
         assertThat(craftingJobDependencyGraph.getDependents(j3), equalTo(Lists.newArrayList(j4)));
+    }
+
+    @Test
+    public void testCalculateCraftingJobsSingleOneAvailableHigherRequested() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
+        RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
+        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
+
+        // Single crafting recipe with one available dependent
+        IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+        storage.insert(CA01_, false);
+        storageGetter = (c) -> storage;
+
+        CraftingJob j0 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+                IngredientComponentStubs.COMPLEX, CB03_, ComplexStack.Match.EXACT, true,
+                simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies);
+
+        assertThat(j0.getId(), equalTo(0));
+        assertThat(j0.getChannel(), equalTo(0));
+        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeB));
+        assertThat(j0.getAmount(), equalTo(2));
+        assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
+        assertThat(craftingJobDependencyGraph.getDependents(j0).size(), equalTo(0));
+
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(0));
+    }
+
+    @Test
+    public void testCalculateCraftingJobsSingleOneAvailableALotHigherRequested() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
+        RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
+        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
+
+        // Single crafting recipe with one available dependent
+        IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+        storage.insert(CA01_, false);
+        storageGetter = (c) -> storage;
+
+        CraftingJob j0 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+                IngredientComponentStubs.COMPLEX, CB0110_, ComplexStack.Match.EXACT, true,
+                simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies);
+
+        assertThat(j0.getId(), equalTo(0));
+        assertThat(j0.getChannel(), equalTo(0));
+        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeB));
+        assertThat(j0.getAmount(), equalTo(55));
+        assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
+        assertThat(craftingJobDependencyGraph.getDependents(j0).size(), equalTo(0));
+
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(0));
     }
 
 }
