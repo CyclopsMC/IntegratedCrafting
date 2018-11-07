@@ -18,7 +18,7 @@ public class CraftingJob {
     private final PrioritizedRecipe recipe;
     private final IntList dependencyCraftingJobs;
     private final IntList dependentCraftingJobs;
-    private final int amount;
+    private int amount;
 
     public CraftingJob(int id, int channel, PrioritizedRecipe recipe, int amount) {
         this.id = id;
@@ -51,6 +51,10 @@ public class CraftingJob {
 
     public int getAmount() {
         return amount;
+    }
+
+    public void setAmount(int amount) {
+        this.amount = amount;
     }
 
     public void addDependency(CraftingJob dependency) {

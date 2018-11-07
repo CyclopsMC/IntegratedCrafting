@@ -55,7 +55,7 @@ public class CraftingJobDependencyGraph {
             throw new IllegalStateException("A crafting job was finished while it still has unfinished dependencies.");
         }
 
-        // Remove the job instance referemce
+        // Remove the job instance reference
         removeCraftingJobId(craftingJob);
 
         // Remove the dependents

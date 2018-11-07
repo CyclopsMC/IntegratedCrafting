@@ -272,7 +272,7 @@ public class CraftingJobHandler {
                 // Check if pendingCraftingJob can start and set as startingCraftingJob
                 // This requires checking the available ingredients AND if the crafting handler can accept it.
                 IMixedIngredients ingredients = CraftingHelpers.getRecipeInputs(network, channel,
-                        pendingCraftingJob.getRecipe().getRecipe(), true);
+                        pendingCraftingJob.getRecipe().getRecipe(), true, pendingCraftingJob.getAmount());
                 if (ingredients != null && insertCrafting(targetPos, ingredients, true)) {
                     startingCraftingJob = pendingCraftingJob;
                     break;
@@ -283,7 +283,7 @@ public class CraftingJobHandler {
             if (startingCraftingJob != null) {
                 // Remove ingredients from network
                 IMixedIngredients ingredients = CraftingHelpers.getRecipeInputs(network, channel,
-                        startingCraftingJob.getRecipe().getRecipe(), false);
+                        startingCraftingJob.getRecipe().getRecipe(), false, startingCraftingJob.getAmount());
 
                 // Update state with expected outputs
                 markCraftingJobProcessing(startingCraftingJob,
