@@ -458,6 +458,8 @@ public class CraftingHelpers {
             CraftingJob craftingJob = calculateCraftingJobs(network, channel, ingredientComponent, instance,
                     matchCondition, craftMissing, identifierGenerator, dependencyGraph);
 
+            dependencyGraph.addCraftingJobId(craftingJob);
+
             ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
             craftingNetwork.getCraftingJobDependencyGraph().importDependencies(dependencyGraph);
 
