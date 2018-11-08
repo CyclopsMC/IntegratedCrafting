@@ -242,9 +242,17 @@ public class CraftingJobHandler {
         // Notify the network of finalized crafting jobs
         if (finishedCraftingJobs.size() > 0) {
             for (CraftingJob finishedCraftingJob : finishedCraftingJobs) {
-                ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetwork(network);
-                craftingNetwork.onCraftingJobFinished(finishedCraftingJob);
+                if (finishedCraftingJob.getAmount() == 1) {
+                    // If only a single amount for the job was remaining, remove it from the network
+                    ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetwork(network);
+                    craftingNetwork.onCraftingJobFinished(finishedCraftingJob);
+                } else {
+                    // If more than one amount was remaining, decrement it and re-add it to the pending jobs list
+                    finishedCraftingJob.setAmount(finishedCraftingJob.getAmount() - 1);
+                    pendingCraftingJobs.add(finishedCraftingJob);
+                }
             }
+            finishedCraftingJobs.clear();
         }
 
         // The actual output observation of processing jobs is done via the ingredient observers
@@ -272,7 +280,7 @@ public class CraftingJobHandler {
                 // Check if pendingCraftingJob can start and set as startingCraftingJob
                 // This requires checking the available ingredients AND if the crafting handler can accept it.
                 IMixedIngredients ingredients = CraftingHelpers.getRecipeInputs(network, channel,
-                        pendingCraftingJob.getRecipe().getRecipe(), true, pendingCraftingJob.getAmount());
+                        pendingCraftingJob.getRecipe().getRecipe(), true, 1);
                 if (ingredients != null && insertCrafting(targetPos, ingredients, true)) {
                     startingCraftingJob = pendingCraftingJob;
                     break;
@@ -283,14 +291,11 @@ public class CraftingJobHandler {
             if (startingCraftingJob != null) {
                 // Remove ingredients from network
                 IMixedIngredients ingredients = CraftingHelpers.getRecipeInputs(network, channel,
-                        startingCraftingJob.getRecipe().getRecipe(), false, startingCraftingJob.getAmount());
+                        startingCraftingJob.getRecipe().getRecipe(), false, 1);
 
                 // Update state with expected outputs
                 markCraftingJobProcessing(startingCraftingJob,
-                        CraftingHelpers.multiplyRecipeOutputs(
-                                CraftingHelpers.getRecipeOutputs(startingCraftingJob.getRecipe().getRecipe()),
-                                startingCraftingJob.getAmount()
-                        ));
+                        CraftingHelpers.getRecipeOutputs(startingCraftingJob.getRecipe().getRecipe()));
 
                 // Push the ingredients to the crafting interface
                 insertCrafting(targetPos, ingredients, false);
