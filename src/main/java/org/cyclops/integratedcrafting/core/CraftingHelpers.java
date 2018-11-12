@@ -82,6 +82,7 @@ public class CraftingHelpers {
      * @param network The network.
      * @param channel A network channel.
      * @param ingredientComponent The ingredient component type of the network.
+     * @param scheduleObservation If an observation inside the ingredients network should be scheduled.
      * @param <T> The instance type.
      * @param <M> The matching condition parameter.
      * @return The storage.
@@ -526,6 +527,8 @@ public class CraftingHelpers {
      * @param recipe The recipe to get the inputs from.
      * @param simulate If true, then the ingredients will effectively be removed from the network, not when false.
      * @param recipeOutputQuantity The number of times the given recipe should be applied.
+     * @param <T> The instance type.
+     * @param <M> The matching condition parameter, may be Void.
      * @return A list of slot-based ingredients, or null if no valid inputs could be found.
      */
     @Nullable
@@ -566,6 +569,8 @@ public class CraftingHelpers {
      *                                  if no valid matches can be found,
      *                                  and the second returned list is always null,
      * @param recipeOutputQuantity The number of times the given recipe should be applied.
+     * @param <T> The instance type.
+     * @param <M> The matching condition parameter, may be Void.
      * @return A pair with two lists:
      *           1. A list of available slot-based ingredients.
      *           2. A list with missing ingredients (non-slot-based).
