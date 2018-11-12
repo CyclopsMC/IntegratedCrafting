@@ -1,6 +1,8 @@
 package org.cyclops.integratedcrafting.api.recipe;
 
 import com.google.common.collect.Sets;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.Constants;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 
 import java.util.TreeSet;
@@ -33,5 +35,24 @@ public class PrioritizedRecipe {
      */
     public static TreeSet<PrioritizedRecipe> newOutputSortedSet() {
         return Sets.newTreeSet(PrioritizedRecipeOutputComparator.getInstance());
+    }
+
+    public static NBTTagCompound serialize(PrioritizedRecipe prioritizedRecipe) {
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setIntArray("priorities", prioritizedRecipe.getPriorities());
+        tag.setTag("recipeDefinition", IRecipeDefinition.serialize(prioritizedRecipe.getRecipe()));
+        return tag;
+    }
+
+    public static PrioritizedRecipe deserialize(NBTTagCompound tag) {
+        if (!tag.hasKey("priorities", Constants.NBT.TAG_INT_ARRAY)) {
+            throw new IllegalArgumentException("Could not find a priorities entry in the given tag");
+        }
+        if (!tag.hasKey("recipeDefinition", Constants.NBT.TAG_COMPOUND)) {
+            throw new IllegalArgumentException("Could not find a recipeDefinition entry in the given tag");
+        }
+        int[] priorities = tag.getIntArray("priorities");
+        IRecipeDefinition recipeDefinition = IRecipeDefinition.deserialize(tag.getCompoundTag("recipeDefinition"));
+        return new PrioritizedRecipe(recipeDefinition, priorities);
     }
 }

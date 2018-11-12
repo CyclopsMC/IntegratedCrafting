@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagIntArray;
 import net.minecraftforge.common.util.Constants;
-import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 
 /**
@@ -66,8 +65,7 @@ public class CraftingJob {
         NBTTagCompound tag = new NBTTagCompound();
         tag.setInteger("id", craftingJob.id);
         tag.setInteger("channel", craftingJob.channel);
-        tag.setIntArray("priorities", craftingJob.recipe.getPriorities());
-        tag.setTag("recipeDefinition", IRecipeDefinition.serialize(craftingJob.recipe.getRecipe()));
+        tag.setTag("recipe", PrioritizedRecipe.serialize(craftingJob.recipe));
         tag.setTag("dependencies", new NBTTagIntArray(craftingJob.getDependencyCraftingJobs()));
         tag.setTag("dependents", new NBTTagIntArray(craftingJob.getDependentCraftingJobs()));
         tag.setInteger("amount", craftingJob.amount);
@@ -81,11 +79,8 @@ public class CraftingJob {
         if (!tag.hasKey("channel", Constants.NBT.TAG_INT)) {
             throw new IllegalArgumentException("Could not find a channel entry in the given tag");
         }
-        if (!tag.hasKey("priorities", Constants.NBT.TAG_INT_ARRAY)) {
-            throw new IllegalArgumentException("Could not find a priorities entry in the given tag");
-        }
-        if (!tag.hasKey("recipeDefinition", Constants.NBT.TAG_COMPOUND)) {
-            throw new IllegalArgumentException("Could not find a recipeDefinition entry in the given tag");
+        if (!tag.hasKey("recipe", Constants.NBT.TAG_COMPOUND)) {
+            throw new IllegalArgumentException("Could not find a recipe entry in the given tag");
         }
         if (!tag.hasKey("dependencies", Constants.NBT.TAG_INT_ARRAY)) {
             throw new IllegalArgumentException("Could not find a dependencies entry in the given tag");
@@ -98,10 +93,9 @@ public class CraftingJob {
         }
         int id = tag.getInteger("id");
         int channel = tag.getInteger("channel");
-        int[] priorities = tag.getIntArray("priorities");
-        IRecipeDefinition recipeDefinition = IRecipeDefinition.deserialize(tag.getCompoundTag("recipeDefinition"));
+        PrioritizedRecipe prioritizedRecipe = PrioritizedRecipe.deserialize(tag.getCompoundTag("recipe"));
         int amount = tag.getInteger("amount");
-        CraftingJob craftingJob = new CraftingJob(id, channel, new PrioritizedRecipe(recipeDefinition, priorities), amount);
+        CraftingJob craftingJob = new CraftingJob(id, channel, prioritizedRecipe, amount);
         for (int dependency : tag.getIntArray("dependencies")) {
             craftingJob.dependencyCraftingJobs.add(dependency);
         }
