@@ -271,7 +271,7 @@ public class CraftingHelpers {
                 continue;
             }
 
-            CraftingJob craftingJob = new CraftingJob(identifierGenerator.getNext(), channel, recipe, amount);
+            CraftingJob craftingJob = new CraftingJob(identifierGenerator.getNext(), channel, recipe, amount, new MixedIngredients(simulation.getLeft()));
             for (CraftingJob dependency : dependencies.values()) {
                 craftingJob.addDependency(dependency);
                 craftingJobsGraph.addDependency(craftingJob, dependency);

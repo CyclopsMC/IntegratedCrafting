@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagIntArray;
 import net.minecraftforge.common.util.Constants;
+import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 
 /**
@@ -18,12 +19,14 @@ public class CraftingJob {
     private final IntList dependencyCraftingJobs;
     private final IntList dependentCraftingJobs;
     private int amount;
+    private final IMixedIngredients ingredientsStorage;
 
-    public CraftingJob(int id, int channel, PrioritizedRecipe recipe, int amount) {
+    public CraftingJob(int id, int channel, PrioritizedRecipe recipe, int amount, IMixedIngredients ingredientsStorage) {
         this.id = id;
         this.channel = channel;
         this.recipe = recipe;
         this.amount = amount;
+        this.ingredientsStorage = ingredientsStorage;
         this.dependencyCraftingJobs = new IntArrayList();
         this.dependentCraftingJobs = new IntArrayList();
     }
@@ -61,6 +64,13 @@ public class CraftingJob {
         dependency.dependentCraftingJobs.add(this.getId());
     }
 
+    /**
+     * @return The ingredients that will be taken from storage
+     */
+    public IMixedIngredients getIngredientsStorage() {
+        return ingredientsStorage;
+    }
+
     public static NBTTagCompound serialize(CraftingJob craftingJob) {
         NBTTagCompound tag = new NBTTagCompound();
         tag.setInteger("id", craftingJob.id);
@@ -69,6 +79,7 @@ public class CraftingJob {
         tag.setTag("dependencies", new NBTTagIntArray(craftingJob.getDependencyCraftingJobs()));
         tag.setTag("dependents", new NBTTagIntArray(craftingJob.getDependentCraftingJobs()));
         tag.setInteger("amount", craftingJob.amount);
+        tag.setTag("ingredientsStorage", IMixedIngredients.serialize(craftingJob.ingredientsStorage));
         return tag;
     }
 
@@ -91,11 +102,15 @@ public class CraftingJob {
         if (!tag.hasKey("amount", Constants.NBT.TAG_INT)) {
             throw new IllegalArgumentException("Could not find a amount entry in the given tag");
         }
+        if (!tag.hasKey("ingredientsStorage", Constants.NBT.TAG_COMPOUND)) {
+            throw new IllegalArgumentException("Could not find a ingredientsStorage entry in the given tag");
+        }
         int id = tag.getInteger("id");
         int channel = tag.getInteger("channel");
         PrioritizedRecipe prioritizedRecipe = PrioritizedRecipe.deserialize(tag.getCompoundTag("recipe"));
         int amount = tag.getInteger("amount");
-        CraftingJob craftingJob = new CraftingJob(id, channel, prioritizedRecipe, amount);
+        IMixedIngredients ingredientsStorage = IMixedIngredients.deserialize(tag.getCompoundTag("ingredientsStorage"));
+        CraftingJob craftingJob = new CraftingJob(id, channel, prioritizedRecipe, amount, ingredientsStorage);
         for (int dependency : tag.getIntArray("dependencies")) {
             craftingJob.dependencyCraftingJobs.add(dependency);
         }
