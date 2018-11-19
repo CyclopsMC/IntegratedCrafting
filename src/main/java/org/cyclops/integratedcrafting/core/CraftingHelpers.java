@@ -210,10 +210,10 @@ public class CraftingHelpers {
             int amount = (int) Math.ceil(((float) instanceQuantity) / (float) recipeOutputQuantity);
 
             // Check if all requirements are met for this recipe, if so return directly (don't schedule yet)
-            Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>>> simulation =
+            Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> simulation =
                     getRecipeInputs(storageGetter, recipe.getRecipe(), true, simulatedExtractionMemory,
                             true, amount);
-            Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> missingIngredients = simulation.getRight();
+            Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> missingIngredients = simulation.getRight();
             boolean validDependencies = true;
             if (!craftMissing && !missingIngredients.isEmpty()) {
                 continue;
@@ -226,9 +226,9 @@ public class CraftingHelpers {
             Map<IRecipeDefinition, CraftingJob> dependencies = Maps.newHashMapWithExpectedSize(missingIngredients.size());
             Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> dependenciesOutputSurplus = Maps.newIdentityHashMap();
             // We must be able to find crafting jobs for all dependencies
-            for (IngredientComponent<?, ?> dependencyComponent : missingIngredients.keySet()) {
+            for (IngredientComponent dependencyComponent : missingIngredients.keySet()) {
                 validDependencies = calculateCraftingJobDependencyComponent(dependencyComponent,
-                        dependenciesOutputSurplus, missingIngredients, parentDependencies, dependencies, recipeIndex,
+                        dependenciesOutputSurplus, missingIngredients.get(dependencyComponent), parentDependencies, dependencies, recipeIndex,
                         channel, storageGetter, simulatedExtractionMemory, identifierGenerator, craftingJobsGraph);
                 // Don't check the other components once we have an invalid dependency.
                 if (!validDependencies) {
@@ -257,7 +257,7 @@ public class CraftingHelpers {
     // Helper function for calculateCraftingJobs
     protected static <T, M> boolean calculateCraftingJobDependencyComponent(IngredientComponent<T, M> dependencyComponent,
                                                                             Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> dependenciesOutputSurplus,
-                                                                            Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> missingIngredients,
+                                                                            MissingIngredients<T, M> missingIngredients,
                                                                             Set<IPrototypedIngredient> parentDependencies,
                                                                             Map<IRecipeDefinition, CraftingJob> dependencies,
                                                                             IRecipeIndex recipeIndex,
@@ -269,11 +269,12 @@ public class CraftingHelpers {
                                                                             CraftingJobDependencyGraph craftingJobsGraph)
             throws RecursiveCraftingRecipeException {
         IIngredientMatcher<T, M> dependencyMatcher = dependencyComponent.getMatcher();
-        for (List<IPrototypedIngredient<T, M>> prototypedAlternatives : (List<List<IPrototypedIngredient<T, M>>>)(List) missingIngredients.get(dependencyComponent)) {
+        for (MissingIngredients.Element<T, M> missingElement : missingIngredients.getElements()) {
             CraftingJob dependency = null;
             boolean skipDependency = false;
             // Loop over all prototype alternatives, at least one has to match.
-            for (IPrototypedIngredient<T, M> prototypedAlternative : prototypedAlternatives) {
+            for (MissingIngredients.PrototypedWithRequested<T, M> prototypedAlternative : missingElement.getAlternatives()) {
+                IPrototypedIngredient<T, M> prototype = prototypedAlternative.getRequestedPrototype();
                 // First check if we can grab it from previous surplus
                 IngredientCollectionPrototypeMap<T, M> dependencyComponentSurplusOld = (IngredientCollectionPrototypeMap<T, M>) dependenciesOutputSurplus.get(dependencyComponent);
                 IngredientCollectionPrototypeMap<T, M> dependencyComponentSurplus = null;
@@ -286,12 +287,12 @@ public class CraftingHelpers {
                     dependencyComponentSurplus = new IngredientCollectionPrototypeMap<>(dependencyComponentSurplusOld.getComponent());
                     dependencyComponentSurplus.addAll(dependencyComponentSurplusOld);
 
-                    long remainingQuantity = dependencyMatcher.getQuantity(prototypedAlternative.getPrototype());
-                    IIngredientMatcher<T, M> prototypeMatcher = prototypedAlternative.getComponent().getMatcher();
+                    long remainingQuantity = dependencyMatcher.getQuantity(prototype.getPrototype());
+                    IIngredientMatcher<T, M> prototypeMatcher = prototype.getComponent().getMatcher();
                     // Check all instances in the surplus that match with the given prototype
                     // For each match, we subtract its quantity from the required quantity.
-                    Iterator<T> surplusIt = dependencyComponentSurplus.iterator(prototypedAlternative.getPrototype(),
-                            prototypeMatcher.withoutCondition(prototypedAlternative.getCondition(), prototypedAlternative.getComponent().getPrimaryQuantifier().getMatchCondition()));
+                    Iterator<T> surplusIt = dependencyComponentSurplus.iterator(prototype.getPrototype(),
+                            prototypeMatcher.withoutCondition(prototype.getCondition(), prototype.getComponent().getPrimaryQuantifier().getMatchCondition()));
                     boolean updatedRemainingQuantity = false;
                     while (remainingQuantity > 0 && surplusIt.hasNext()) {
                         updatedRemainingQuantity = true;
@@ -320,9 +321,9 @@ public class CraftingHelpers {
                             break;
                         } else {
                             // Partial availability, other part needs to be crafted still.
-                            prototypedAlternative = new PrototypedIngredient<>(dependencyComponent,
-                                    dependencyMatcher.withQuantity(prototypedAlternative.getPrototype(), remainingQuantity),
-                                    prototypedAlternative.getCondition());
+                            prototype = new PrototypedIngredient<>(dependencyComponent,
+                                    dependencyMatcher.withQuantity(prototype.getPrototype(), remainingQuantity),
+                                    prototype.getCondition());
                         }
                     }
                 }
@@ -330,12 +331,12 @@ public class CraftingHelpers {
                 // Try to craft the given prototype
                 try {
                     Set<IPrototypedIngredient> childDependencies = Sets.newHashSet(parentDependencies);
-                    if (!childDependencies.add(prototypedAlternative)) {
-                        throw new RecursiveCraftingRecipeException(prototypedAlternative);
+                    if (!childDependencies.add(prototype)) {
+                        throw new RecursiveCraftingRecipeException(prototype);
                     }
                     dependency = calculateCraftingJobs(recipeIndex, channel, storageGetter,
-                            dependencyComponent, prototypedAlternative.getPrototype(),
-                            prototypedAlternative.getCondition(), true, simulatedExtractionMemory,
+                            dependencyComponent, prototype.getPrototype(),
+                            prototype.getCondition(), true, simulatedExtractionMemory,
                             identifierGenerator, craftingJobsGraph, childDependencies);
 
                     // The prototype is valid,
@@ -345,9 +346,9 @@ public class CraftingHelpers {
                     }
 
                     // Add the auxiliary recipe outputs that are not requested to the surplus
-                    Object dependencyQuantifierlessCondition = dependencyMatcher.withoutCondition(prototypedAlternative.getCondition(),
+                    Object dependencyQuantifierlessCondition = dependencyMatcher.withoutCondition(prototype.getCondition(),
                             dependencyComponent.getPrimaryQuantifier().getMatchCondition());
-                    long requestedQuantity = dependencyMatcher.getQuantity(prototypedAlternative.getPrototype());
+                    long requestedQuantity = dependencyMatcher.getQuantity(prototype.getPrototype());
                     for (IngredientComponent outputComponent : dependency.getRecipe().getRecipe().getOutput().getComponents()) {
                         IngredientCollectionPrototypeMap<?, ?> componentSurplus = dependenciesOutputSurplus.get(outputComponent);
                         if (componentSurplus == null) {
@@ -355,7 +356,7 @@ public class CraftingHelpers {
                             dependenciesOutputSurplus.put(outputComponent, componentSurplus);
                         }
                         addRemainderAsSurplusForComponent(outputComponent, dependency.getRecipe().getRecipe().getOutput().getInstances(outputComponent), componentSurplus,
-                                (IngredientComponent) prototypedAlternative.getComponent(), prototypedAlternative.getPrototype(), dependencyQuantifierlessCondition,
+                                (IngredientComponent) prototype.getComponent(), prototype.getPrototype(), dependencyQuantifierlessCondition,
                                 requestedQuantity);
                     }
 
@@ -573,26 +574,27 @@ public class CraftingHelpers {
      * @param <M> The matching condition parameter, may be Void.
      * @return A pair with two lists:
      *           1. A list of available slot-based ingredients.
-     *           2. A list with missing ingredients (non-slot-based).
-     *              The first list contains a list of ingredients,
-     *              whereas the deeper second list contains different prototype-based alternatives
-     *              for the ingredient at this position.
+     *           2. A missing ingredients object.
      */
-    public static <T, M> Pair<List<T>, List<List<IPrototypedIngredient<T, M>>>>
+    public static <T, M> Pair<List<T>, MissingIngredients<T, M>>
     getIngredientRecipeInputs(IIngredientComponentStorage<T, M> storage, IngredientComponent<T, M> ingredientComponent,
                               IRecipeDefinition recipe, boolean simulate,
                               IngredientCollectionPrototypeMap<T, M> simulatedExtractionMemory,
                               boolean collectMissingIngredients, long recipeOutputQuantity) {
+        IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
+
         // Quickly return if the storage is empty
         if (storage.getMaxQuantity() == 0) {
             if (collectMissingIngredients) {
-                List<List<IPrototypedIngredient<T, M>>> missing = recipe.getInputs(ingredientComponent);
-                // Multiply missing collection if recipe quantity is higher than one
-                if (recipeOutputQuantity > 1) {
-                    missing = missing.stream()
-                            .map(l -> multiplyPrototypedIngredients(l, recipeOutputQuantity))
-                            .collect(Collectors.toList());
-                }
+                MissingIngredients<T, M> missing = new MissingIngredients<>(recipe.getInputs(ingredientComponent)
+                        .stream()
+                        .map(l -> multiplyPrototypedIngredients(l, recipeOutputQuantity))
+                        .map(ps -> new MissingIngredients.Element<>(ps
+                                .stream()
+                                .map(p -> new MissingIngredients.PrototypedWithRequested<>(p, matcher.getQuantity(p.getPrototype())))
+                                .collect(Collectors.toList()))
+                        )
+                        .collect(Collectors.toList()));
                 return Pair.of(
                         Lists.newArrayList(Collections.nCopies(recipe.getInputs(ingredientComponent).size(),
                                 ingredientComponent.getMatcher().getEmptyInstance())),
@@ -603,16 +605,16 @@ public class CraftingHelpers {
         }
 
         // Iterate over all input slots
-        IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
         List<List<IPrototypedIngredient<T, M>>> inputAlternativePrototypes = recipe.getInputs(ingredientComponent);
         List<T> inputInstances = Lists.newArrayList();
-        List<List<IPrototypedIngredient<T, M>>> missingInstances =
+        List<MissingIngredients.Element<T, M>> missingElements =
                 collectMissingIngredients ? Lists.newArrayList() : null;
         for (List<IPrototypedIngredient<T, M>> inputPrototypes : inputAlternativePrototypes) {
             T inputInstance = null;
             boolean hasInputInstance = false;
 
             // Iterate over all alternatives for this input slot, and take the first matching ingredient.
+            List<MissingIngredients.PrototypedWithRequested<T, M>> missingAlternatives = Lists.newArrayList();
             for (IPrototypedIngredient<T, M> inputPrototype : inputPrototypes) {
                 // Multiply required prototype if recipe quantity is higher than one
                 if (recipeOutputQuantity > 1) {
@@ -626,40 +628,52 @@ public class CraftingHelpers {
                     break;
                 }
 
+                long prototypeQuantity = matcher.getQuantity(inputPrototype.getPrototype());
                 long memoryQuantity;
                 if (simulate && (memoryQuantity = simulatedExtractionMemory
                         .getQuantity(inputPrototype.getPrototype())) != 0) {
-                    long newQuantity = memoryQuantity + matcher.getQuantity(inputPrototype.getPrototype());
+                    long newQuantity = memoryQuantity + prototypeQuantity;
                     if (newQuantity > 0) {
                         // Part of our quantity can be provided via simulatedExtractionMemory,
                         // but not all of it,
                         // so we need to extract from storage as well.
                         T newInstance = matcher.withQuantity(inputPrototype.getPrototype(), newQuantity);
-                        M matchCondition = matcher.withCondition(inputPrototype.getCondition(),
+                        M matchCondition = matcher.withoutCondition(inputPrototype.getCondition(),
                                 ingredientComponent.getPrimaryQuantifier().getMatchCondition());
                         T extracted = storage.extract(newInstance, matchCondition, true);
-                        if (!matcher.isEmpty(extracted)) {
+                        long quantityExtracted = matcher.getQuantity(extracted);
+                        if (quantityExtracted == newQuantity) {
                             inputInstance = inputPrototype.getPrototype();
                             hasInputInstance = true;
                             simulatedExtractionMemory.add(inputPrototype.getPrototype());
                             break;
+                        } else if (collectMissingIngredients) {
+                            long quantityMissing = newQuantity - quantityExtracted;
+                            missingAlternatives.add(new MissingIngredients.PrototypedWithRequested<>(inputPrototype, quantityMissing));
                         }
                     } else {
                         // All of our quantity can be provided via our surplus in simulatedExtractionMemory
                         inputInstance = inputPrototype.getPrototype();
                         hasInputInstance = true;
                         simulatedExtractionMemory.add(inputPrototype.getPrototype());
+                        missingAlternatives.add(new MissingIngredients.PrototypedWithRequested<>(inputPrototype, 0));
                         break;
                     }
                 } else {
-                    T extracted = storage.extract(inputPrototype.getPrototype(), inputPrototype.getCondition(), simulate);
-                    if (!matcher.isEmpty(extracted)) {
+                    M matchCondition = matcher.withoutCondition(inputPrototype.getCondition(),
+                            ingredientComponent.getPrimaryQuantifier().getMatchCondition());
+                    T extracted = storage.extract(inputPrototype.getPrototype(), matchCondition, simulate);
+                    long quantityExtracted = matcher.getQuantity(extracted);
+                    if (prototypeQuantity == quantityExtracted) {
                         inputInstance = extracted;
                         hasInputInstance = true;
                         if (simulate) {
                             simulatedExtractionMemory.add(extracted);
                         }
                         break;
+                    } else if (collectMissingIngredients) {
+                        long quantityMissing = prototypeQuantity - quantityExtracted;
+                        missingAlternatives.add(new MissingIngredients.PrototypedWithRequested<>(inputPrototype, quantityMissing));
                     }
                 }
             }
@@ -683,10 +697,7 @@ public class CraftingHelpers {
                     return Pair.of(null, null);
                 } else {
                     // Multiply missing collection if recipe quantity is higher than one
-                    if (recipeOutputQuantity > 1) {
-                        inputPrototypes = multiplyPrototypedIngredients(inputPrototypes, recipeOutputQuantity);
-                    }
-                    missingInstances.add(inputPrototypes);
+                    missingElements.add(new MissingIngredients.Element<>(missingAlternatives));
                 }
             }
 
@@ -694,7 +705,10 @@ public class CraftingHelpers {
             inputInstances.add(inputInstance);
         }
 
-        return Pair.of(inputInstances, missingInstances);
+        return Pair.of(
+                collectMissingIngredients && missingElements.size() > 0 ? null : inputInstances,
+                collectMissingIngredients ? new MissingIngredients<>(missingElements) : null
+        );
     }
 
     /**
@@ -760,17 +774,14 @@ public class CraftingHelpers {
      * @param recipeOutputQuantity The number of times the given recipe should be applied.
      * @return A pair with two objects:
      *           1. The found ingredients or null.
-     *           2. A mapping from ingredient component to a list with missing ingredients (non-slot-based).
-     *                The first list contains a list of ingredients,
-     *                whereas the deeper second list contains different prototype-based alternatives
-     *                for the ingredient at this position.
+     *           2. A mapping from ingredient component to missing ingredients (non-slot-based).
      */
-    public static Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>>>
+    public static Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>>
     getRecipeInputs(Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter, IRecipeDefinition recipe, boolean simulate,
                     Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemories,
                     boolean collectMissingIngredients, long recipeOutputQuantity) {
         Map<IngredientComponent<?, ?>, List<?>> ingredientsAvailable = Maps.newIdentityHashMap();
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> ingredientsMissing = Maps.newIdentityHashMap();
+        Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> ingredientsMissing = Maps.newIdentityHashMap();
         for (IngredientComponent<?, ?> ingredientComponent : recipe.getInputComponents()) {
             IIngredientComponentStorage storage = storageGetter.apply(ingredientComponent);
             IngredientCollectionPrototypeMap<?, ?> simulatedExtractionMemory = simulatedExtractionMemories.get(ingredientComponent);
@@ -778,16 +789,16 @@ public class CraftingHelpers {
                 simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(ingredientComponent, true);
                 simulatedExtractionMemories.put(ingredientComponent, simulatedExtractionMemory);
             }
-            Pair<List<?>, List<List<IPrototypedIngredient<?, ?>>>> subIngredients = getIngredientRecipeInputs(storage,
+            Pair<List<?>, MissingIngredients<?, ?>> subIngredients = getIngredientRecipeInputs(storage,
                     (IngredientComponent) ingredientComponent, recipe, simulate, simulatedExtractionMemory,
                     collectMissingIngredients, recipeOutputQuantity);
             List<?> subIngredientAvailable = subIngredients.getLeft();
-            List<List<IPrototypedIngredient<?, ?>>> subIngredientsMissing = subIngredients.getRight();
+            MissingIngredients<?, ?> subIngredientsMissing = subIngredients.getRight();
             if (subIngredientAvailable == null && !collectMissingIngredients) {
                 return Pair.of(null, null);
             } else {
                 ingredientsAvailable.put(ingredientComponent, subIngredientAvailable);
-                if (collectMissingIngredients && !subIngredientsMissing.isEmpty()) {
+                if (collectMissingIngredients && !subIngredientsMissing.getElements().isEmpty()) {
                     ingredientsMissing.put(ingredientComponent, subIngredientsMissing);
                 }
             }
