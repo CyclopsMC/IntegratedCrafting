@@ -22,6 +22,7 @@ import org.cyclops.integratedcrafting.Capabilities;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
+import org.cyclops.integratedcrafting.api.crafting.FailedCraftingRecipeException;
 import org.cyclops.integratedcrafting.api.crafting.RecursiveCraftingRecipeException;
 import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeException;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
@@ -135,6 +136,41 @@ public class CraftingHelpers {
     }
 
     /**
+     * Calculate the required crafting jobs and their dependencies for the given instance in the given network.
+     * @param network The target network.
+     * @param channel The target channel.
+     * @param recipe The recipe to calculate a job for.
+     * @param amount The amount of times the recipe should be crafted.
+     * @param craftMissing If the missing required ingredients should also be crafted.
+     * @param identifierGenerator identifierGenerator An ID generator for crafting jobs.
+     * @param craftingJobsGraph The target graph where all dependencies will be stored.
+     * @param collectMissingRecipes If the missing recipes should be collected inside
+     *                              {@link FailedCraftingRecipeException}.
+     *                              This may slow down calculation for deeply nested recipe graphs.
+     * @return The crafting job for the given instance.
+     * @throws FailedCraftingRecipeException If the recipe could not be crafted due to missing sub-dependencies.
+     * @throws RecursiveCraftingRecipeException If an infinite recursive recipe was detected.
+     */
+    public static CraftingJob calculateCraftingJobs(INetwork network, int channel,
+                                                    PrioritizedRecipe recipe, int amount, boolean craftMissing,
+                                                    IIdentifierGenerator identifierGenerator,
+                                                    CraftingJobDependencyGraph craftingJobsGraph,
+                                                    boolean collectMissingRecipes)
+            throws FailedCraftingRecipeException, RecursiveCraftingRecipeException {
+        ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
+        IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
+        Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel);
+        Pair<CraftingJob, List<UnknownCraftingRecipeException>> result = calculateCraftingJobs(recipeIndex, channel, storageGetter, recipe, amount,
+                craftMissing, Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),
+                collectMissingRecipes);
+        if (result.getLeft() == null) {
+            throw new FailedCraftingRecipeException(recipe, amount, result.getRight());
+        } else {
+            return result.getLeft();
+        }
+    }
+
+    /**
      * @return An identifier generator for crafting jobs.
      */
     public static IIdentifierGenerator getGlobalCraftingJobIdentifier() {
@@ -213,75 +249,120 @@ public class CraftingHelpers {
         List<UnknownCraftingRecipeException> firstMissingDependencies = Lists.newArrayList();
         while (recipes.hasNext()) {
             PrioritizedRecipe recipe = recipes.next();
-            List<UnknownCraftingRecipeException> missingDependencies = Lists.newArrayList();
 
             // Calculate the quantity for the given instance that the recipe outputs
             long recipeOutputQuantity = getOutputQuantityForRecipe(recipe.getRecipe(), ingredientComponent, instance, quantifierlessCondition);
             // Based on the quantity of the recipe output, calculate the amount of required recipe jobs.
             int amount = (int) Math.ceil(((float) instanceQuantity) / (float) recipeOutputQuantity);
 
-            // Check if all requirements are met for this recipe, if so return directly (don't schedule yet)
-            Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> simulation =
-                    getRecipeInputs(storageGetter, recipe.getRecipe(), true, simulatedExtractionMemory,
-                            true, amount);
-            Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> missingIngredients = simulation.getRight();
-            if (!craftMissing && !missingIngredients.isEmpty()) {
-                if (collectMissingRecipes && firstMissingDependencies.isEmpty()) {
-                    // Collect missing ingredients as missing recipes when we don't want to craft sub-components,
-                    // but they are missing.
-                    firstMissingDependencies = Lists.newArrayList();
-                    for (Map.Entry<IngredientComponent<?, ?>, MissingIngredients<?, ?>> entry : missingIngredients.entrySet()) {
-                        for (MissingIngredients.Element<?, ?> element : entry.getValue().getElements()) {
-                            MissingIngredients.PrototypedWithRequested<?, ?> alternative = element.getAlternatives().get(0);
-                            firstMissingDependencies.add(new UnknownCraftingRecipeException(
-                                    alternative.getRequestedPrototype(), alternative.getQuantityMissing(), Collections.emptyList()));
-                        }
-                    }
-                }
-                continue;
+            // Calculate jobs for the given recipe
+            Pair<CraftingJob, List<UnknownCraftingRecipeException>> result = calculateCraftingJobs(recipeIndex, channel,
+                    storageGetter, recipe, amount, craftMissing,
+                    simulatedExtractionMemory, identifierGenerator, craftingJobsGraph, parentDependencies,
+                    collectMissingRecipes && firstMissingDependencies.isEmpty());
+            if (result.getLeft() == null) {
+                firstMissingDependencies = result.getRight();
+            } else {
+                return result.getLeft();
             }
-
-            // For all missing ingredients, recursively call this method for all missing items, and add as dependencies
-            // We store dependencies as a mapping from recipe to job,
-            // so that only one job exist per unique recipe,
-            // so that a job amount can be incremented once another equal recipe is found.
-            Map<IRecipeDefinition, CraftingJob> dependencies = Maps.newHashMapWithExpectedSize(missingIngredients.size());
-            Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> dependenciesOutputSurplus = Maps.newIdentityHashMap();
-            // We must be able to find crafting jobs for all dependencies
-            for (IngredientComponent dependencyComponent : missingIngredients.keySet()) {
-                List<UnknownCraftingRecipeException> missingSubDependencies = calculateCraftingJobDependencyComponent(
-                        dependencyComponent, dependenciesOutputSurplus, missingIngredients.get(dependencyComponent), parentDependencies,
-                        dependencies, recipeIndex, channel, storageGetter, simulatedExtractionMemory,
-                        identifierGenerator, craftingJobsGraph, collectMissingRecipes);
-                // Don't check the other components once we have an invalid dependency.
-                if (!missingSubDependencies.isEmpty()) {
-                    missingDependencies.addAll(missingSubDependencies);
-                    if (!collectMissingRecipes) {
-                        break;
-                    }
-                }
-            }
-
-            // If at least one of our dependencies does not have a valid recipe or is not available,
-            // go check the next recipe.
-            if (!missingDependencies.isEmpty()) {
-                if (firstMissingDependencies.isEmpty()) {
-                    firstMissingDependencies = missingDependencies;
-                }
-                continue;
-            }
-
-            CraftingJob craftingJob = new CraftingJob(identifierGenerator.getNext(), channel, recipe, amount, new MixedIngredients(simulation.getLeft()));
-            for (CraftingJob dependency : dependencies.values()) {
-                craftingJob.addDependency(dependency);
-                craftingJobsGraph.addDependency(craftingJob, dependency);
-            }
-            return craftingJob;
         }
 
         // No valid recipes were available, so we error or collect the missing instance.
         throw new UnknownCraftingRecipeException(new PrototypedIngredient<>(ingredientComponent, instance, matchCondition),
                 matcher.getQuantity(instance), firstMissingDependencies);
+    }
+
+    /**
+     * Calculate a crafting job for the given recipe.
+     *
+     * This method is merely an easily-stubbable implementation for the method above,
+     * to simplify unit testing.
+     *
+     * @param recipeIndex The recipe index.
+     * @param channel The target channel that will be stored in created crafting jobs.
+     * @param storageGetter A callback function to get a storage for the given ingredient component.
+     * @param recipe The recipe to calculate a job for.
+     * @param amount The amount of times the recipe should be crafted.
+     * @param craftMissing If the missing required ingredients should also be crafted.
+     * @param simulatedExtractionMemory This map remembers all extracted instances in simulation mode.
+     *                                  This is to make sure that instances can not be extracted multiple times
+     *                                  when simulating.
+     * @param identifierGenerator An ID generator for crafting jobs.
+     * @param craftingJobsGraph The target graph where all dependencies will be stored.
+     * @param parentDependencies A set of parent recipe dependencies that are pending.
+     *                           This is used to check for infinite recursion in recipes.
+     * @param collectMissingRecipes If the missing recipes should be collected inside
+     *                              {@link UnknownCraftingRecipeException}.
+     *                              This may slow down calculation for deeply nested recipe graphs.
+     * @return The crafting job for the given instance.
+     * @throws RecursiveCraftingRecipeException If an infinite recursive recipe was detected.
+     */
+    protected static Pair<CraftingJob, List<UnknownCraftingRecipeException>> calculateCraftingJobs(
+            IRecipeIndex recipeIndex, int channel,
+            Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
+            PrioritizedRecipe recipe, int amount, boolean craftMissing,
+            Map<IngredientComponent<?, ?>,
+                    IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemory,
+            IIdentifierGenerator identifierGenerator,
+            CraftingJobDependencyGraph craftingJobsGraph,
+            Set<IPrototypedIngredient> parentDependencies,
+            boolean collectMissingRecipes)
+            throws RecursiveCraftingRecipeException {
+        List<UnknownCraftingRecipeException> missingDependencies = Lists.newArrayList();
+
+        // Check if all requirements are met for this recipe, if so return directly (don't schedule yet)
+        Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> simulation =
+                getRecipeInputs(storageGetter, recipe.getRecipe(), true, simulatedExtractionMemory,
+                        true, amount);
+        Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> missingIngredients = simulation.getRight();
+        if (!craftMissing && !missingIngredients.isEmpty()) {
+            if (collectMissingRecipes) {
+                // Collect missing ingredients as missing recipes when we don't want to craft sub-components,
+                // but they are missing.
+                for (Map.Entry<IngredientComponent<?, ?>, MissingIngredients<?, ?>> entry : missingIngredients.entrySet()) {
+                    for (MissingIngredients.Element<?, ?> element : entry.getValue().getElements()) {
+                        MissingIngredients.PrototypedWithRequested<?, ?> alternative = element.getAlternatives().get(0);
+                        missingDependencies.add(new UnknownCraftingRecipeException(
+                                alternative.getRequestedPrototype(), alternative.getQuantityMissing(), Collections.emptyList()));
+                    }
+                }
+            }
+            return Pair.of(null, missingDependencies);
+        }
+
+        // For all missing ingredients, recursively call this method for all missing items, and add as dependencies
+        // We store dependencies as a mapping from recipe to job,
+        // so that only one job exist per unique recipe,
+        // so that a job amount can be incremented once another equal recipe is found.
+        Map<IRecipeDefinition, CraftingJob> dependencies = Maps.newHashMapWithExpectedSize(missingIngredients.size());
+        Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> dependenciesOutputSurplus = Maps.newIdentityHashMap();
+        // We must be able to find crafting jobs for all dependencies
+        for (IngredientComponent dependencyComponent : missingIngredients.keySet()) {
+            List<UnknownCraftingRecipeException> missingSubDependencies = calculateCraftingJobDependencyComponent(
+                    dependencyComponent, dependenciesOutputSurplus, missingIngredients.get(dependencyComponent), parentDependencies,
+                    dependencies, recipeIndex, channel, storageGetter, simulatedExtractionMemory,
+                    identifierGenerator, craftingJobsGraph, collectMissingRecipes);
+            // Don't check the other components once we have an invalid dependency.
+            if (!missingSubDependencies.isEmpty()) {
+                missingDependencies.addAll(missingSubDependencies);
+                if (!collectMissingRecipes) {
+                    break;
+                }
+            }
+        }
+
+        // If at least one of our dependencies does not have a valid recipe or is not available,
+        // go check the next recipe.
+        if (!missingDependencies.isEmpty()) {
+            return Pair.of(null, missingDependencies);
+        }
+
+        CraftingJob craftingJob = new CraftingJob(identifierGenerator.getNext(), channel, recipe, amount, new MixedIngredients(simulation.getLeft()));
+        for (CraftingJob dependency : dependencies.values()) {
+            craftingJob.addDependency(dependency);
+            craftingJobsGraph.addDependency(craftingJob, dependency);
+        }
+        return Pair.of(craftingJob, null);
     }
 
     // Helper function for calculateCraftingJobs, returns a list of non-craftable ingredients.
