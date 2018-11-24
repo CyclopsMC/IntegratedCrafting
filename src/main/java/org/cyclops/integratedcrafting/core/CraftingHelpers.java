@@ -922,7 +922,9 @@ public class CraftingHelpers {
             if (subIngredientAvailable == null && !collectMissingIngredients) {
                 return Pair.of(null, null);
             } else {
-                ingredientsAvailable.put(ingredientComponent, subIngredientAvailable);
+                if (subIngredientAvailable != null && !subIngredientAvailable.isEmpty()) {
+                    ingredientsAvailable.put(ingredientComponent, subIngredientAvailable);
+                }
                 if (collectMissingIngredients && !subIngredientsMissing.getElements().isEmpty()) {
                     ingredientsMissing.put(ingredientComponent, subIngredientsMissing);
                 }
