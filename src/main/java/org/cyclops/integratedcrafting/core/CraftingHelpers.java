@@ -338,16 +338,21 @@ public class CraftingHelpers {
         Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> dependenciesOutputSurplus = Maps.newIdentityHashMap();
         // We must be able to find crafting jobs for all dependencies
         for (IngredientComponent dependencyComponent : missingIngredients.keySet()) {
-            List<UnknownCraftingRecipeException> missingSubDependencies = calculateCraftingJobDependencyComponent(
-                    dependencyComponent, dependenciesOutputSurplus, missingIngredients.get(dependencyComponent), parentDependencies,
-                    dependencies, recipeIndex, channel, storageGetter, simulatedExtractionMemory,
-                    identifierGenerator, craftingJobsGraph, collectMissingRecipes);
-            // Don't check the other components once we have an invalid dependency.
-            if (!missingSubDependencies.isEmpty()) {
-                missingDependencies.addAll(missingSubDependencies);
-                if (!collectMissingRecipes) {
-                    break;
+            try {
+                List<UnknownCraftingRecipeException> missingSubDependencies = calculateCraftingJobDependencyComponent(
+                        dependencyComponent, dependenciesOutputSurplus, missingIngredients.get(dependencyComponent), parentDependencies,
+                        dependencies, recipeIndex, channel, storageGetter, simulatedExtractionMemory,
+                        identifierGenerator, craftingJobsGraph, collectMissingRecipes);
+                // Don't check the other components once we have an invalid dependency.
+                if (!missingSubDependencies.isEmpty()) {
+                    missingDependencies.addAll(missingSubDependencies);
+                    if (!collectMissingRecipes) {
+                        break;
+                    }
                 }
+            } catch (RecursiveCraftingRecipeException e) {
+                e.addRecipe(recipe);
+                throw e;
             }
         }
 

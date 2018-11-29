@@ -612,6 +612,7 @@ public class TestCraftingHelpers {
     private IRecipeDefinition recipeAMultiple;
     private IRecipeDefinition recipeAMultipleAux;
     private IRecipeDefinition recipeAB;
+    private IRecipeDefinition recipeA9;
     private IRecipeDefinition recipeC;
     private Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetterEmpty;
     private Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter;
@@ -773,6 +774,16 @@ public class TestCraftingHelpers {
         mapAMultipleAuxOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA04_, CC01_));
         mapAMultipleAuxOutput.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(10));
         recipeAMultipleAux = new RecipeDefinition(mapAMultipleAux, new MixedIngredients(mapAMultipleAuxOutput));
+
+        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapA9 = Maps.newIdentityHashMap();
+        mapA9.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
+                Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB01_, ComplexStack.Match.EXACT)
+                )
+        ));
+        Map<IngredientComponent<?, ?>, List<?>> mapA9Output = Maps.newIdentityHashMap();
+        mapA9Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA91B));
+        recipeA9 = new RecipeDefinition(mapA9, new MixedIngredients(mapA9Output));
 
         Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapAB = Maps.newIdentityHashMap();
         mapAB.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
@@ -1178,9 +1189,43 @@ public class TestCraftingHelpers {
 
         // A recipe with infinite recursion
 
-        CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetterEmpty,
-                IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
-                simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
+        try {
+            CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetterEmpty,
+                    IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
+                    simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
+        } catch (RecursiveCraftingRecipeException e) {
+            RecursiveCraftingRecipeException eExpected = new RecursiveCraftingRecipeException(
+                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT));
+            eExpected.addRecipe(new PrioritizedRecipe(recipeBRecursive));
+            eExpected.addRecipe(new PrioritizedRecipe(recipeBRecursive));
+            assertThat(e, equalTo(eExpected));
+            throw e;
+        }
+    }
+
+    @Test(expected = RecursiveCraftingRecipeException.class)
+    public void testCalculateCraftingJobsRecursiveDeep() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
+        RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
+        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
+        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
+        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA9));
+
+        // A recipe with infinite recursion
+
+        try {
+            CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetterEmpty,
+                    IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
+                    simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
+        } catch (RecursiveCraftingRecipeException e) {
+            RecursiveCraftingRecipeException eExpected = new RecursiveCraftingRecipeException(
+                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT));
+            eExpected.addRecipe(new PrioritizedRecipe(recipeB));
+            eExpected.addRecipe(new PrioritizedRecipe(recipeA9));
+            eExpected.addRecipe(new PrioritizedRecipe(recipeA));
+            eExpected.addRecipe(new PrioritizedRecipe(recipeB));
+            assertThat(e, equalTo(eExpected));
+            throw e;
+        }
     }
 
     @Test

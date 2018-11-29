@@ -5,6 +5,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.Constants;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 
+import java.util.Arrays;
 import java.util.TreeSet;
 
 /**
@@ -28,6 +29,18 @@ public class PrioritizedRecipe {
 
     public int[] getPriorities() {
         return priorities;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof PrioritizedRecipe
+                && ((PrioritizedRecipe) obj).getRecipe().equals(this.getRecipe())
+                && Arrays.equals(((PrioritizedRecipe) obj).getPriorities(), this.getPriorities());
+    }
+
+    @Override
+    public String toString() {
+        return String.format("[PrioritizedRecipe %s %s]", getRecipe(), getPriorities());
     }
 
     /**
