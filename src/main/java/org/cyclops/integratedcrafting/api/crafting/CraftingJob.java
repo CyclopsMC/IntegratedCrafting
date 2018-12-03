@@ -19,7 +19,7 @@ public class CraftingJob {
     private final IntList dependencyCraftingJobs;
     private final IntList dependentCraftingJobs;
     private int amount;
-    private final IMixedIngredients ingredientsStorage;
+    private IMixedIngredients ingredientsStorage;
 
     public CraftingJob(int id, int channel, PrioritizedRecipe recipe, int amount, IMixedIngredients ingredientsStorage) {
         this.id = id;
@@ -66,9 +66,14 @@ public class CraftingJob {
 
     /**
      * @return The ingredients that will be taken from storage
+     *         The amount of this job is already taken into account.
      */
     public IMixedIngredients getIngredientsStorage() {
         return ingredientsStorage;
+    }
+
+    public void setIngredientsStorage(IMixedIngredients ingredientsStorage) {
+        this.ingredientsStorage = ingredientsStorage;
     }
 
     public static NBTTagCompound serialize(CraftingJob craftingJob) {
