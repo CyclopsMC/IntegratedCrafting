@@ -127,6 +127,22 @@ public class CraftingJob {
 
     @Override
     public String toString() {
-        return String.format("[Crafting Job %s]", getId());
+        return String.format("[Crafting Job id: %s, channel: %s, recipe: %s, dependencies: %s, dependents: %s, amount: %s, storage: %s]",
+                getId(), getChannel(), getRecipe(), getDependencyCraftingJobs(), getDependentCraftingJobs(), getAmount(), getIngredientsStorage());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof CraftingJob)) {
+            return false;
+        }
+        CraftingJob that = (CraftingJob) obj;
+        return this.getId() == that.getId()
+                && this.getChannel() == that.getChannel()
+                && this.getRecipe().equals(that.getRecipe())
+                && this.getDependencyCraftingJobs().equals(that.getDependencyCraftingJobs())
+                && this.getDependentCraftingJobs().equals(that.getDependentCraftingJobs())
+                && this.getAmount() == that.getAmount()
+                && this.getIngredientsStorage().equals(that.getIngredientsStorage());
     }
 }

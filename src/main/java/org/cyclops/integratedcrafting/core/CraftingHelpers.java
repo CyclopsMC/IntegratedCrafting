@@ -160,13 +160,14 @@ public class CraftingHelpers {
         ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
         IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
         Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel);
-        Pair<CraftingJob, List<UnknownCraftingRecipeException>> result = calculateCraftingJobs(recipeIndex, channel, storageGetter, recipe, amount,
+        PartialCraftingJobCalculation result = calculateCraftingJobs(recipeIndex, channel, storageGetter, recipe, amount,
                 craftMissing, Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),
                 collectMissingRecipes);
-        if (result.getLeft() == null) {
-            throw new FailedCraftingRecipeException(recipe, amount, result.getRight());
+        if (result.getCraftingJob() == null) {
+            throw new FailedCraftingRecipeException(recipe, amount, result.getMissingDependencies(),
+                    new MixedIngredients(result.getIngredientsStorage()), result.getPartialCraftingJobs());
         } else {
-            return result.getLeft();
+            return result.getCraftingJob();
         }
     }
 
@@ -247,6 +248,8 @@ public class CraftingHelpers {
         // Loop over all available recipes, and return the first valid one.
         Iterator<PrioritizedRecipe> recipes = recipeIndex.getRecipes(ingredientComponent, instance, quantifierlessCondition);
         List<UnknownCraftingRecipeException> firstMissingDependencies = Lists.newArrayList();
+        Map<IngredientComponent<?, ?>, List<?>> firstIngredientsStorage = Collections.emptyMap();
+        List<CraftingJob> firstPartialCraftingJobs = Lists.newArrayList();
         while (recipes.hasNext()) {
             PrioritizedRecipe recipe = recipes.next();
 
@@ -256,20 +259,25 @@ public class CraftingHelpers {
             int amount = (int) Math.ceil(((float) instanceQuantity) / (float) recipeOutputQuantity);
 
             // Calculate jobs for the given recipe
-            Pair<CraftingJob, List<UnknownCraftingRecipeException>> result = calculateCraftingJobs(recipeIndex, channel,
+            PartialCraftingJobCalculation result = calculateCraftingJobs(recipeIndex, channel,
                     storageGetter, recipe, amount, craftMissing,
                     simulatedExtractionMemory, identifierGenerator, craftingJobsGraph, parentDependencies,
                     collectMissingRecipes && firstMissingDependencies.isEmpty());
-            if (result.getLeft() == null) {
-                firstMissingDependencies = result.getRight();
+            if (result.getCraftingJob() == null) {
+                firstMissingDependencies = result.getMissingDependencies();
+                firstIngredientsStorage = result.getIngredientsStorage();
+                if (result.getPartialCraftingJobs() != null) {
+                    firstPartialCraftingJobs = result.getPartialCraftingJobs();
+                }
             } else {
-                return result.getLeft();
+                return result.getCraftingJob();
             }
         }
 
         // No valid recipes were available, so we error or collect the missing instance.
         throw new UnknownCraftingRecipeException(new PrototypedIngredient<>(ingredientComponent, instance, matchCondition),
-                matcher.getQuantity(instance), firstMissingDependencies);
+                matcher.getQuantity(instance), firstMissingDependencies, compressMixedIngredients(new MixedIngredients(firstIngredientsStorage)),
+                firstPartialCraftingJobs);
     }
 
     /**
@@ -297,7 +305,7 @@ public class CraftingHelpers {
      * @return The crafting job for the given instance.
      * @throws RecursiveCraftingRecipeException If an infinite recursive recipe was detected.
      */
-    protected static Pair<CraftingJob, List<UnknownCraftingRecipeException>> calculateCraftingJobs(
+    protected static PartialCraftingJobCalculation calculateCraftingJobs(
             IRecipeIndex recipeIndex, int channel,
             Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
             PrioritizedRecipe recipe, int amount, boolean craftMissing,
@@ -309,6 +317,7 @@ public class CraftingHelpers {
             boolean collectMissingRecipes)
             throws RecursiveCraftingRecipeException {
         List<UnknownCraftingRecipeException> missingDependencies = Lists.newArrayList();
+        List<CraftingJob> partialCraftingJobs = Lists.newArrayList();
 
         // Check if all requirements are met for this recipe, if so return directly (don't schedule yet)
         Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> simulation =
@@ -322,12 +331,28 @@ public class CraftingHelpers {
                 for (Map.Entry<IngredientComponent<?, ?>, MissingIngredients<?, ?>> entry : missingIngredients.entrySet()) {
                     for (MissingIngredients.Element<?, ?> element : entry.getValue().getElements()) {
                         MissingIngredients.PrototypedWithRequested<?, ?> alternative = element.getAlternatives().get(0);
+
+                        // Calculate the instance that was available in storage
+                        IngredientComponent<?, ?> component = alternative.getRequestedPrototype().getComponent();
+                        IIngredientMatcher matcher = component.getMatcher();
+                        long storedQuantity = matcher.getQuantity(alternative.getRequestedPrototype().getPrototype()) - alternative.getQuantityMissing();
+                        Map<IngredientComponent<?, ?>, List<?>> storageMap;
+                        if (storedQuantity > 0) {
+                            storageMap = Maps.newIdentityHashMap();
+                            storageMap.put(component, Collections.singletonList(
+                                    matcher.withQuantity(alternative.getRequestedPrototype().getPrototype(), storedQuantity)
+                            ));
+                        } else {
+                            storageMap = Collections.emptyMap();
+                        }
+
                         missingDependencies.add(new UnknownCraftingRecipeException(
-                                alternative.getRequestedPrototype(), alternative.getQuantityMissing(), Collections.emptyList()));
+                                alternative.getRequestedPrototype(), alternative.getQuantityMissing(),
+                                Collections.emptyList(), compressMixedIngredients(new MixedIngredients(storageMap)), Lists.newArrayList()));
                     }
                 }
             }
-            return Pair.of(null, missingDependencies);
+            return new PartialCraftingJobCalculation(null, missingDependencies, simulation.getLeft(), null);
         }
 
         // For all missing ingredients, recursively call this method for all missing items, and add as dependencies
@@ -340,13 +365,14 @@ public class CraftingHelpers {
         for (IngredientComponent dependencyComponent : missingIngredients.keySet()) {
             try {
                 // TODO: if we run into weird simulated extraction bugs, we may have to scope simulatedExtractionMemory, but I'm not sure about this (yet)
-                List<UnknownCraftingRecipeException> missingSubDependencies = calculateCraftingJobDependencyComponent(
+                PartialCraftingJobCalculationDependency resultDependency = calculateCraftingJobDependencyComponent(
                         dependencyComponent, dependenciesOutputSurplus, missingIngredients.get(dependencyComponent), parentDependencies,
                         dependencies, recipeIndex, channel, storageGetter, simulatedExtractionMemory,
                         identifierGenerator, craftingJobsGraph, collectMissingRecipes);
                 // Don't check the other components once we have an invalid dependency.
-                if (!missingSubDependencies.isEmpty()) {
-                    missingDependencies.addAll(missingSubDependencies);
+                if (!resultDependency.isValid()) {
+                    missingDependencies.addAll(resultDependency.getUnknownCrafingRecipes());
+                    partialCraftingJobs.addAll(resultDependency.getPartialCraftingJobs());
                     if (!collectMissingRecipes) {
                         break;
                     }
@@ -360,7 +386,7 @@ public class CraftingHelpers {
         // If at least one of our dependencies does not have a valid recipe or is not available,
         // go check the next recipe.
         if (!missingDependencies.isEmpty()) {
-            return Pair.of(null, missingDependencies);
+            return new PartialCraftingJobCalculation(null, missingDependencies, simulation.getLeft(), partialCraftingJobs);
         }
 
         CraftingJob craftingJob = new CraftingJob(identifierGenerator.getNext(), channel, recipe, amount,
@@ -369,11 +395,11 @@ public class CraftingHelpers {
             craftingJob.addDependency(dependency);
             craftingJobsGraph.addDependency(craftingJob, dependency);
         }
-        return Pair.of(craftingJob, null);
+        return new PartialCraftingJobCalculation(craftingJob, null, simulation.getLeft(), null);
     }
 
-    // Helper function for calculateCraftingJobs, returns a list of non-craftable ingredients.
-    protected static <T, M> List<UnknownCraftingRecipeException> calculateCraftingJobDependencyComponent(
+    // Helper function for calculateCraftingJobs, returns a list of non-craftable ingredients and craftable ingredients.
+    protected static <T, M> PartialCraftingJobCalculationDependency calculateCraftingJobDependencyComponent(
             IngredientComponent<T, M> dependencyComponent,
             Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> dependenciesOutputSurplus,
             MissingIngredients<T, M> missingIngredients,
@@ -505,7 +531,8 @@ public class CraftingHelpers {
                     if (firstError == null) {
                         // Modify the error so that the correct missing quantity is stored
                         firstError = new UnknownCraftingRecipeException(
-                                e.getIngredient(), prototypedAlternative.getQuantityMissing(), e.getMissingChildRecipes());
+                                e.getIngredient(), prototypedAlternative.getQuantityMissing(),
+                                e.getMissingChildRecipes(), compressMixedIngredients(e.getIngredientsStorage()), e.getPartialCraftingJobs());
                     }
                 }
             }
@@ -545,7 +572,7 @@ public class CraftingHelpers {
             }
         }
 
-        return missingDependencies;
+        return new PartialCraftingJobCalculationDependency(missingDependencies, dependencies.values());
     }
 
     // Helper function for calculateCraftingJobDependencyComponent

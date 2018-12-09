@@ -4,6 +4,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
@@ -27,6 +29,7 @@ import org.cyclops.integratedcrafting.ingredient.IngredientComponentStubs;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -937,7 +940,7 @@ public class TestCraftingHelpers {
                     simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
         } catch (UnknownCraftingRecipeException e) {
             assertThat(e, equalTo(
-                    new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT), 2, Lists.newArrayList())
+                    new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT), 2, Lists.newArrayList(), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
             ));
             throw e;
         }
@@ -964,7 +967,7 @@ public class TestCraftingHelpers {
                     simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
         } catch (UnknownCraftingRecipeException e) {
             assertThat(e, equalTo(
-                    new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 1, Lists.newArrayList())
+                    new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 1, Lists.newArrayList(), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
             ));
             throw e;
         }
@@ -1108,8 +1111,8 @@ public class TestCraftingHelpers {
         } catch (UnknownCraftingRecipeException e) {
             assertThat(e, equalTo(
                     new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT), 2, Lists.newArrayList(
-                            new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 1, Lists.newArrayList())
-                    ))
+                            new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 1, Lists.newArrayList(), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
+                    ), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
             ));
             throw e;
         }
@@ -1313,12 +1316,14 @@ public class TestCraftingHelpers {
                     IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
                     simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
         } catch (UnknownCraftingRecipeException e) {
+            Map<IngredientComponent<?, ?>, List<?>> mapB = Maps.newIdentityHashMap();
+            mapB.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA01B, CA91B));
             assertThat(e, equalTo(
                     new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT), 2, Lists.newArrayList(
                             new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 1, Lists.newArrayList(
-                                    new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT), 1, Lists.newArrayList())
-                            ))
-                    ))
+                                    new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT), 1, Lists.newArrayList(), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
+                            ), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
+                    ), new MixedIngredients(mapB), Lists.newArrayList())
             ));
             throw e;
         }
@@ -1616,10 +1621,12 @@ public class TestCraftingHelpers {
                     IngredientComponentStubs.COMPLEX, CB03_, ComplexStack.Match.EXACT, true,
                     simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
         } catch (UnknownCraftingRecipeException e) {
+            Map<IngredientComponent<?, ?>, List<?>> mapA = Maps.newIdentityHashMap();
+            mapA.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA01_));
             assertThat(e, equalTo(
                     new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB03_, ComplexStack.Match.EXACT), 3, Lists.newArrayList(
-                            new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 1, Lists.newArrayList())
-                    ))
+                            new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 1, Lists.newArrayList(), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
+                    ), new MixedIngredients(mapA), Lists.newArrayList())
             ));
             throw e;
         }
@@ -1693,12 +1700,21 @@ public class TestCraftingHelpers {
                     IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
                     simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
         } catch (UnknownCraftingRecipeException e) {
+            Map<IngredientComponent<?, ?>, List<?>> storageMapValidJob = Maps.newIdentityHashMap();
+            storageMapValidJob.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA94B));
+            CraftingJob validJob = new CraftingJob(
+                    0,
+                    0,
+                    new PrioritizedRecipe(recipeA),
+                    4,
+                    new MixedIngredients(storageMapValidJob)
+            );
             assertThat(e, equalTo(
                     new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT), 2, Lists.newArrayList(
                             new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 1, Lists.newArrayList(
-                                    new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT), 1, Lists.newArrayList())
-                            ))
-                    ))
+                                    new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT), 1, Lists.newArrayList(), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
+                            ), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
+                    ), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList(validJob))
             ));
             throw e;
         }
@@ -1856,12 +1872,22 @@ public class TestCraftingHelpers {
                     IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
                     simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
         } catch (UnknownCraftingRecipeException e) {
+            Map<IngredientComponent<?, ?>, List<?>> storageMapValidJob = Maps.newIdentityHashMap();
+            storageMapValidJob.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA91B));
+            CraftingJob validJob = new CraftingJob(
+                    0,
+                    0,
+                    new PrioritizedRecipe(recipeAMultiple),
+                    1,
+                    new MixedIngredients(storageMapValidJob)
+            );
+
             assertThat(e, equalTo(
                     new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT), 2, Lists.newArrayList(
                             new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 1, Lists.newArrayList(
-                                    new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT), 1, Lists.newArrayList())
-                            ))
-                    ))
+                                    new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT), 1, Lists.newArrayList(), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
+                            ), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
+                    ), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList(validJob))
             ));
             throw e;
 
