@@ -68,7 +68,7 @@ public class TestCraftingHelpers {
     private static final ComplexStack CA94B = new ComplexStack(ComplexStack.Group.A, 9, 4, ComplexStack.Tag.B);
     private static final ComplexStack CA95B = new ComplexStack(ComplexStack.Group.A, 9, 5, ComplexStack.Tag.B);
     private static final ComplexStack CA97B = new ComplexStack(ComplexStack.Group.A, 9, 7, ComplexStack.Tag.B);
-    private static final ComplexStack CA98B = new ComplexStack(ComplexStack.Group.A, 9, 8, ComplexStack.Tag.B);
+    private static final ComplexStack CA99B = new ComplexStack(ComplexStack.Group.A, 9, 9, ComplexStack.Tag.B);
     private static final ComplexStack CA01B = new ComplexStack(ComplexStack.Group.A, 0, 1, ComplexStack.Tag.B);
 
     private IIngredientComponentStorage<ComplexStack, Integer> storageEmpty;
@@ -2142,10 +2142,10 @@ public class TestCraftingHelpers {
         recipeIndex.addRecipe(new PrioritizedRecipe(recipeAMultiple4));
 
         // This corresponds to crafting 5 minecraft chest (CB010_), where 4 planks (CA04_) are available,
-        // but 36 more need to be crafted with 8 available logs (CA98B).
+        // but 36 more need to be crafted with 9 available logs (CA99B).
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
         storage.insert(CA04_, false);
-        storage.insert(CA98B, false);
+        storage.insert(CA99B, false);
         storageGetter = (c) -> storage;
 
         CraftingJob j8 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
@@ -2167,10 +2167,10 @@ public class TestCraftingHelpers {
 
         assertThat(j0.getChannel(), equalTo(0));
         assertThat(j0.getRecipe().getRecipe(), equalTo(recipeAMultiple4));
-        assertThat(j0.getAmount(), equalTo(8));
+        assertThat(j0.getAmount(), equalTo(9));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                CA98B
+                CA99B
         )));
         assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
         assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j8)));

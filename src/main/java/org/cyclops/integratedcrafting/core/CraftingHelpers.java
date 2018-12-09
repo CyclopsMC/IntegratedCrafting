@@ -483,7 +483,17 @@ public class CraftingHelpers {
                             componentSurplus = new IngredientCollectionPrototypeMap<>(outputComponent, true);
                             dependenciesOutputSurplus.put(outputComponent, componentSurplus);
                         }
-                        addRemainderAsSurplusForComponent(outputComponent, dependency.getRecipe().getRecipe().getOutput().getInstances(outputComponent), componentSurplus,
+                        List<Object> instances = dependency.getRecipe().getRecipe().getOutput().getInstances(outputComponent);
+                        long recipeAmount = dependency.getAmount();
+                        if (recipeAmount > 1) {
+                            IIngredientMatcher matcher = outputComponent.getMatcher();
+                            // If more than one recipe amount was crafted, correctly multiply the outputs to calculate the effective surplus.
+                            instances = instances
+                                    .stream()
+                                    .map(instance -> matcher.withQuantity(instance, matcher.getQuantity(instance) * recipeAmount))
+                                    .collect(Collectors.toList());
+                        }
+                        addRemainderAsSurplusForComponent(outputComponent, (List) instances, componentSurplus,
                                 (IngredientComponent) prototype.getComponent(), prototype.getPrototype(), dependencyQuantifierlessCondition,
                                 requestedQuantity);
                     }
@@ -527,7 +537,7 @@ public class CraftingHelpers {
             if (existingJob == null) {
                 dependencies.put(dependency.getRecipe().getRecipe(), dependency);
             } else {
-                existingJob.setAmount(existingJob.getAmount() + 1);
+                existingJob.setAmount(existingJob.getAmount() + dependency.getAmount());
                 existingJob.setIngredientsStorage(mergeMixedIngredients(
                         existingJob.getIngredientsStorage(), dependency.getIngredientsStorage()));
                 craftingJobsGraph.onCraftingJobFinished(dependency);
@@ -814,7 +824,7 @@ public class CraftingHelpers {
 
                             missingAlternatives.add(new MissingIngredients.PrototypedWithRequested<>(inputPrototype, quantityMissingRelative));
                             inputInstance = matcher.withQuantity(inputPrototype.getPrototype(), prototypeQuantity - quantityMissingRelative);
-                            simulatedExtractionMemoryAlternative.setQuantity(inputPrototype.getPrototype(), quantityMissingRelative);
+                            simulatedExtractionMemoryAlternative.setQuantity(inputPrototype.getPrototype(), quantityMissingTotal);
                             simulatedExtractionMemoryBuffer.add(matcher.withQuantity(inputPrototype.getPrototype(), quantityMissingRelative));
                         }
                     } else {
