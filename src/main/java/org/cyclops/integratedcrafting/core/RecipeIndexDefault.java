@@ -3,6 +3,7 @@ package org.cyclops.integratedcrafting.core;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.cyclopscore.datastructure.DistinctIterator;
 import org.cyclops.cyclopscore.datastructure.MultitransformIterator;
 import org.cyclops.cyclopscore.ingredient.collection.IIngredientMapMutable;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientHashMap;
@@ -41,9 +42,9 @@ public class RecipeIndexDefault implements IRecipeIndexModifiable {
         if (index == null) {
             return Iterators.forArray();
         }
-        return MultitransformIterator.flattenIterableIterator(
+        return new DistinctIterator<>(MultitransformIterator.flattenIterableIterator(
                 Iterators.transform(((IIngredientMapMutable<T, M, Set<PrioritizedRecipe>>) index)
-                        .iterator(output, matchCondition), (entry) -> entry.getValue()));
+                        .iterator(output, matchCondition), (entry) -> entry.getValue())), true);
     }
 
     @Nullable
