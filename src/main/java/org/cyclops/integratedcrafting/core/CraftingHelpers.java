@@ -339,6 +339,7 @@ public class CraftingHelpers {
         // We must be able to find crafting jobs for all dependencies
         for (IngredientComponent dependencyComponent : missingIngredients.keySet()) {
             try {
+                // TODO: if we run into weird simulated extraction bugs, we may have to scope simulatedExtractionMemory, but I'm not sure about this (yet)
                 List<UnknownCraftingRecipeException> missingSubDependencies = calculateCraftingJobDependencyComponent(
                         dependencyComponent, dependenciesOutputSurplus, missingIngredients.get(dependencyComponent), parentDependencies,
                         dependencies, recipeIndex, channel, storageGetter, simulatedExtractionMemory,
