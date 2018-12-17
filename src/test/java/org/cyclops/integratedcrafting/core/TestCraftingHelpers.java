@@ -4,8 +4,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
@@ -1248,7 +1246,7 @@ public class TestCraftingHelpers {
         assertThat(j1.getAmount(), equalTo(1));
         assertThat(j1.getRecipe().getRecipe(), equalTo(recipeB3));
         assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+        assertThat(Sets.newHashSet(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX)), equalTo(Sets.newHashSet(
                 CA91B,
                 CA01B
         )));
@@ -1317,7 +1315,7 @@ public class TestCraftingHelpers {
                     simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
         } catch (UnknownCraftingRecipeException e) {
             Map<IngredientComponent<?, ?>, List<?>> mapB = Maps.newIdentityHashMap();
-            mapB.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA91B, CA01B));
+            mapB.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA01B, CA91B));
             assertThat(e, equalTo(
                     new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT), 2, Lists.newArrayList(
                             new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 1, Lists.newArrayList(

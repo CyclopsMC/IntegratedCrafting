@@ -17,7 +17,9 @@ import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IngredientComponentStorageEmpty;
 import org.cyclops.cyclopscore.helper.TileHelpers;
+import org.cyclops.cyclopscore.ingredient.collection.IngredientArrayList;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
+import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionQuantitativeGrouper;
 import org.cyclops.integratedcrafting.Capabilities;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
@@ -1160,24 +1162,24 @@ public class CraftingHelpers {
      */
     protected static IMixedIngredients mergeMixedIngredients(IMixedIngredients a, IMixedIngredients b) {
         // Temporarily store instances in IngredientCollectionPrototypeMaps
-        Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> prototypeMaps = Maps.newIdentityHashMap();
+        Map<IngredientComponent<?, ?>, IngredientCollectionQuantitativeGrouper<?, ?, IngredientArrayList<?, ?>>> groupings = Maps.newIdentityHashMap();
         for (IngredientComponent<?, ?> component : a.getComponents()) {
-            IngredientCollectionPrototypeMap prototypeMap = new IngredientCollectionPrototypeMap<>(component);
-            prototypeMaps.put(component, prototypeMap);
-            prototypeMap.addAll(a.getInstances(component));
+            IngredientCollectionQuantitativeGrouper grouping = new IngredientCollectionQuantitativeGrouper<>(new IngredientArrayList<>(component));
+            groupings.put(component, grouping);
+            grouping.addAll(a.getInstances(component));
         }
         for (IngredientComponent<?, ?> component : b.getComponents()) {
-            IngredientCollectionPrototypeMap prototypeMap = prototypeMaps.get(component);
-            if (prototypeMap == null) {
-                prototypeMap = new IngredientCollectionPrototypeMap<>(component);
-                prototypeMaps.put(component, prototypeMap);
+            IngredientCollectionQuantitativeGrouper grouping = groupings.get(component);
+            if (grouping == null) {
+                grouping = new IngredientCollectionQuantitativeGrouper<>(new IngredientArrayList<>(component));
+                groupings.put(component, grouping);
             }
-            prototypeMap.addAll(b.getInstances(component));
+            grouping.addAll(b.getInstances(component));
         }
 
         // Convert IngredientCollectionPrototypeMaps to lists
         Map<IngredientComponent<?, ?>, List<?>> ingredients = Maps.newIdentityHashMap();
-        for (Map.Entry<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> entry : prototypeMaps.entrySet()) {
+        for (Map.Entry<IngredientComponent<?, ?>, IngredientCollectionQuantitativeGrouper<?, ?, IngredientArrayList<?, ?>>> entry : groupings.entrySet()) {
             ingredients.put(entry.getKey(), Lists.newArrayList(entry.getValue()));
         }
         return new MixedIngredients(ingredients);
@@ -1190,18 +1192,23 @@ public class CraftingHelpers {
      */
     protected static IMixedIngredients compressMixedIngredients(IMixedIngredients mixedIngredients) {
         // Temporarily store instances in IngredientCollectionPrototypeMaps
-        Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> prototypeMaps = Maps.newIdentityHashMap();
+        Map<IngredientComponent<?, ?>, IngredientCollectionQuantitativeGrouper<?, ?, IngredientArrayList<?, ?>>> groupings = Maps.newIdentityHashMap();
         for (IngredientComponent<?, ?> component : mixedIngredients.getComponents()) {
-            IngredientCollectionPrototypeMap prototypeMap = new IngredientCollectionPrototypeMap<>(component);
-            prototypeMaps.put(component, prototypeMap);
-            prototypeMap.addAll(mixedIngredients.getInstances(component));
+            IngredientCollectionQuantitativeGrouper grouping = new IngredientCollectionQuantitativeGrouper<>(new IngredientArrayList<>(component));
+            groupings.put(component, grouping);
+            grouping.addAll(mixedIngredients.getInstances(component));
         }
 
         // Convert IngredientCollectionPrototypeMaps to lists
         Map<IngredientComponent<?, ?>, List<?>> ingredients = Maps.newIdentityHashMap();
-        for (Map.Entry<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> entry : prototypeMaps.entrySet()) {
-            if (!entry.getValue().isEmpty()) {
-                ingredients.put(entry.getKey(), Lists.newArrayList(entry.getValue()));
+        for (Map.Entry<IngredientComponent<?, ?>, IngredientCollectionQuantitativeGrouper<?, ?, IngredientArrayList<?, ?>>> entry : groupings.entrySet()) {
+            IIngredientMatcher matcher = entry.getKey().getMatcher();
+            List<?> values = entry.getValue()
+                    .stream()
+                    .filter(i -> !matcher.isEmpty(i))
+                    .collect(Collectors.toList());
+            if (!values.isEmpty()) {
+                ingredients.put(entry.getKey(), values);
             }
         }
         return new MixedIngredients(ingredients);
