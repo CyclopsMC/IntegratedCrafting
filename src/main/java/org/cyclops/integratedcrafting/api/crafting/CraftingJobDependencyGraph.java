@@ -5,6 +5,10 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagIntArray;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -15,9 +19,21 @@ import java.util.stream.Collectors;
  */
 public class CraftingJobDependencyGraph {
 
-    private final Int2ObjectMap<CraftingJob> craftingJobs = new Int2ObjectOpenHashMap<>();
-    private final Int2ObjectMap<IntCollection> dependencies = new Int2ObjectOpenHashMap<>();
-    private final Int2ObjectMap<IntCollection> dependents = new Int2ObjectOpenHashMap<>();
+    private final Int2ObjectMap<CraftingJob> craftingJobs;
+    private final Int2ObjectMap<IntCollection> dependencies;
+    private final Int2ObjectMap<IntCollection> dependents;
+
+    public CraftingJobDependencyGraph() {
+        this(new Int2ObjectOpenHashMap<>(), new Int2ObjectOpenHashMap<>(), new Int2ObjectOpenHashMap<>());
+    }
+
+    public CraftingJobDependencyGraph(Int2ObjectMap<CraftingJob> craftingJobs,
+                                      Int2ObjectMap<IntCollection> dependencies,
+                                      Int2ObjectMap<IntCollection> dependents) {
+        this.craftingJobs = craftingJobs;
+        this.dependencies = dependencies;
+        this.dependents = dependents;
+    }
 
     public Collection<CraftingJob> getCraftingJobs() {
         return craftingJobs.values();
@@ -137,6 +153,73 @@ public class CraftingJobDependencyGraph {
                 this.addDependency(craftingJob, dependency);
             }
         }
+    }
+
+    public static NBTTagCompound serialize(CraftingJobDependencyGraph graph) {
+        NBTTagCompound tag = new NBTTagCompound();
+
+        NBTTagList craftingJobs = new NBTTagList();
+        for (CraftingJob craftingJob : graph.getCraftingJobs()) {
+            craftingJobs.appendTag(CraftingJob.serialize(craftingJob));
+        }
+        tag.setTag("craftingJobs", craftingJobs);
+
+        NBTTagCompound dependencies = new NBTTagCompound();
+        for (CraftingJob craftingJob : graph.getCraftingJobs()) {
+            IntCollection intCollection = graph.dependencies.get(craftingJob.getId());
+            if (intCollection != null) {
+                dependencies.setTag(Integer.toString(craftingJob.getId()), new NBTTagIntArray(intCollection.toIntArray()));
+            }
+        }
+        tag.setTag("dependencies", dependencies);
+
+        NBTTagCompound dependents = new NBTTagCompound();
+        for (CraftingJob craftingJob : graph.getCraftingJobs()) {
+            IntCollection intCollection = graph.dependents.get(craftingJob.getId());
+            if (intCollection != null) {
+                dependents.setTag(Integer.toString(craftingJob.getId()), new NBTTagIntArray(intCollection.toIntArray()));
+            }
+        }
+        tag.setTag("dependents", dependents);
+
+        return tag;
+    }
+
+    public static CraftingJobDependencyGraph deserialize(NBTTagCompound tag) {
+        if (!tag.hasKey("craftingJobs", Constants.NBT.TAG_LIST)) {
+            throw new IllegalArgumentException("Could not find a craftingJobs entry in the given tag");
+        }
+        if (!tag.hasKey("dependencies", Constants.NBT.TAG_COMPOUND)) {
+            throw new IllegalArgumentException("Could not find a dependencies entry in the given tag");
+        }
+        if (!tag.hasKey("dependents", Constants.NBT.TAG_COMPOUND)) {
+            throw new IllegalArgumentException("Could not find a dependents entry in the given tag");
+        }
+
+        Int2ObjectMap<CraftingJob> craftingJobs = new Int2ObjectOpenHashMap<>();
+        NBTTagList craftingJobsTag = tag.getTagList("craftingJobs", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < craftingJobsTag.tagCount(); i++) {
+            CraftingJob craftingJob = CraftingJob.deserialize(craftingJobsTag.getCompoundTagAt(i));
+            craftingJobs.put(craftingJob.getId(), craftingJob);
+        }
+
+        Int2ObjectMap<IntCollection> dependencies = new Int2ObjectOpenHashMap<>();
+        NBTTagCompound dependenciesTag = tag.getCompoundTag("dependencies");
+        for (String key : dependenciesTag.getKeySet()) {
+            int id = Integer.parseInt(key);
+            int[] value = dependenciesTag.getIntArray(key);
+            dependencies.put(id, new IntArrayList(value));
+        }
+
+        Int2ObjectMap<IntCollection> dependents = new Int2ObjectOpenHashMap<>();
+        NBTTagCompound dependentsTag = tag.getCompoundTag("dependencies");
+        for (String key : dependentsTag.getKeySet()) {
+            int id = Integer.parseInt(key);
+            int[] value = dependentsTag.getIntArray(key);
+            dependents.put(id, new IntArrayList(value));
+        }
+
+        return new CraftingJobDependencyGraph(craftingJobs, dependencies, dependents);
     }
 
 }
