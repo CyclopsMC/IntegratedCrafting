@@ -1317,7 +1317,7 @@ public class TestCraftingHelpers {
                     simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
         } catch (UnknownCraftingRecipeException e) {
             Map<IngredientComponent<?, ?>, List<?>> mapB = Maps.newIdentityHashMap();
-            mapB.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA01B, CA91B));
+            mapB.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA91B, CA01B));
             assertThat(e, equalTo(
                     new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT), 2, Lists.newArrayList(
                             new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 1, Lists.newArrayList(
