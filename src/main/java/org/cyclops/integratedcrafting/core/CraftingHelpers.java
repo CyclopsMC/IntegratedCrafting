@@ -130,9 +130,11 @@ public class CraftingHelpers {
         ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
         IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
         Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel);
-        return calculateCraftingJobs(recipeIndex, channel, storageGetter, ingredientComponent, instance, matchCondition,
+        CraftingJob craftingJob = calculateCraftingJobs(recipeIndex, channel, storageGetter, ingredientComponent, instance, matchCondition,
                 craftMissing, Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),
                 collectMissingRecipes);
+        craftingJobsGraph.addCraftingJobId(craftingJob);
+        return craftingJob;
     }
 
     /**
@@ -167,6 +169,7 @@ public class CraftingHelpers {
             throw new FailedCraftingRecipeException(recipe, amount, result.getMissingDependencies(),
                     new MixedIngredients(result.getIngredientsStorage()), result.getPartialCraftingJobs());
         } else {
+            craftingJobsGraph.addCraftingJobId(result.getCraftingJob());
             return result.getCraftingJob();
         }
     }
@@ -644,8 +647,6 @@ public class CraftingHelpers {
             CraftingJobDependencyGraph dependencyGraph = new CraftingJobDependencyGraph();
             CraftingJob craftingJob = calculateCraftingJobs(network, channel, ingredientComponent, instance,
                     matchCondition, craftMissing, identifierGenerator, dependencyGraph, false);
-
-            dependencyGraph.addCraftingJobId(craftingJob);
 
             ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
             craftingNetwork.getCraftingJobDependencyGraph().importDependencies(dependencyGraph);
