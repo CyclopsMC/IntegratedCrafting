@@ -43,6 +43,11 @@ public class PrioritizedRecipe {
         return String.format("[PrioritizedRecipe %s %s]", getRecipe(), getPriorities());
     }
 
+    @Override
+    public int hashCode() {
+        return getRecipe().hashCode() | Arrays.hashCode(getPriorities());
+    }
+
     /**
      * @return A new set in which recipes will be sorted by output, followed by priority.
      */

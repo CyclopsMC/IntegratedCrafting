@@ -34,7 +34,7 @@ public class CraftingNetwork implements ICraftingNetwork {
     private final Set<ICraftingInterface> allCraftingInterfaces = Sets.newHashSet();
     private final TIntObjectMap<Set<ICraftingInterface>> craftingInterfaces = new TIntObjectHashMap<>();
 
-    private final Map<PrioritizedRecipe, ICraftingInterface> allRecipeCraftingInterfaces = Maps.newIdentityHashMap();
+    private final Map<PrioritizedRecipe, ICraftingInterface> allRecipeCraftingInterfaces = Maps.newHashMap();
     private final TIntObjectMap<Map<PrioritizedRecipe, ICraftingInterface>> recipeCraftingInterfaces = new TIntObjectHashMap<>();
 
     private final IRecipeIndexModifiable allRecipesIndex = new RecipeIndexDefault();
@@ -70,7 +70,7 @@ public class CraftingNetwork implements ICraftingNetwork {
         }
         Map<PrioritizedRecipe, ICraftingInterface> recipeCraftingInterfaces = this.recipeCraftingInterfaces.get(channel);
         if (recipeCraftingInterfaces == null) {
-            recipeCraftingInterfaces = Maps.newIdentityHashMap();
+            recipeCraftingInterfaces = Maps.newHashMap();
             this.recipeCraftingInterfaces.put(channel, recipeCraftingInterfaces);
         }
         return recipeCraftingInterfaces;
