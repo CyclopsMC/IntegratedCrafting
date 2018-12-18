@@ -3,6 +3,8 @@ package org.cyclops.integratedcrafting.core;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.datastructure.MultitransformIterator;
 import org.cyclops.cyclopscore.ingredient.collection.IIngredientMapMutable;
@@ -24,16 +26,16 @@ import java.util.Map;
 public class CraftingJobIndexDefault implements ICraftingJobIndexModifiable {
 
     private final Map<IngredientComponent<?, ?>, IIngredientMapMutable<?, ?, Collection<CraftingJob>>> recipeComponentIndexes;
-    private final Collection<CraftingJob> craftingJobs;
+    private final Int2ObjectMap<CraftingJob> craftingJobs;
 
     public CraftingJobIndexDefault() {
         this.recipeComponentIndexes = Maps.newIdentityHashMap();
-        this.craftingJobs = Sets.newIdentityHashSet();
+        this.craftingJobs = new Int2ObjectOpenHashMap<>();
     }
 
     @Override
     public Collection<CraftingJob> getCraftingJobs() {
-        return Collections.unmodifiableCollection(craftingJobs);
+        return Collections.unmodifiableCollection(craftingJobs.values());
     }
 
     @Override
@@ -48,13 +50,19 @@ public class CraftingJobIndexDefault implements ICraftingJobIndexModifiable {
     }
 
     @Nullable
+    @Override
+    public CraftingJob getCraftingJob(int craftingJobId) {
+        return craftingJobs.get(craftingJobId);
+    }
+
+    @Nullable
     protected <T, M> IIngredientMapMutable<T, M, Collection<CraftingJob>> initializeIndex(IngredientComponent<T, M> recipeComponent) {
         return new IngredientHashMap<>(recipeComponent);
     }
 
     @Override
     public void addCraftingJob(CraftingJob craftingJob) {
-        craftingJobs.add(craftingJob);
+        craftingJobs.put(craftingJob.getId(), craftingJob);
         for (IngredientComponent<?, ?> recipeComponent : craftingJob.getRecipe().getRecipe().getOutput().getComponents()) {
             IIngredientMapMutable<?, ?, Collection<CraftingJob>> index = recipeComponentIndexes.computeIfAbsent(recipeComponent, this::initializeIndex);
             if (index != null) {
@@ -77,7 +85,7 @@ public class CraftingJobIndexDefault implements ICraftingJobIndexModifiable {
 
     @Override
     public void removeCraftingJob(CraftingJob craftingJob) {
-        craftingJobs.remove(craftingJob);
+        craftingJobs.remove(craftingJob.getId());
         for (IngredientComponent<?, ?> recipeComponent : craftingJob.getRecipe().getRecipe().getOutput().getComponents()) {
             IIngredientMapMutable<?, ?, Collection<CraftingJob>> index = recipeComponentIndexes.get(recipeComponent);
             if (index != null) {

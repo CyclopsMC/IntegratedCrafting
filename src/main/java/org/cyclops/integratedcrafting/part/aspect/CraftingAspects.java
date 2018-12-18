@@ -96,7 +96,7 @@ public class CraftingAspects {
                                             continue;
                                         }
                                         Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pendingPrototypes = craftingInterface
-                                                .getPendingCraftingJobOutputs(crafingJob);
+                                                .getPendingCraftingJobOutputs(crafingJob.getId());
 
                                         if (pendingPrototypes.isEmpty()) {
                                             continue;

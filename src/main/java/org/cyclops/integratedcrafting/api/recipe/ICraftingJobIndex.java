@@ -3,6 +3,7 @@ package org.cyclops.integratedcrafting.api.recipe;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -27,5 +28,13 @@ public interface ICraftingJobIndex {
      * @return An iterator of the crafting jobs that have the given output.
      */
     public <T, M> Iterator<CraftingJob> getCraftingJobs(IngredientComponent<T, M> outputType, T output, M matchCondition);
+
+    /**
+     * Get the crafting job with the given id.
+     * @param craftingJobId A crafting job id.
+     * @return A crafting job or null.
+     */
+    @Nullable
+    public CraftingJob getCraftingJob(int craftingJobId);
 
 }

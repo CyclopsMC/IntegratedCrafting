@@ -22,6 +22,7 @@ import org.cyclops.cyclopscore.helper.Helpers;
 import org.cyclops.cyclopscore.inventory.IGuiContainerProvider;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
+import org.cyclops.integratedcrafting.api.crafting.CraftingJobStatus;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
@@ -385,12 +386,17 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Override
-        public Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> getPendingCraftingJobOutputs(CraftingJob craftingJob) {
-            Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pending = this.craftingJobHandler.getProcessingCraftingJobsPendingIngredients().get(craftingJob);
+        public Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> getPendingCraftingJobOutputs(int craftingJobId) {
+            Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pending = this.craftingJobHandler.getProcessingCraftingJobsPendingIngredients().get(craftingJobId);
             if (pending == null) {
                 pending = Maps.newIdentityHashMap();
             }
             return pending;
+        }
+
+        @Override
+        public CraftingJobStatus getCraftingJobStatus(int craftingJobId) {
+            return craftingJobHandler.getCraftingJobStatus(craftingJobId);
         }
 
         public CraftingJobHandler getCraftingJobHandler() {

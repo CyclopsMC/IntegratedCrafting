@@ -2,6 +2,8 @@ package org.cyclops.integratedcrafting.core;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.nbt.NBTBase;
@@ -16,6 +18,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
+import org.cyclops.integratedcrafting.api.crafting.CraftingJobStatus;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverride;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
@@ -43,13 +46,15 @@ public class CraftingJobHandler {
     private final ICraftingResultsSink resultsSink;
     private final Collection<ICraftingProcessOverride> craftingProcessOverrides;
 
-    private final Map<CraftingJob, Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> processingCraftingJobsPendingIngredients;
-    private final List<CraftingJob> pendingCraftingJobs;
+    private final Int2ObjectMap<CraftingJob> allCraftingJobs;
+    private final Int2ObjectMap<CraftingJob> processingCraftingJobs;
+    private final Int2ObjectMap<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> processingCraftingJobsPendingIngredients;
+    private final Int2ObjectMap<CraftingJob> pendingCraftingJobs;
     private final Object2IntMap<IngredientComponent<?, ?>> ingredientObserverCounters;
     private final Map<IngredientComponent<?, ?>, IIngredientComponentStorageObservable.IIndexChangeObserver<?, ?>> ingredientObservers;
     private final List<IngredientComponent<?, ?>> observersPendingCreation;
     private final List<IngredientComponent<?, ?>> observersPendingDeletion;
-    private final List<CraftingJob> finishedCraftingJobs;
+    private final Int2ObjectMap<CraftingJob> finishedCraftingJobs;
 
     public CraftingJobHandler(int maxProcessingJobs, Collection<ICraftingProcessOverride> craftingProcessOverrides,
                               ICraftingResultsSink resultsSink) {
@@ -57,22 +62,26 @@ public class CraftingJobHandler {
         this.resultsSink = resultsSink;
         this.craftingProcessOverrides = craftingProcessOverrides;
 
-        this.pendingCraftingJobs = Lists.newArrayList();
-        this.processingCraftingJobsPendingIngredients = Maps.newIdentityHashMap();
+        this.allCraftingJobs = new Int2ObjectOpenHashMap<>();
+        this.processingCraftingJobs = new Int2ObjectOpenHashMap<>();
+        this.pendingCraftingJobs = new Int2ObjectOpenHashMap<>();
+        this.processingCraftingJobsPendingIngredients = new Int2ObjectOpenHashMap<>();
         this.ingredientObserverCounters = new Object2IntOpenHashMap<>();
         this.ingredientObservers = Maps.newIdentityHashMap();
         this.observersPendingCreation = Lists.newArrayList();
         this.observersPendingDeletion = Lists.newArrayList();
-        this.finishedCraftingJobs = Lists.newArrayList();
+        this.finishedCraftingJobs = new Int2ObjectOpenHashMap<>();
     }
 
     public void writeToNBT(NBTTagCompound tag) {
         NBTTagList processingCraftingJobs = new NBTTagList();
-        for (Map.Entry<CraftingJob, Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> entry : this.processingCraftingJobsPendingIngredients.entrySet()) {
+        for (CraftingJob processingCraftingJob : this.processingCraftingJobs.values()) {
             NBTTagCompound entryTag = new NBTTagCompound();
-            entryTag.setTag("craftingJob", CraftingJob.serialize(entry.getKey()));
+            entryTag.setTag("craftingJob", CraftingJob.serialize(processingCraftingJob));
+
+            Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> ingredients = this.processingCraftingJobsPendingIngredients.get(processingCraftingJob.getId());
             NBTTagList pendingIngredientInstances = new NBTTagList();
-            for (Map.Entry<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> ingredientComponentListEntry : entry.getValue().entrySet()) {
+            for (Map.Entry<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> ingredientComponentListEntry : ingredients.entrySet()) {
                 NBTTagCompound ingredientInstance = new NBTTagCompound();
 
                 IngredientComponent<?, ?> ingredientComponent = ingredientComponentListEntry.getKey();
@@ -96,7 +105,7 @@ public class CraftingJobHandler {
         tag.setTag("processingCraftingJobs", processingCraftingJobs);
 
         NBTTagList pendingCraftingJobs = new NBTTagList();
-        for (CraftingJob craftingJob : this.pendingCraftingJobs) {
+        for (CraftingJob craftingJob : this.pendingCraftingJobs.values()) {
             pendingCraftingJobs.appendTag(CraftingJob.serialize(craftingJob));
         }
         tag.setTag("pendingCraftingJobs", pendingCraftingJobs);
@@ -128,43 +137,54 @@ public class CraftingJobHandler {
                 pendingIngredientInstances.put(ingredientComponent, pendingIngredients);
             }
 
+            CraftingJob craftingJob = CraftingJob.deserialize(entryTag.getCompoundTag("craftingJob"));
+
+            this.processingCraftingJobs.put(craftingJob.getId(), craftingJob);
+            this.allCraftingJobs.put(craftingJob.getId(), craftingJob);
             this.processingCraftingJobsPendingIngredients.put(
-                    CraftingJob.deserialize(entryTag.getCompoundTag("craftingJob")),
+                    craftingJob.getId(),
                     pendingIngredientInstances);
 
         }
 
         NBTTagList pendingCraftingJobs = tag.getTagList("pendingCraftingJobs", Constants.NBT.TAG_COMPOUND);
         for (NBTBase craftingJob : pendingCraftingJobs) {
-            this.pendingCraftingJobs.add(CraftingJob.deserialize((NBTTagCompound) craftingJob));
+            CraftingJob craftingJobInstance = CraftingJob.deserialize((NBTTagCompound) craftingJob);
+            this.pendingCraftingJobs.put(craftingJobInstance.getId(), craftingJobInstance);
+            this.allCraftingJobs.put(craftingJobInstance.getId(), craftingJobInstance);
         }
 
         // Add required observers to a list so that they will be created in the next tick
-        for (Map.Entry<CraftingJob, Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> entry : this.processingCraftingJobsPendingIngredients.entrySet()) {
+        for (Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> value : this.processingCraftingJobsPendingIngredients.values()) {
             // It's possible that the same component is added multiple times over different jobs,
             // this is because we want to make sure our counters are correct.
-            observersPendingCreation.addAll(entry.getValue().keySet());
+            observersPendingCreation.addAll(value.keySet());
         }
     }
 
     public void scheduleCraftingJob(CraftingJob craftingJob) {
-        this.pendingCraftingJobs.add(craftingJob);
+        this.pendingCraftingJobs.put(craftingJob.getId(), craftingJob);
+        this.allCraftingJobs.put(craftingJob.getId(), craftingJob);
     }
 
-    public Map<CraftingJob, Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> getProcessingCraftingJobsPendingIngredients() {
+    public Int2ObjectMap<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> getProcessingCraftingJobsPendingIngredients() {
         return processingCraftingJobsPendingIngredients;
     }
 
+    public Int2ObjectMap<CraftingJob> getProcessingCraftingJobsRaw() {
+        return processingCraftingJobs;
+    }
+
     public Collection<CraftingJob> getProcessingCraftingJobs() {
-        return processingCraftingJobsPendingIngredients.keySet();
+        return getProcessingCraftingJobsRaw().values();
     }
 
     public Collection<CraftingJob> getPendingCraftingJobs() {
-        return pendingCraftingJobs;
+        return pendingCraftingJobs.values();
     }
 
     public void markCraftingJobProcessing(CraftingJob craftingJob, Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pendingIngredients) {
-        if (this.pendingCraftingJobs.remove(craftingJob)) {
+        if (this.pendingCraftingJobs.remove(craftingJob.getId()) != null) {
             setCraftingJobProcessingPendingIngredients(craftingJob, pendingIngredients);
         }
     }
@@ -173,9 +193,13 @@ public class CraftingJobHandler {
                                                            Map<IngredientComponent<?, ?>,
                                                                    List<IPrototypedIngredient<?, ?>>> pendingIngredients) {
         if (pendingIngredients.isEmpty()) {
-            this.processingCraftingJobsPendingIngredients.remove(craftingJob);
+            this.processingCraftingJobs.remove(craftingJob.getId());
+            this.processingCraftingJobsPendingIngredients.remove(craftingJob.getId());
+            this.allCraftingJobs.remove(craftingJob.getId());
         } else {
-            this.processingCraftingJobsPendingIngredients.put(craftingJob, pendingIngredients);
+            this.processingCraftingJobs.put(craftingJob.getId(), craftingJob);
+            this.processingCraftingJobsPendingIngredients.put(craftingJob.getId(), pendingIngredients);
+            this.allCraftingJobs.put(craftingJob.getId(), craftingJob);
         }
     }
 
@@ -211,7 +235,8 @@ public class CraftingJobHandler {
     }
 
     public void onCraftingJobFinished(CraftingJob craftingJob) {
-        this.finishedCraftingJobs.add(craftingJob);
+        this.finishedCraftingJobs.put(craftingJob.getId(), craftingJob);
+        this.allCraftingJobs.put(craftingJob.getId(), craftingJob);
     }
 
     public void reRegisterObservers(INetwork network) {
@@ -241,15 +266,16 @@ public class CraftingJobHandler {
 
         // Notify the network of finalized crafting jobs
         if (finishedCraftingJobs.size() > 0) {
-            for (CraftingJob finishedCraftingJob : finishedCraftingJobs) {
+            for (CraftingJob finishedCraftingJob : finishedCraftingJobs.values()) {
                 if (finishedCraftingJob.getAmount() == 1) {
                     // If only a single amount for the job was remaining, remove it from the network
                     ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetwork(network);
                     craftingNetwork.onCraftingJobFinished(finishedCraftingJob);
+                    allCraftingJobs.remove(finishedCraftingJob.getId());
                 } else {
                     // If more than one amount was remaining, decrement it and re-add it to the pending jobs list
                     finishedCraftingJob.setAmount(finishedCraftingJob.getAmount() - 1);
-                    pendingCraftingJobs.add(finishedCraftingJob);
+                    pendingCraftingJobs.put(finishedCraftingJob.getId(), finishedCraftingJob);
                 }
             }
             finishedCraftingJobs.clear();
@@ -321,4 +347,18 @@ public class CraftingJobHandler {
         return CraftingHelpers.insertCrafting(target, ingredients, simulate);
     }
 
+    public CraftingJobStatus getCraftingJobStatus(int craftingJobId) {
+        if (pendingCraftingJobs.containsKey(craftingJobId)) {
+            return CraftingJobStatus.PENDING;
+        } else if (processingCraftingJobs.containsKey(craftingJobId)) {
+            return CraftingJobStatus.PROCESSING;
+        } else if (finishedCraftingJobs.containsKey(craftingJobId)) {
+            return CraftingJobStatus.FINISHED;
+        }
+        return CraftingJobStatus.UNKNOWN;
+    }
+
+    public Int2ObjectMap<CraftingJob> getAllCraftingJobs() {
+        return allCraftingJobs;
+    }
 }

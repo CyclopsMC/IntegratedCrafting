@@ -1,5 +1,7 @@
 package org.cyclops.integratedcrafting.core;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
@@ -41,10 +43,10 @@ public class PendingCraftingJobResultIndexObserver<T, M>
             IIngredientComponentStorage<T, M> ingredientsHayStack = null; // A mutable copy of addedIngredients (lazily created)
             IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
 
-            Map<CraftingJob, Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> processingJobs = handler.getProcessingCraftingJobsPendingIngredients();
-            Iterator<Map.Entry<CraftingJob, Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>>> jobEntryIt = processingJobs.entrySet().iterator();
+            Int2ObjectMap<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> processingJobs = handler.getProcessingCraftingJobsPendingIngredients();
+            ObjectIterator<Int2ObjectMap.Entry<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>>> jobEntryIt = processingJobs.int2ObjectEntrySet().iterator();
             while (jobEntryIt.hasNext()) {
-                Map.Entry<CraftingJob, Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> jobEntry = jobEntryIt.next();
+                Int2ObjectMap.Entry<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> jobEntry = jobEntryIt.next();
                 List<IPrototypedIngredient<?, ?>> pendingIngredientsUnsafe = jobEntry.getValue().get(ingredientComponent);
                 if (pendingIngredientsUnsafe != null) {
                     // Remove pending ingredients that were added in the event
@@ -105,7 +107,8 @@ public class PendingCraftingJobResultIndexObserver<T, M>
                         // Remove crafting job if needed.
                         jobEntry.getValue().remove(ingredientComponent);
                         if (jobEntry.getValue().isEmpty()) {
-                            handler.onCraftingJobFinished(jobEntry.getKey());
+                            handler.onCraftingJobFinished(handler.getAllCraftingJobs().get(jobEntry.getIntKey()));
+                            handler.getProcessingCraftingJobsRaw().remove(jobEntry.getIntKey());
                             jobEntryIt.remove();
                         }
                     }
