@@ -609,6 +609,7 @@ public class CraftingHelpers {
      */
     public static void scheduleCraftingJobs(ICraftingNetwork craftingNetwork,
                                             CraftingJobDependencyGraph craftingJobDependencyGraph) {
+        craftingNetwork.getCraftingJobDependencyGraph().importDependencies(craftingJobDependencyGraph);
         for (CraftingJob craftingJob : craftingJobDependencyGraph.getCraftingJobs()) {
             craftingNetwork.scheduleCraftingJob(craftingJob);
         }
@@ -651,7 +652,6 @@ public class CraftingHelpers {
                     matchCondition, craftMissing, identifierGenerator, dependencyGraph, false);
 
             ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
-            craftingNetwork.getCraftingJobDependencyGraph().importDependencies(dependencyGraph);
 
             scheduleCraftingJobs(craftingNetwork, dependencyGraph);
 
