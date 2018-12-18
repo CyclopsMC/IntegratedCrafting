@@ -20,6 +20,7 @@ import org.cyclops.integratedcrafting.core.CraftingJobIndexDefault;
 import org.cyclops.integratedcrafting.core.RecipeIndexDefault;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetwork;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -42,6 +43,9 @@ public class CraftingNetwork implements ICraftingNetwork {
 
     private final ICraftingJobIndexModifiable allIndexedCraftingJobs = new CraftingJobIndexDefault();
     private final TIntObjectMap<ICraftingJobIndexModifiable> indexedCraftingJobs = new TIntObjectHashMap<>();
+
+    private final TIntObjectMap<ICraftingInterface> allCraftingJobsToInterface = new TIntObjectHashMap<>();
+    private final TIntObjectMap<TIntObjectMap<ICraftingInterface>> channeledCraftingJobsToInterface = new TIntObjectHashMap<>();
 
     private final CraftingJobDependencyGraph craftingJobDependencyGraph = new CraftingJobDependencyGraph();
 
@@ -106,7 +110,7 @@ public class CraftingNetwork implements ICraftingNetwork {
             }
 
             // Add the crafting jobs owned by the interface
-            addCraftingJobs(channel, Lists.newArrayList(craftingInterface.getCraftingJobs()));
+            addCraftingJobs(channel, Lists.newArrayList(craftingInterface.getCraftingJobs()), craftingInterface);
 
             // Add the crafting job dependencies
             Iterator<CraftingJob> craftingJobsIt = craftingInterface.getCraftingJobs();
@@ -163,7 +167,7 @@ public class CraftingNetwork implements ICraftingNetwork {
         Map<PrioritizedRecipe, ICraftingInterface> recipeInterfaces = getRecipeCraftingInterfaces(craftingJob.getChannel());
         ICraftingInterface craftingInterface = recipeInterfaces.get(craftingJob.getRecipe());
         craftingInterface.scheduleCraftingJob(craftingJob);
-        addCraftingJobs(craftingJob.getChannel(), Lists.newArrayList(craftingJob));
+        addCraftingJobs(craftingJob.getChannel(), Lists.newArrayList(craftingJob), craftingInterface);
     }
 
     @Override
@@ -178,24 +182,50 @@ public class CraftingNetwork implements ICraftingNetwork {
                 ICraftingInterface::getCraftingJobs);
     }
 
-    protected void addCraftingJobs(int channel, Collection<CraftingJob> craftingJobs) {
+    protected void addCraftingJobs(int channel, Collection<CraftingJob> craftingJobs, ICraftingInterface craftingInterface) {
+        // Prepare crafting job index
         ICraftingJobIndexModifiable craftingJobIndex = indexedCraftingJobs.get(channel);
         if (craftingJobIndex == null) {
             craftingJobIndex = new CraftingJobIndexDefault();
             indexedCraftingJobs.put(channel, craftingJobIndex);
         }
+
+        // Prepare crafting job to interface mapping
+        TIntObjectMap<ICraftingInterface> craftingJobsToInterface = this.channeledCraftingJobsToInterface.get(channel);
+        if (craftingJobsToInterface == null) {
+            craftingJobsToInterface = new TIntObjectHashMap<>();
+            this.channeledCraftingJobsToInterface.put(channel, craftingJobsToInterface);
+        }
+
         for (CraftingJob craftingJob : craftingJobs) {
+            // Insert into crafting job index
             allIndexedCraftingJobs.addCraftingJob(craftingJob);
             craftingJobIndex.addCraftingJob(craftingJob);
+
+            // Insert into crafting job to interface mapping
+            allCraftingJobsToInterface.put(craftingJob.getId(), craftingInterface);
+            craftingJobsToInterface.put(craftingJob.getId(), craftingInterface);
         }
     }
 
     protected void removeCraftingJobs(int channel, Collection<CraftingJob> craftingJobs) {
+        // Prepare crafting job index
         ICraftingJobIndexModifiable craftingJobIndex = indexedCraftingJobs.get(channel);
+
+        // Prepare crafting job to interface mapping
+        TIntObjectMap<ICraftingInterface> craftingJobsToInterface = this.channeledCraftingJobsToInterface.get(channel);
+
         for (CraftingJob craftingJob : craftingJobs) {
+            // Remove from crafting job index
             allIndexedCraftingJobs.removeCraftingJob(craftingJob);
             if (craftingJobIndex != null) {
                 craftingJobIndex.removeCraftingJob(craftingJob);
+            }
+
+            // Remove from crafting job to interface mapping
+            allCraftingJobsToInterface.remove(craftingJob.getId());
+            if (craftingJobsToInterface != null) {
+                craftingJobsToInterface.remove(craftingJob.getId());
             }
         }
     }
@@ -216,6 +246,19 @@ public class CraftingNetwork implements ICraftingNetwork {
     @Override
     public CraftingJobDependencyGraph getCraftingJobDependencyGraph() {
         return craftingJobDependencyGraph;
+    }
+
+    @Nullable
+    @Override
+    public ICraftingInterface getCraftingJobInterface(int channel, int craftingJobId) {
+        if (channel == IPositionedAddonsNetwork.WILDCARD_CHANNEL) {
+            return allCraftingJobsToInterface.get(craftingJobId);
+        }
+        TIntObjectMap<ICraftingInterface> craftingJobsToInterface = this.channeledCraftingJobsToInterface.get(channel);
+        if (craftingJobsToInterface != null) {
+            return craftingJobsToInterface.get(craftingJobId);
+        }
+        return null;
     }
 
     protected void cleanupChannelIfEmpty(int channel) {

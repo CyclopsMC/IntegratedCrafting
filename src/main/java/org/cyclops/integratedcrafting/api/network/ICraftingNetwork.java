@@ -7,6 +7,7 @@ import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 
+import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -94,5 +95,14 @@ public interface ICraftingNetwork {
      * @return An overview of all crafting job dependencies in this network.
      */
     public CraftingJobDependencyGraph getCraftingJobDependencyGraph();
+
+    /**
+     * Get the interface in which the given crafting job is being crafted.
+     * @param channel The channel.
+     * @param craftingJobId A crafting job.
+     * @return The owning crafting interface or null.
+     */
+    @Nullable
+    public ICraftingInterface getCraftingJobInterface(int channel, int craftingJobId);
 
 }
