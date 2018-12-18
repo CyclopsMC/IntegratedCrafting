@@ -10,6 +10,7 @@ import net.minecraft.nbt.NBTTagIntArray;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -37,6 +38,11 @@ public class CraftingJobDependencyGraph {
 
     public Collection<CraftingJob> getCraftingJobs() {
         return craftingJobs.values();
+    }
+
+    @Nullable
+    public CraftingJob getCraftingJob(int id) {
+        return craftingJobs.get(id);
     }
 
     public Collection<CraftingJob> getDependencies(CraftingJob craftingJob) {
