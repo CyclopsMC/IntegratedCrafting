@@ -123,4 +123,11 @@ public interface ICraftingNetwork {
     @Nullable
     public ICraftingInterface getCraftingJobInterface(int channel, int craftingJobId);
 
+    /**
+     * Calculate the number of ticks the given job has been running.
+     * @param craftingJob A crafting job.
+     * @return The number of ticks this job has been running.
+     */
+    public long getRunningTicks(CraftingJob craftingJob);
+
 }

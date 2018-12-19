@@ -26,6 +26,7 @@ public class CraftingJob {
     private int amount;
     private IMixedIngredients ingredientsStorage;
     private Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients;
+    private long startTick;
 
     public CraftingJob(int id, int channel, PrioritizedRecipe recipe, int amount, IMixedIngredients ingredientsStorage) {
         this.id = id;
@@ -94,6 +95,14 @@ public class CraftingJob {
         this.lastMissingIngredients = lastMissingIngredients;
     }
 
+    public long getStartTick() {
+        return startTick;
+    }
+
+    public void setStartTick(long startTick) {
+        this.startTick = startTick;
+    }
+
     public static NBTTagCompound serialize(CraftingJob craftingJob) {
         NBTTagCompound tag = new NBTTagCompound();
         tag.setInteger("id", craftingJob.id);
@@ -104,6 +113,7 @@ public class CraftingJob {
         tag.setInteger("amount", craftingJob.amount);
         tag.setTag("ingredientsStorage", IMixedIngredients.serialize(craftingJob.ingredientsStorage));
         tag.setTag("lastMissingIngredients", MissingIngredients.serialize(craftingJob.lastMissingIngredients));
+        tag.setLong("startTick", craftingJob.startTick);
         return tag;
     }
 
@@ -132,6 +142,9 @@ public class CraftingJob {
         if (!tag.hasKey("lastMissingIngredients", Constants.NBT.TAG_COMPOUND)) {
             throw new IllegalArgumentException("Could not find a lastMissingIngredients entry in the given tag");
         }
+        if (!tag.hasKey("startTick", Constants.NBT.TAG_LONG)) {
+            throw new IllegalArgumentException("Could not find a startTick entry in the given tag");
+        }
         int id = tag.getInteger("id");
         int channel = tag.getInteger("channel");
         PrioritizedRecipe prioritizedRecipe = PrioritizedRecipe.deserialize(tag.getCompoundTag("recipe"));
@@ -147,6 +160,7 @@ public class CraftingJob {
         Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients = MissingIngredients
                 .deserialize(tag.getCompoundTag("lastMissingIngredients"));
         craftingJob.setLastMissingIngredients(lastMissingIngredients);
+        craftingJob.setStartTick(tag.getLong("startTick"));
         return craftingJob;
     }
 

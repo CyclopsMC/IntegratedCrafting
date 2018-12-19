@@ -1,12 +1,13 @@
 package org.cyclops.integratedcrafting.core.network;
 
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.server.FMLServerHandler;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.datastructure.MultitransformIterator;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
@@ -171,6 +172,11 @@ public class CraftingNetwork implements ICraftingNetwork {
         ICraftingInterface craftingInterface = recipeInterfaces.get(craftingJob.getRecipe());
         craftingInterface.scheduleCraftingJob(craftingJob);
         addCraftingJob(craftingJob.getChannel(), craftingJob, craftingInterface);
+        craftingJob.setStartTick(getCurrentTick());
+    }
+
+    protected long getCurrentTick() {
+        return FMLCommonHandler.instance().getMinecraftServerInstance().worlds[0].getTotalWorldTime();
     }
 
     @Override
@@ -338,6 +344,11 @@ public class CraftingNetwork implements ICraftingNetwork {
         }
 
         return null;
+    }
+
+    @Override
+    public long getRunningTicks(CraftingJob craftingJob) {
+        return getCurrentTick() - craftingJob.getStartTick();
     }
 
     protected void cleanupChannelIfEmpty(int channel) {
