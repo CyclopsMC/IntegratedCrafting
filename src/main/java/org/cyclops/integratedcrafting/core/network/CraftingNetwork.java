@@ -236,11 +236,27 @@ public class CraftingNetwork implements ICraftingNetwork {
         if (channel == IPositionedAddonsNetwork.WILDCARD_CHANNEL) {
             return allIndexedCraftingJobs.getCraftingJobs(ingredientComponent, instance, matchCondition);
         }
+
+        // Check for the specific channel
         ICraftingJobIndexModifiable craftingJobIndex = indexedCraftingJobs.get(channel);
+        Iterator<CraftingJob> channelIterator;
         if (craftingJobIndex != null) {
-            return craftingJobIndex.getCraftingJobs(ingredientComponent, instance, matchCondition);
+            channelIterator = craftingJobIndex.getCraftingJobs(ingredientComponent, instance, matchCondition);
+        } else {
+            channelIterator = Iterators.forArray();
         }
-        return Iterators.forArray();
+
+        // Check for the case the crafting job was explicitly started on the wildcard channel
+        ICraftingJobIndexModifiable wildcardCraftingJobIndex = indexedCraftingJobs.get(IPositionedAddonsNetwork.WILDCARD_CHANNEL);
+        Iterator<CraftingJob> wildcardChannelIterator;
+        if (wildcardCraftingJobIndex != null) {
+            wildcardChannelIterator = wildcardCraftingJobIndex.getCraftingJobs(ingredientComponent, instance, matchCondition);
+        } else {
+            wildcardChannelIterator = Iterators.forArray();
+        }
+
+        // Concat both iterators
+        return Iterators.concat(channelIterator, wildcardChannelIterator);
     }
 
     @Override
@@ -256,7 +272,16 @@ public class CraftingNetwork implements ICraftingNetwork {
         }
         TIntObjectMap<ICraftingInterface> craftingJobsToInterface = this.channeledCraftingJobsToInterface.get(channel);
         if (craftingJobsToInterface != null) {
-            return craftingJobsToInterface.get(craftingJobId);
+            ICraftingInterface craftingInterface = craftingJobsToInterface.get(craftingJobId);
+            if (craftingInterface == null) {
+                // In case the crafting job was explicitly started on the wildcard channel
+                TIntObjectMap<ICraftingInterface> craftingJobsToInterfaceWildcard = this.channeledCraftingJobsToInterface
+                        .get(IPositionedAddonsNetwork.WILDCARD_CHANNEL);
+                if (craftingJobsToInterfaceWildcard != null) {
+                    craftingInterface = craftingJobsToInterfaceWildcard.get(craftingJobId);
+                }
+            }
+            return craftingInterface;
         }
         return null;
     }
