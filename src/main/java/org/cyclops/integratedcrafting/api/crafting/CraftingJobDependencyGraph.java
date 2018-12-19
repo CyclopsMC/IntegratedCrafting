@@ -53,7 +53,11 @@ public class CraftingJobDependencyGraph {
     }
 
     public boolean hasDependencies(CraftingJob craftingJob) {
-        return dependencies.containsKey(craftingJob.getId());
+        return hasDependencies(craftingJob.getId());
+    }
+
+    public boolean hasDependencies(int craftingJobId) {
+        return dependencies.containsKey(craftingJobId);
     }
 
     public Collection<CraftingJob> getDependents(CraftingJob craftingJob) {
