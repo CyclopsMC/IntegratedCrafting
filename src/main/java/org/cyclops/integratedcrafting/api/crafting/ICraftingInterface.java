@@ -2,6 +2,7 @@ package org.cyclops.integratedcrafting.api.crafting;
 
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 
 import java.util.Collection;
@@ -40,9 +41,11 @@ public interface ICraftingInterface {
 
     /**
      * Get the status for the given crafting job.
+     * @param network The network.
+     * @param channel The channel.
      * @param craftingJobId A crafting job id.
      * @return The crafting status.
      */
-    public CraftingJobStatus getCraftingJobStatus(int craftingJobId);
+    public CraftingJobStatus getCraftingJobStatus(ICraftingNetwork network, int channel, int craftingJobId);
 
 }

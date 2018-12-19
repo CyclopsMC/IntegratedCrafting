@@ -395,8 +395,8 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Override
-        public CraftingJobStatus getCraftingJobStatus(int craftingJobId) {
-            return craftingJobHandler.getCraftingJobStatus(craftingJobId);
+        public CraftingJobStatus getCraftingJobStatus(ICraftingNetwork network, int channel, int craftingJobId) {
+            return craftingJobHandler.getCraftingJobStatus(network, channel, craftingJobId);
         }
 
         public CraftingJobHandler getCraftingJobHandler() {

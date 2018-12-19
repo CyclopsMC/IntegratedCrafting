@@ -11,10 +11,12 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
+import org.apache.commons.lang3.tuple.Pair;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientSerializer;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
@@ -305,11 +307,16 @@ public class CraftingJobHandler {
 
                 // Check if pendingCraftingJob can start and set as startingCraftingJob
                 // This requires checking the available ingredients AND if the crafting handler can accept it.
-                IMixedIngredients ingredients = CraftingHelpers.getRecipeInputs(network, channel,
-                        pendingCraftingJob.getRecipe().getRecipe(), true, 1);
-                if (ingredients != null && insertCrafting(targetPos, ingredients, true)) {
+                Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputs = CraftingHelpers.getRecipeInputs(
+                        CraftingHelpers.getNetworkStorageGetter(network, channel),
+                        pendingCraftingJob.getRecipe().getRecipe(), true, Maps.newIdentityHashMap(), true, 1);
+                if (inputs.getLeft() != null && !inputs.getLeft().isEmpty()
+                        && insertCrafting(targetPos, new MixedIngredients(inputs.getLeft()), true)) {
                     startingCraftingJob = pendingCraftingJob;
+                    pendingCraftingJob.setLastMissingIngredients(Maps.newIdentityHashMap());
                     break;
+                } else {
+                    pendingCraftingJob.setLastMissingIngredients(inputs.getRight());
                 }
             }
 
@@ -347,9 +354,14 @@ public class CraftingJobHandler {
         return CraftingHelpers.insertCrafting(target, ingredients, simulate);
     }
 
-    public CraftingJobStatus getCraftingJobStatus(int craftingJobId) {
+    public CraftingJobStatus getCraftingJobStatus(ICraftingNetwork network, int channel, int craftingJobId) {
         if (pendingCraftingJobs.containsKey(craftingJobId)) {
-            return CraftingJobStatus.PENDING;
+            CraftingJobDependencyGraph dependencyGraph = network.getCraftingJobDependencyGraph();
+            if (dependencyGraph.hasDependencies(craftingJobId)) {
+                return CraftingJobStatus.PENDING_DEPENDENCIES;
+            } else {
+                return CraftingJobStatus.PENDING_INGREDIENTS;
+            }
         } else if (processingCraftingJobs.containsKey(craftingJobId)) {
             return CraftingJobStatus.PROCESSING;
         } else if (finishedCraftingJobs.containsKey(craftingJobId)) {
