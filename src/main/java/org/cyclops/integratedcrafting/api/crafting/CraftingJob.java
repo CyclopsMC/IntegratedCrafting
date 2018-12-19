@@ -1,12 +1,17 @@
 package org.cyclops.integratedcrafting.api.crafting;
 
+import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagIntArray;
 import net.minecraftforge.common.util.Constants;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
+import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
+import org.cyclops.integratedcrafting.core.MissingIngredients;
+
+import java.util.Map;
 
 /**
  * @author rubensworks
@@ -20,6 +25,7 @@ public class CraftingJob {
     private final IntList dependentCraftingJobs;
     private int amount;
     private IMixedIngredients ingredientsStorage;
+    private Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients;
 
     public CraftingJob(int id, int channel, PrioritizedRecipe recipe, int amount, IMixedIngredients ingredientsStorage) {
         this.id = id;
@@ -27,6 +33,7 @@ public class CraftingJob {
         this.recipe = recipe;
         this.amount = amount;
         this.ingredientsStorage = ingredientsStorage;
+        this.lastMissingIngredients = Maps.newIdentityHashMap();
         this.dependencyCraftingJobs = new IntArrayList();
         this.dependentCraftingJobs = new IntArrayList();
     }
@@ -76,6 +83,17 @@ public class CraftingJob {
         this.ingredientsStorage = ingredientsStorage;
     }
 
+    /**
+     * @return The ingredients that were missing for 1 job amount. This will mostly be an empty map.
+     */
+    public Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> getLastMissingIngredients() {
+        return lastMissingIngredients;
+    }
+
+    public void setLastMissingIngredients(Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients) {
+        this.lastMissingIngredients = lastMissingIngredients;
+    }
+
     public static NBTTagCompound serialize(CraftingJob craftingJob) {
         NBTTagCompound tag = new NBTTagCompound();
         tag.setInteger("id", craftingJob.id);
@@ -85,6 +103,7 @@ public class CraftingJob {
         tag.setTag("dependents", new NBTTagIntArray(craftingJob.getDependentCraftingJobs()));
         tag.setInteger("amount", craftingJob.amount);
         tag.setTag("ingredientsStorage", IMixedIngredients.serialize(craftingJob.ingredientsStorage));
+        tag.setTag("lastMissingIngredients", MissingIngredients.serialize(craftingJob.lastMissingIngredients));
         return tag;
     }
 
@@ -110,6 +129,9 @@ public class CraftingJob {
         if (!tag.hasKey("ingredientsStorage", Constants.NBT.TAG_COMPOUND)) {
             throw new IllegalArgumentException("Could not find a ingredientsStorage entry in the given tag");
         }
+        if (!tag.hasKey("lastMissingIngredients", Constants.NBT.TAG_COMPOUND)) {
+            throw new IllegalArgumentException("Could not find a lastMissingIngredients entry in the given tag");
+        }
         int id = tag.getInteger("id");
         int channel = tag.getInteger("channel");
         PrioritizedRecipe prioritizedRecipe = PrioritizedRecipe.deserialize(tag.getCompoundTag("recipe"));
@@ -122,6 +144,9 @@ public class CraftingJob {
         for (int dependent : tag.getIntArray("dependents")) {
             craftingJob.dependentCraftingJobs.add(dependent);
         }
+        Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients = MissingIngredients
+                .deserialize(tag.getCompoundTag("lastMissingIngredients"));
+        craftingJob.setLastMissingIngredients(lastMissingIngredients);
         return craftingJob;
     }
 
