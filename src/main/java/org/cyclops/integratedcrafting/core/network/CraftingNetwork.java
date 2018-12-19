@@ -182,6 +182,27 @@ public class CraftingNetwork implements ICraftingNetwork {
                 ICraftingInterface::getCraftingJobs);
     }
 
+    @Nullable
+    @Override
+    public CraftingJob getCraftingJob(int channel, int craftingJobId) {
+        if (channel == IPositionedAddonsNetwork.WILDCARD_CHANNEL) {
+            return allIndexedCraftingJobs.getCraftingJob(craftingJobId);
+        }
+        ICraftingJobIndexModifiable index = indexedCraftingJobs.get(channel);
+        if (index != null) {
+            CraftingJob craftingJob = index.getCraftingJob(craftingJobId);
+            if (craftingJob == null) {
+                // Check for the case the crafting job was explicitly started on the wildcard channel
+                ICraftingJobIndexModifiable wildcardIndex = indexedCraftingJobs.get(IPositionedAddonsNetwork.WILDCARD_CHANNEL);
+                if (wildcardIndex != null) {
+                    craftingJob = wildcardIndex.getCraftingJob(craftingJobId);
+                }
+            }
+            return craftingJob;
+        }
+        return null;
+    }
+
     protected void addCraftingJobs(int channel, Collection<CraftingJob> craftingJobs, ICraftingInterface craftingInterface) {
         // Prepare crafting job index
         ICraftingJobIndexModifiable craftingJobIndex = indexedCraftingJobs.get(channel);

@@ -79,6 +79,14 @@ public interface ICraftingNetwork {
     public Iterator<CraftingJob> getCraftingJobs(int channel);
 
     /**
+     * @param channel A channel id.
+     * @param craftingJobId A crafting job id.
+     * @return The crafting job with the given id or null.
+     */
+    @Nullable
+    public CraftingJob getCraftingJob(int channel, int craftingJobId);
+
+    /**
      * Get present crafting jobs for the given (expected) output instance.
      * @param channel The channel.
      * @param ingredientComponent The ingredient component of the given output type.
