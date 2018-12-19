@@ -237,8 +237,21 @@ public class CraftingJobHandler {
     }
 
     public void onCraftingJobFinished(CraftingJob craftingJob) {
+        this.processingCraftingJobs.remove(craftingJob.getId());
+        this.pendingCraftingJobs.remove(craftingJob.getId());
         this.finishedCraftingJobs.put(craftingJob.getId(), craftingJob);
         this.allCraftingJobs.put(craftingJob.getId(), craftingJob);
+    }
+
+    // This does the same as above, just based on crafting job id
+    public void markCraftingJobFinished(int craftingJobId) {
+        this.processingCraftingJobs.remove(craftingJobId);
+        this.pendingCraftingJobs.remove(craftingJobId);
+
+        // Needed so that we remove the job in the next tick
+        CraftingJob craftingJob = this.allCraftingJobs.get(craftingJobId);
+        this.finishedCraftingJobs.put(craftingJobId, craftingJob);
+        craftingJob.setAmount(1);
     }
 
     public void reRegisterObservers(INetwork network) {
@@ -373,4 +386,5 @@ public class CraftingJobHandler {
     public Int2ObjectMap<CraftingJob> getAllCraftingJobs() {
         return allCraftingJobs;
     }
+
 }

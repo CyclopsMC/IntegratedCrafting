@@ -73,6 +73,16 @@ public interface ICraftingNetwork {
     public void onCraftingJobFinished(CraftingJob craftingJob);
 
     /**
+     * Cancel the given crafting job.
+     * This will also cancel all its dependencies.
+     *
+     * @param channel A channel id.
+     * @param craftingJobId The crafting job id.
+     * @return If the crafting job existed.
+     */
+    public boolean cancelCraftingJob(int channel, int craftingJobId);
+
+    /**
      * @param channel A channel id.
      * @return Get all present crafting jobs.
      */

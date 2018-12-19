@@ -48,4 +48,15 @@ public interface ICraftingInterface {
      */
     public CraftingJobStatus getCraftingJobStatus(ICraftingNetwork network, int channel, int craftingJobId);
 
+    /**
+     * Cancel the given crafting job.
+     *
+     * Note: this should not be called directly unless you know what you are doing!
+     * Instead, you should call {@link ICraftingNetwork#cancelCraftingJob(int, int)}.
+     *
+     * @param channel The channel.
+     * @param craftingJobId A crafting job id.
+     */
+    public void cancelCraftingJob(int channel, int craftingJobId);
+
 }

@@ -399,6 +399,11 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             return craftingJobHandler.getCraftingJobStatus(network, channel, craftingJobId);
         }
 
+        @Override
+        public void cancelCraftingJob(int channel, int craftingJobId) {
+            craftingJobHandler.markCraftingJobFinished(craftingJobId);
+        }
+
         public CraftingJobHandler getCraftingJobHandler() {
             return craftingJobHandler;
         }
