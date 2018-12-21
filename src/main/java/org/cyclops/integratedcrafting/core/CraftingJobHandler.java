@@ -325,7 +325,7 @@ public class CraftingJobHandler {
                 Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputs = CraftingHelpers.getRecipeInputs(
                         CraftingHelpers.getNetworkStorageGetter(network, pendingCraftingJob.getChannel()),
                         pendingCraftingJob.getRecipe().getRecipe(), true, Maps.newIdentityHashMap(), true, 1);
-                if (inputs.getLeft() != null && !inputs.getLeft().isEmpty()) {
+                if (inputs.getRight().isEmpty()) { // If we have no missing ingredients
                     if (insertCrafting(targetPos, new MixedIngredients(inputs.getLeft()), true)) {
                         startingCraftingJob = pendingCraftingJob;
                         pendingCraftingJob.setLastMissingIngredients(Maps.newIdentityHashMap());
