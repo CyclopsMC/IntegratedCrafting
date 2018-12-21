@@ -16,6 +16,10 @@ public enum CraftingJobStatus {
      */
     PENDING_INGREDIENTS,
     /**
+     * The recipe inputs could not be inserted into the crafting handler.
+     */
+    INVALID_INPUTS,
+    /**
      * The crafting job is actively processing,
      * and output ingredients are being awaited.
      */

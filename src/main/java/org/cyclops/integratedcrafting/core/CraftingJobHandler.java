@@ -323,11 +323,15 @@ public class CraftingJobHandler {
                 Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputs = CraftingHelpers.getRecipeInputs(
                         CraftingHelpers.getNetworkStorageGetter(network, channel),
                         pendingCraftingJob.getRecipe().getRecipe(), true, Maps.newIdentityHashMap(), true, 1);
-                if (inputs.getLeft() != null && !inputs.getLeft().isEmpty()
-                        && insertCrafting(targetPos, new MixedIngredients(inputs.getLeft()), true)) {
-                    startingCraftingJob = pendingCraftingJob;
-                    pendingCraftingJob.setLastMissingIngredients(Maps.newIdentityHashMap());
-                    break;
+                if (inputs.getLeft() != null && !inputs.getLeft().isEmpty()) {
+                    if (insertCrafting(targetPos, new MixedIngredients(inputs.getLeft()), true)) {
+                        startingCraftingJob = pendingCraftingJob;
+                        pendingCraftingJob.setLastMissingIngredients(Maps.newIdentityHashMap());
+                        pendingCraftingJob.setInvalidInputs(false);
+                        break;
+                    } else {
+                        pendingCraftingJob.setInvalidInputs(true);
+                    }
                 } else {
                     pendingCraftingJob.setLastMissingIngredients(inputs.getRight());
                 }
@@ -369,6 +373,11 @@ public class CraftingJobHandler {
 
     public CraftingJobStatus getCraftingJobStatus(ICraftingNetwork network, int channel, int craftingJobId) {
         if (pendingCraftingJobs.containsKey(craftingJobId)) {
+            CraftingJob craftingJob = allCraftingJobs.get(craftingJobId);
+            if (craftingJob != null && craftingJob.isInvalidInputs()) {
+                return CraftingJobStatus.INVALID_INPUTS;
+            }
+
             CraftingJobDependencyGraph dependencyGraph = network.getCraftingJobDependencyGraph();
             if (dependencyGraph.hasDependencies(craftingJobId)) {
                 return CraftingJobStatus.PENDING_DEPENDENCIES;

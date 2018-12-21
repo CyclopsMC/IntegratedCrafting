@@ -27,6 +27,7 @@ public class CraftingJob {
     private IMixedIngredients ingredientsStorage;
     private Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients;
     private long startTick;
+    private boolean invalidInputs;
 
     public CraftingJob(int id, int channel, PrioritizedRecipe recipe, int amount, IMixedIngredients ingredientsStorage) {
         this.id = id;
@@ -37,6 +38,7 @@ public class CraftingJob {
         this.lastMissingIngredients = Maps.newIdentityHashMap();
         this.dependencyCraftingJobs = new IntArrayList();
         this.dependentCraftingJobs = new IntArrayList();
+        this.invalidInputs = false;
     }
 
     public int getId() {
@@ -103,6 +105,14 @@ public class CraftingJob {
         this.startTick = startTick;
     }
 
+    public boolean isInvalidInputs() {
+        return invalidInputs;
+    }
+
+    public void setInvalidInputs(boolean invalidInputs) {
+        this.invalidInputs = invalidInputs;
+    }
+
     public static NBTTagCompound serialize(CraftingJob craftingJob) {
         NBTTagCompound tag = new NBTTagCompound();
         tag.setInteger("id", craftingJob.id);
@@ -114,6 +124,7 @@ public class CraftingJob {
         tag.setTag("ingredientsStorage", IMixedIngredients.serialize(craftingJob.ingredientsStorage));
         tag.setTag("lastMissingIngredients", MissingIngredients.serialize(craftingJob.lastMissingIngredients));
         tag.setLong("startTick", craftingJob.startTick);
+        tag.setBoolean("invalidInputs", craftingJob.invalidInputs);
         return tag;
     }
 
@@ -145,6 +156,9 @@ public class CraftingJob {
         if (!tag.hasKey("startTick", Constants.NBT.TAG_LONG)) {
             throw new IllegalArgumentException("Could not find a startTick entry in the given tag");
         }
+        if (!tag.hasKey("invalidInputs", Constants.NBT.TAG_BYTE)) {
+            throw new IllegalArgumentException("Could not find an invalidInputs entry in the given tag");
+        }
         int id = tag.getInteger("id");
         int channel = tag.getInteger("channel");
         PrioritizedRecipe prioritizedRecipe = PrioritizedRecipe.deserialize(tag.getCompoundTag("recipe"));
@@ -161,6 +175,7 @@ public class CraftingJob {
                 .deserialize(tag.getCompoundTag("lastMissingIngredients"));
         craftingJob.setLastMissingIngredients(lastMissingIngredients);
         craftingJob.setStartTick(tag.getLong("startTick"));
+        craftingJob.setInvalidInputs(tag.getBoolean("invalidInputs"));
         return craftingJob;
     }
 
