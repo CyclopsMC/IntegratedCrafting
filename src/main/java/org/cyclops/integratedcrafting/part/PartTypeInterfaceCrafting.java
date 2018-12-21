@@ -30,10 +30,12 @@ import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 import org.cyclops.integratedcrafting.capability.network.CraftingInterfaceConfig;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
 import org.cyclops.integratedcrafting.client.gui.GuiPartInterfaceCrafting;
+import org.cyclops.integratedcrafting.client.gui.GuiPartInterfaceCraftingSettings;
 import org.cyclops.integratedcrafting.core.CraftingJobHandler;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
 import org.cyclops.integratedcrafting.core.part.PartTypeCraftingBase;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCrafting;
+import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettings;
 import org.cyclops.integrateddynamics.api.evaluate.EvaluationException;
 import org.cyclops.integrateddynamics.api.evaluate.variable.IValue;
 import org.cyclops.integrateddynamics.api.item.IVariableFacade;
@@ -70,7 +72,17 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
     public PartTypeInterfaceCrafting(String name) {
         super(name);
         getModGui().getGuiHandler().registerGUI((settingsGuiProvider = new PartTypeConfigurable.GuiProviderSettings(
-                Helpers.getNewId(getModGui(), Helpers.IDType.GUI), getModGui())), ExtendedGuiHandler.PART);
+                Helpers.getNewId(getModGui(), Helpers.IDType.GUI), getModGui()) {
+            @Override
+            public Class<? extends Container> getContainer() {
+                return ContainerPartInterfaceCraftingSettings.class;
+            }
+
+            @Override
+            public Class<? extends GuiScreen> getGui() {
+                return GuiPartInterfaceCraftingSettings.class;
+            }
+        }), ExtendedGuiHandler.PART);
     }
 
     public IGuiContainerProvider getSettingsGuiProvider() {
@@ -94,7 +106,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
     @Override
     public Class<? extends Container> getContainer() {
-        return ContainerPartInterfaceCrafting.class; // TODO: allow setting channel in part settings
+        return ContainerPartInterfaceCrafting.class;
     }
 
     @Override
@@ -282,8 +294,22 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         public void setChannelCrafting(int channelCrafting) {
-            this.channelCrafting = channelCrafting;
-            sendUpdate();
+            if (this.channelCrafting != channelCrafting) {
+                // Unregister from the network
+                if (craftingNetwork != null) {
+                    craftingNetwork.removeCraftingInterface(this.channelCrafting, this);
+                }
+
+                // Update the channel
+                this.channelCrafting = channelCrafting;
+
+                // Re-register to the network
+                if (craftingNetwork != null) {
+                    craftingNetwork.addCraftingInterface(this.channelCrafting, this);
+                }
+
+                sendUpdate();
+            }
         }
 
         public int getChannelCrafting() {
