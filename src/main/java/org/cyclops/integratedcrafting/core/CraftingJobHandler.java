@@ -12,12 +12,14 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientSerializer;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
+import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobStatus;
@@ -321,7 +323,7 @@ public class CraftingJobHandler {
                 // Check if pendingCraftingJob can start and set as startingCraftingJob
                 // This requires checking the available ingredients AND if the crafting handler can accept it.
                 Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputs = CraftingHelpers.getRecipeInputs(
-                        CraftingHelpers.getNetworkStorageGetter(network, channel),
+                        CraftingHelpers.getNetworkStorageGetter(network, pendingCraftingJob.getChannel()),
                         pendingCraftingJob.getRecipe().getRecipe(), true, Maps.newIdentityHashMap(), true, 1);
                 if (inputs.getLeft() != null && !inputs.getLeft().isEmpty()) {
                     if (insertCrafting(targetPos, new MixedIngredients(inputs.getLeft()), true)) {
@@ -340,21 +342,26 @@ public class CraftingJobHandler {
             // Start the crafting job
             if (startingCraftingJob != null) {
                 // Remove ingredients from network
-                IMixedIngredients ingredients = CraftingHelpers.getRecipeInputs(network, channel,
+                IMixedIngredients ingredients = CraftingHelpers.getRecipeInputs(network, startingCraftingJob.getChannel(),
                         startingCraftingJob.getRecipe().getRecipe(), false, 1);
 
-                // Update state with expected outputs
-                markCraftingJobProcessing(startingCraftingJob,
-                        CraftingHelpers.getRecipeOutputs(startingCraftingJob.getRecipe().getRecipe()));
+                // This may not be null, error if it is null!
+                if (ingredients != null) {
+                    // Update state with expected outputs
+                    markCraftingJobProcessing(startingCraftingJob,
+                            CraftingHelpers.getRecipeOutputs(startingCraftingJob.getRecipe().getRecipe()));
 
-                // Push the ingredients to the crafting interface
-                insertCrafting(targetPos, ingredients, false);
+                    // Push the ingredients to the crafting interface
+                    insertCrafting(targetPos, ingredients, false);
 
-                // Register listeners for pending ingredients
-                for (IngredientComponent<?, ?> component : ingredients.getComponents()) {
-                    registerIngredientObserver(component, network);
+                    // Register listeners for pending ingredients
+                    for (IngredientComponent<?, ?> component : ingredients.getComponents()) {
+                        registerIngredientObserver(component, network);
+                    }
+                } else {
+                    // TODO: re-insert failed ingredients?
+                    IntegratedCrafting.clog(Level.WARN, "Corruption during crafting, lost: " + ingredients);
                 }
-
             }
         }
     }
