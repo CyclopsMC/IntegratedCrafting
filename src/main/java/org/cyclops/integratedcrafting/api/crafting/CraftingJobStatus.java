@@ -7,6 +7,11 @@ package org.cyclops.integratedcrafting.api.crafting;
 public enum CraftingJobStatus {
     /**
      * The crafting job has been scheduled,
+     * but is not processing yet because the crafting interface is still processing another job.
+     */
+    PENDING_INTERFACE,
+    /**
+     * The crafting job has been scheduled,
      * but is not processing yet because a dependency is still being processed.
      */
     PENDING_DEPENDENCIES,

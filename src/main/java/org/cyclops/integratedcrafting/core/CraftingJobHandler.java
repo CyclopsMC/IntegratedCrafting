@@ -408,7 +408,11 @@ public class CraftingJobHandler {
             if (dependencyGraph.hasDependencies(craftingJobId)) {
                 return CraftingJobStatus.PENDING_DEPENDENCIES;
             } else {
-                return CraftingJobStatus.PENDING_INGREDIENTS;
+                if (!craftingJob.getLastMissingIngredients().isEmpty()) {
+                    return CraftingJobStatus.PENDING_INGREDIENTS;
+                } else {
+                    return CraftingJobStatus.PENDING_INTERFACE;
+                }
             }
         } else if (processingCraftingJobs.containsKey(craftingJobId)) {
             return CraftingJobStatus.PROCESSING;
