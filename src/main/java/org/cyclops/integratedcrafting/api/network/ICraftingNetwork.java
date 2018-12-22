@@ -1,12 +1,12 @@
 package org.cyclops.integratedcrafting.api.network;
 
 import com.google.common.collect.Multimap;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
-import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 
 import javax.annotation.Nullable;
 import java.util.Iterator;
@@ -35,7 +35,7 @@ public interface ICraftingNetwork {
      * @param channel The crafting channel.
      * @return The recipe to interface mapping.
      */
-    public Multimap<PrioritizedRecipe, ICraftingInterface> getRecipeCraftingInterfaces(int channel);
+    public Multimap<IRecipeDefinition, ICraftingInterface> getRecipeCraftingInterfaces(int channel);
 
     /**
      * Get the recipe index on the given channel.

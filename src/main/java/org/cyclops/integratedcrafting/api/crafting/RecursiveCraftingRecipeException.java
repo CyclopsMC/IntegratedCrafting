@@ -1,8 +1,8 @@
 package org.cyclops.integratedcrafting.api.crafting;
 
 import com.google.common.collect.Lists;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
-import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ import java.util.List;
 public class RecursiveCraftingRecipeException extends Exception {
 
     private final IPrototypedIngredient prototypedIngredient;
-    private final List<PrioritizedRecipe> recipeStack;
+    private final List<IRecipeDefinition> recipeStack;
 
     public <T, M> RecursiveCraftingRecipeException(IPrototypedIngredient prototypedIngredient) {
         super();
@@ -25,7 +25,7 @@ public class RecursiveCraftingRecipeException extends Exception {
         return prototypedIngredient;
     }
 
-    public List<PrioritizedRecipe> getRecipeStack() {
+    public List<IRecipeDefinition> getRecipeStack() {
         return recipeStack;
     }
 
@@ -39,7 +39,7 @@ public class RecursiveCraftingRecipeException extends Exception {
         return String.format("[Infinite recursive recipe detected: %s, %s]", getPrototypedIngredient(), getRecipeStack());
     }
 
-    public void addRecipe(PrioritizedRecipe recipe) {
+    public void addRecipe(IRecipeDefinition recipe) {
         this.recipeStack.add(recipe);
     }
 

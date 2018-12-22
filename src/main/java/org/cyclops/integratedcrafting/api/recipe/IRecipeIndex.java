@@ -1,5 +1,6 @@
 package org.cyclops.integratedcrafting.api.recipe;
 
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 
 import java.util.Iterator;
@@ -14,7 +15,7 @@ public interface IRecipeIndex {
     /**
      * @return All recipes that are available.
      */
-    public Set<PrioritizedRecipe> getRecipes();
+    public Set<IRecipeDefinition> getRecipes();
 
     /**
      * Find recipes with the given output.
@@ -25,6 +26,6 @@ public interface IRecipeIndex {
      * @param <M> The matching condition parameter, may be Void.
      * @return An iterator of the recipes that have the given output.
      */
-    public <T, M> Iterator<PrioritizedRecipe> getRecipes(IngredientComponent<T, M> outputType, T output, M matchCondition);
+    public <T, M> Iterator<IRecipeDefinition> getRecipes(IngredientComponent<T, M> outputType, T output, M matchCondition);
 
 }

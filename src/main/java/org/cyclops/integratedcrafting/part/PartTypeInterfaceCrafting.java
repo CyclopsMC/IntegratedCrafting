@@ -27,7 +27,6 @@ import org.cyclops.integratedcrafting.api.crafting.CraftingJobStatus;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
-import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 import org.cyclops.integratedcrafting.capability.network.CraftingInterfaceConfig;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
 import org.cyclops.integratedcrafting.client.gui.GuiPartInterfaceCrafting;
@@ -45,6 +44,7 @@ import org.cyclops.integrateddynamics.api.network.IPartNetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
+import org.cyclops.integrateddynamics.api.part.PrioritizedPartPos;
 import org.cyclops.integrateddynamics.capability.network.PositionedAddonsNetworkIngredientsHandlerConfig;
 import org.cyclops.integrateddynamics.core.client.gui.ExtendedGuiHandler;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueHelpers;
@@ -236,7 +236,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private final List<IngredientInstanceWrapper<?, ?>> inventoryOutputBuffer;
         private int channelCrafting = 0;
 
-        private final List<PrioritizedRecipe> currentRecipes;
+        private final List<IRecipeDefinition> currentRecipes;
         private PartTarget target = null;
         private ICraftingNetwork craftingNetwork = null;
         private IPartNetwork partNetwork = null;
@@ -331,10 +331,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                                 if (value.getType() == ValueTypes.OBJECT_RECIPE) {
                                     Optional<IRecipeDefinition> recipeWrapper = ((ValueObjectTypeRecipe.ValueRecipe) value).getRawValue();
                                     if (recipeWrapper.isPresent()) {
-                                        IRecipeDefinition recipe = recipeWrapper.get();
-
-                                        // First priority is the part priority, after that, the index inside this inventoryVariables.
-                                        this.currentRecipes.add(new PrioritizedRecipe(recipe, getPriority(), i));
+                                        this.currentRecipes.add(recipeWrapper.get());
                                     }
 
                                 }
@@ -395,7 +392,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Override
-        public Collection<PrioritizedRecipe> getRecipes() {
+        public Collection<IRecipeDefinition> getRecipes() {
             return this.currentRecipes;
         }
 
@@ -435,6 +432,11 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         @Override
         public void cancelCraftingJob(int channel, int craftingJobId) {
             craftingJobHandler.markCraftingJobFinished(craftingJobId);
+        }
+
+        @Override
+        public PrioritizedPartPos getPosition() {
+            return PrioritizedPartPos.of(getTarget().getCenter(), getPriority());
         }
 
         public CraftingJobHandler getCraftingJobHandler() {

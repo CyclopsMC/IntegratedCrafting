@@ -2,8 +2,8 @@ package org.cyclops.integratedcrafting.part.aspect;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import org.apache.logging.log4j.Level;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
@@ -12,7 +12,6 @@ import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
-import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 import org.cyclops.integrateddynamics.api.part.aspect.IAspectRead;
 import org.cyclops.integrateddynamics.api.part.aspect.IAspectWrite;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeFluidStack;
@@ -71,7 +70,7 @@ public class CraftingAspects {
                                     int channel = data.getLeft().getValue(AspectReadBuilders.Network.PROPERTY_CHANNEL).getRawValue();
                                     Iterator<CraftingJob> it = data.getRight().getCraftingJobs(channel);
                                     while (it.hasNext()) {
-                                        recipes.add(ValueObjectTypeRecipe.ValueRecipe.of(it.next().getRecipe().getRecipe()));
+                                        recipes.add(ValueObjectTypeRecipe.ValueRecipe.of(it.next().getRecipe()));
                                     }
                                 }
                                 return ValueTypeList.ValueList.ofList(ValueTypes.OBJECT_RECIPE, recipes);
@@ -126,8 +125,8 @@ public class CraftingAspects {
                                     int channel = data.getLeft().getValue(AspectReadBuilders.Network.PROPERTY_CHANNEL).getRawValue();
                                     ICraftingNetwork craftingNetwork = data.getRight();
                                     IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
-                                    for (PrioritizedRecipe recipe : recipeIndex.getRecipes()) {
-                                        ingredients.add(ValueObjectTypeRecipe.ValueRecipe.of(recipe.getRecipe()));
+                                    for (IRecipeDefinition recipe : recipeIndex.getRecipes()) {
+                                        ingredients.add(ValueObjectTypeRecipe.ValueRecipe.of(recipe));
                                     }
                                 }
                                 return ValueTypeList.ValueList.ofList(ValueTypes.OBJECT_RECIPE, ingredients);

@@ -21,7 +21,6 @@ import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
 import org.cyclops.integratedcrafting.api.crafting.RecursiveCraftingRecipeException;
 import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeException;
-import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 import org.cyclops.integratedcrafting.ingredient.ComplexStack;
 import org.cyclops.integratedcrafting.ingredient.IngredientComponentStubs;
 import org.junit.Before;
@@ -947,7 +946,7 @@ public class TestCraftingHelpers {
     @Test(expected = UnknownCraftingRecipeException.class)
     public void testCalculateCraftingJobsUnknown() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
+        recipeIndex.addRecipe(recipeB);
 
         CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetterEmpty,
                 IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT, true,
@@ -957,7 +956,7 @@ public class TestCraftingHelpers {
     @Test(expected = UnknownCraftingRecipeException.class)
     public void testCalculateCraftingJobsUnknownCollect() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
+        recipeIndex.addRecipe(recipeB);
 
         try {
             CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetterEmpty,
@@ -974,7 +973,7 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsSingleOneAvailable() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
+        recipeIndex.addRecipe(recipeB);
 
         // Single crafting recipe with one available dependent
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -988,7 +987,7 @@ public class TestCraftingHelpers {
         assertThat(j.getId(), equalTo(0));
         assertThat(j.getChannel(), equalTo(0));
         assertThat(j.getAmount(), equalTo(1));
-        assertThat(j.getRecipe().getRecipe(), equalTo(recipeB));
+        assertThat(j.getRecipe(), equalTo(recipeB));
         assertThat(j.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA01_
@@ -1000,7 +999,7 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsSingleOneAvailableLowerRequested() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
+        recipeIndex.addRecipe(recipeB);
 
         // Single crafting recipe with one available dependent
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1014,7 +1013,7 @@ public class TestCraftingHelpers {
         assertThat(j.getId(), equalTo(0));
         assertThat(j.getChannel(), equalTo(0));
         assertThat(j.getAmount(), equalTo(1));
-        assertThat(j.getRecipe().getRecipe(), equalTo(recipeB));
+        assertThat(j.getRecipe(), equalTo(recipeB));
         assertThat(j.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA01_
@@ -1026,7 +1025,7 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsSingleMoreAvailable() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
+        recipeIndex.addRecipe(recipeB);
 
         // Single crafting recipe with one available dependent
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1040,7 +1039,7 @@ public class TestCraftingHelpers {
         assertThat(j.getId(), equalTo(0));
         assertThat(j.getChannel(), equalTo(0));
         assertThat(j.getAmount(), equalTo(1));
-        assertThat(j.getRecipe().getRecipe(), equalTo(recipeB));
+        assertThat(j.getRecipe(), equalTo(recipeB));
         assertThat(j.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA01_
@@ -1052,7 +1051,7 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsSingleOneAvailableNoCraftMissing() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
+        recipeIndex.addRecipe(recipeB);
 
         // Single crafting recipe with one available dependent
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1066,7 +1065,7 @@ public class TestCraftingHelpers {
         assertThat(j.getId(), equalTo(0));
         assertThat(j.getChannel(), equalTo(0));
         assertThat(j.getAmount(), equalTo(1));
-        assertThat(j.getRecipe().getRecipe(), equalTo(recipeB));
+        assertThat(j.getRecipe(), equalTo(recipeB));
         assertThat(j.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA01_
@@ -1078,8 +1077,8 @@ public class TestCraftingHelpers {
     @Test(expected = UnknownCraftingRecipeException.class)
     public void testCalculateCraftingJobsDoubleOneMissingNoCraftMissing() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
+        recipeIndex.addRecipe(recipeB);
+        recipeIndex.addRecipe(recipeA);
 
         // Single crafting recipe with one missing but craftable dependent
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1094,8 +1093,8 @@ public class TestCraftingHelpers {
     @Test(expected = UnknownCraftingRecipeException.class)
     public void testCalculateCraftingJobsDoubleOneMissingNoCraftMissingCollect() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
+        recipeIndex.addRecipe(recipeB);
+        recipeIndex.addRecipe(recipeA);
 
         // Single crafting recipe with one missing but craftable dependent
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1119,8 +1118,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleOneMissing() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
+        recipeIndex.addRecipe(recipeB);
+        recipeIndex.addRecipe(recipeA);
 
         // Single crafting recipe with one missing but craftable dependent
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1134,7 +1133,7 @@ public class TestCraftingHelpers {
         assertThat(j1.getId(), equalTo(1));
         assertThat(j1.getChannel(), equalTo(0));
         assertThat(j1.getAmount(), equalTo(1));
-        assertThat(j1.getRecipe().getRecipe(), equalTo(recipeB));
+        assertThat(j1.getRecipe(), equalTo(recipeB));
         assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
@@ -1155,7 +1154,7 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsSingleAlternativeAvailable() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBAlt));
+        recipeIndex.addRecipe(recipeBAlt);
 
         // Single crafting recipe with one missing, but one other available alternative
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1169,7 +1168,7 @@ public class TestCraftingHelpers {
         assertThat(j0.getId(), equalTo(0));
         assertThat(j0.getChannel(), equalTo(0));
         assertThat(j0.getAmount(), equalTo(1));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeBAlt));
+        assertThat(j0.getRecipe(), equalTo(recipeBAlt));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA01B
@@ -1181,8 +1180,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleOneMissingOneAvailable() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB2));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
+        recipeIndex.addRecipe(recipeB2);
+        recipeIndex.addRecipe(recipeA);
 
         // Single crafting recipe with one missing but craftable dependent (as an alternative), and one available dependent
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1197,7 +1196,7 @@ public class TestCraftingHelpers {
         assertThat(j1.getId(), equalTo(1));
         assertThat(j1.getChannel(), equalTo(0));
         assertThat(j1.getAmount(), equalTo(1));
-        assertThat(j1.getRecipe().getRecipe(), equalTo(recipeB2));
+        assertThat(j1.getRecipe(), equalTo(recipeB2));
         assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA01B
@@ -1221,8 +1220,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleThreeAvailableOverlapping() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB3));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
+        recipeIndex.addRecipe(recipeB3);
+        recipeIndex.addRecipe(recipeA);
 
         // Single crafting recipe with three requirements
         // Two items are available, one is missing, but craftable
@@ -1244,7 +1243,7 @@ public class TestCraftingHelpers {
         assertThat(j1.getId(), equalTo(1));
         assertThat(j1.getChannel(), equalTo(0));
         assertThat(j1.getAmount(), equalTo(1));
-        assertThat(j1.getRecipe().getRecipe(), equalTo(recipeB3));
+        assertThat(j1.getRecipe(), equalTo(recipeB3));
         assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(Sets.newHashSet(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX)), equalTo(Sets.newHashSet(
                 CA91B,
@@ -1269,8 +1268,8 @@ public class TestCraftingHelpers {
     @Test(expected = UnknownCraftingRecipeException.class)
     public void testCalculateCraftingJobsDoubleThreeAvailableOverlappingPartial() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB3));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
+        recipeIndex.addRecipe(recipeB3);
+        recipeIndex.addRecipe(recipeA);
 
         // Single crafting recipe with three requirements
         // Two items are available, one is missing, but craftable
@@ -1293,8 +1292,8 @@ public class TestCraftingHelpers {
     @Test(expected = UnknownCraftingRecipeException.class)
     public void testCalculateCraftingJobsDoubleThreeAvailableOverlappingPartialCollect() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB3));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
+        recipeIndex.addRecipe(recipeB3);
+        recipeIndex.addRecipe(recipeA);
 
         // Single crafting recipe with three requirements
         // Two items are available, one is missing, but craftable
@@ -1330,7 +1329,7 @@ public class TestCraftingHelpers {
     @Test(expected = RecursiveCraftingRecipeException.class)
     public void testCalculateCraftingJobsRecursive() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBRecursive));
+        recipeIndex.addRecipe(recipeBRecursive);
 
         // A recipe with infinite recursion
 
@@ -1341,8 +1340,8 @@ public class TestCraftingHelpers {
         } catch (RecursiveCraftingRecipeException e) {
             RecursiveCraftingRecipeException eExpected = new RecursiveCraftingRecipeException(
                     new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT));
-            eExpected.addRecipe(new PrioritizedRecipe(recipeBRecursive));
-            eExpected.addRecipe(new PrioritizedRecipe(recipeBRecursive));
+            eExpected.addRecipe(recipeBRecursive);
+            eExpected.addRecipe(recipeBRecursive);
             assertThat(e, equalTo(eExpected));
             throw e;
         }
@@ -1351,9 +1350,9 @@ public class TestCraftingHelpers {
     @Test(expected = RecursiveCraftingRecipeException.class)
     public void testCalculateCraftingJobsRecursiveDeep() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA9));
+        recipeIndex.addRecipe(recipeB);
+        recipeIndex.addRecipe(recipeA);
+        recipeIndex.addRecipe(recipeA9);
 
         // A recipe with infinite recursion
 
@@ -1364,10 +1363,10 @@ public class TestCraftingHelpers {
         } catch (RecursiveCraftingRecipeException e) {
             RecursiveCraftingRecipeException eExpected = new RecursiveCraftingRecipeException(
                     new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT));
-            eExpected.addRecipe(new PrioritizedRecipe(recipeB));
-            eExpected.addRecipe(new PrioritizedRecipe(recipeA9));
-            eExpected.addRecipe(new PrioritizedRecipe(recipeA));
-            eExpected.addRecipe(new PrioritizedRecipe(recipeB));
+            eExpected.addRecipe(recipeB);
+            eExpected.addRecipe(recipeA9);
+            eExpected.addRecipe(recipeA);
+            eExpected.addRecipe(recipeB);
             assertThat(e, equalTo(eExpected));
             throw e;
         }
@@ -1376,8 +1375,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsSingleMultipleRecipes1() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBAlt2));
+        recipeIndex.addRecipe(recipeB);
+        recipeIndex.addRecipe(recipeBAlt2);
 
         // Single crafting recipe with one missing, but one other available alternative
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1391,7 +1390,7 @@ public class TestCraftingHelpers {
         assertThat(j0.getId(), equalTo(0));
         assertThat(j0.getChannel(), equalTo(0));
         assertThat(j0.getAmount(), equalTo(1));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeBAlt2));
+        assertThat(j0.getRecipe(), equalTo(recipeBAlt2));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA91B
@@ -1403,8 +1402,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsSingleMultipleRecipes2() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBAlt2));
+        recipeIndex.addRecipe(recipeB);
+        recipeIndex.addRecipe(recipeBAlt2);
 
         // Single crafting recipe with one missing, but one other available alternative
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1418,7 +1417,7 @@ public class TestCraftingHelpers {
         assertThat(j0.getId(), equalTo(0));
         assertThat(j0.getChannel(), equalTo(0));
         assertThat(j0.getAmount(), equalTo(1));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeB));
+        assertThat(j0.getRecipe(), equalTo(recipeB));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA01_
@@ -1430,10 +1429,10 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsTriple() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB2Alt));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeAB));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeC));
+        recipeIndex.addRecipe(recipeB2Alt);
+        recipeIndex.addRecipe(recipeA);
+        recipeIndex.addRecipe(recipeAB);
+        recipeIndex.addRecipe(recipeC);
 
         // Complex recipe tree depth of 3, where the root has 2 branches
         // recipeB2Alt (4)
@@ -1455,7 +1454,7 @@ public class TestCraftingHelpers {
         assertThat(j4.getId(), equalTo(4));
         assertThat(j4.getChannel(), equalTo(0));
         assertThat(j4.getAmount(), equalTo(1));
-        assertThat(j4.getRecipe().getRecipe(), equalTo(recipeB2Alt));
+        assertThat(j4.getRecipe(), equalTo(recipeB2Alt));
         assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(5));
@@ -1469,7 +1468,7 @@ public class TestCraftingHelpers {
         CraftingJob j3 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 3).findFirst().get();
 
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeA));
+        assertThat(j0.getRecipe(), equalTo(recipeA));
         assertThat(j0.getAmount(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -1479,7 +1478,7 @@ public class TestCraftingHelpers {
         assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j4)));
 
         assertThat(j1.getChannel(), equalTo(0));
-        assertThat(j1.getRecipe().getRecipe(), equalTo(recipeA));
+        assertThat(j1.getRecipe(), equalTo(recipeA));
         assertThat(j1.getAmount(), equalTo(1));
         assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -1489,14 +1488,14 @@ public class TestCraftingHelpers {
         assertThat(craftingJobDependencyGraph.getDependents(j1), equalTo(Lists.newArrayList(j2)));
 
         assertThat(j2.getChannel(), equalTo(0));
-        assertThat(j2.getRecipe().getRecipe(), equalTo(recipeAB));
+        assertThat(j2.getRecipe(), equalTo(recipeAB));
         assertThat(j2.getAmount(), equalTo(1));
         assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(0));
         assertThat(craftingJobDependencyGraph.getDependencies(j2), equalTo(Lists.newArrayList(j1)));
         assertThat(craftingJobDependencyGraph.getDependents(j2), equalTo(Lists.newArrayList(j3)));
 
         assertThat(j3.getChannel(), equalTo(0));
-        assertThat(j3.getRecipe().getRecipe(), equalTo(recipeC));
+        assertThat(j3.getRecipe(), equalTo(recipeC));
         assertThat(j3.getAmount(), equalTo(1));
         assertThat(j3.getIngredientsStorage().getComponents().size(), equalTo(0));
         assertThat(craftingJobDependencyGraph.getDependencies(j3), equalTo(Lists.newArrayList(j2)));
@@ -1506,9 +1505,9 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsTriplePartiallyAvailable() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeAB));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeC));
+        recipeIndex.addRecipe(recipeA);
+        recipeIndex.addRecipe(recipeAB);
+        recipeIndex.addRecipe(recipeC);
 
         // Complex recipe tree depth of 3, where the second-to-last depth is partially available in storage
         //   recipeC (3)
@@ -1527,7 +1526,7 @@ public class TestCraftingHelpers {
         assertThat(j2.getId(), equalTo(2));
         assertThat(j2.getChannel(), equalTo(0));
         assertThat(j2.getAmount(), equalTo(2));
-        assertThat(j2.getRecipe().getRecipe(), equalTo(recipeC));
+        assertThat(j2.getRecipe(), equalTo(recipeC));
         assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(0));
 
 
@@ -1540,7 +1539,7 @@ public class TestCraftingHelpers {
         CraftingJob j1 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 1).findFirst().get();
 
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeA));
+        assertThat(j0.getRecipe(), equalTo(recipeA));
         assertThat(j0.getAmount(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -1550,7 +1549,7 @@ public class TestCraftingHelpers {
         assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j1)));
 
         assertThat(j1.getChannel(), equalTo(0));
-        assertThat(j1.getRecipe().getRecipe(), equalTo(recipeAB));
+        assertThat(j1.getRecipe(), equalTo(recipeAB));
         assertThat(j1.getAmount(), equalTo(2));
         assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -1563,7 +1562,7 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsSingleOneAvailableHigherRequested() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
+        recipeIndex.addRecipe(recipeB);
 
         // Single crafting recipe with one available dependent
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1577,7 +1576,7 @@ public class TestCraftingHelpers {
 
         assertThat(j0.getId(), equalTo(0));
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeB));
+        assertThat(j0.getRecipe(), equalTo(recipeB));
         assertThat(j0.getAmount(), equalTo(2));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -1592,7 +1591,7 @@ public class TestCraftingHelpers {
     @Test(expected = UnknownCraftingRecipeException.class)
     public void testCalculateCraftingJobsSingleOneAvailableHigherRequestedFew() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
+        recipeIndex.addRecipe(recipeB);
 
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
         storage.insert(CA01_, false);
@@ -1607,7 +1606,7 @@ public class TestCraftingHelpers {
     @Test(expected = UnknownCraftingRecipeException.class)
     public void testCalculateCraftingJobsSingleOneAvailableHigherRequestedFewCollect() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
+        recipeIndex.addRecipe(recipeB);
 
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
         storage.insert(CA01_, false);
@@ -1633,7 +1632,7 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsSingleOneAvailableALotHigherRequested() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeB));
+        recipeIndex.addRecipe(recipeB);
 
         // Single crafting recipe with one available dependent
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1646,7 +1645,7 @@ public class TestCraftingHelpers {
 
         assertThat(j0.getId(), equalTo(0));
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeB));
+        assertThat(j0.getRecipe(), equalTo(recipeB));
         assertThat(j0.getAmount(), equalTo(55));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -1661,8 +1660,8 @@ public class TestCraftingHelpers {
     @Test(expected = UnknownCraftingRecipeException.class)
     public void testCalculateCraftingJobsDoubleCompressBatchFew() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
+        recipeIndex.addRecipe(recipeBBatch);
+        recipeIndex.addRecipe(recipeA);
 
         // Single crafting recipe with one missing, but one other available alternative
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1681,8 +1680,8 @@ public class TestCraftingHelpers {
     @Test(expected = UnknownCraftingRecipeException.class)
     public void testCalculateCraftingJobsDoubleCompressBatchFewCollect() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
+        recipeIndex.addRecipe(recipeBBatch);
+        recipeIndex.addRecipe(recipeA);
 
         // Single crafting recipe with one missing, but one other available alternative
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1703,7 +1702,7 @@ public class TestCraftingHelpers {
             CraftingJob validJob = new CraftingJob(
                     0,
                     0,
-                    new PrioritizedRecipe(recipeA),
+                    recipeA,
                     4,
                     new MixedIngredients(storageMapValidJob)
             );
@@ -1721,8 +1720,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleCompressBatch() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
+        recipeIndex.addRecipe(recipeBBatch);
+        recipeIndex.addRecipe(recipeA);
 
         // Double crafting recipe where the dependencies are equal, and must be batched
         IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
@@ -1740,7 +1739,7 @@ public class TestCraftingHelpers {
         assertThat(j4.getId(), equalTo(4));
         assertThat(j4.getChannel(), equalTo(0));
         assertThat(j4.getAmount(), equalTo(1));
-        assertThat(j4.getRecipe().getRecipe(), equalTo(recipeBBatch));
+        assertThat(j4.getRecipe(), equalTo(recipeBBatch));
         assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
@@ -1748,7 +1747,7 @@ public class TestCraftingHelpers {
         CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
 
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeA));
+        assertThat(j0.getRecipe(), equalTo(recipeA));
         assertThat(j0.getAmount(), equalTo(5));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -1761,8 +1760,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleCompressBatchMultiOutput1() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeAMultiple));
+        recipeIndex.addRecipe(recipeBBatch);
+        recipeIndex.addRecipe(recipeAMultiple);
 
         // Double crafting recipe where the dependencies are equal, and must be batched
         // Also, the dependencies have multiple outputs!
@@ -1778,7 +1777,7 @@ public class TestCraftingHelpers {
         assertThat(j2.getId(), equalTo(2));
         assertThat(j2.getChannel(), equalTo(0));
         assertThat(j2.getAmount(), equalTo(1));
-        assertThat(j2.getRecipe().getRecipe(), equalTo(recipeBBatch));
+        assertThat(j2.getRecipe(), equalTo(recipeBBatch));
         assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
@@ -1786,7 +1785,7 @@ public class TestCraftingHelpers {
         CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
 
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeAMultiple));
+        assertThat(j0.getRecipe(), equalTo(recipeAMultiple));
         assertThat(j0.getAmount(), equalTo(2));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -1799,8 +1798,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleCompressBatchMultiOutput2() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeAMultiple));
+        recipeIndex.addRecipe(recipeBBatch);
+        recipeIndex.addRecipe(recipeAMultiple);
 
         // Double crafting recipe where the dependencies are equal, and must be batched
         // Also, the dependencies have multiple outputs!
@@ -1816,7 +1815,7 @@ public class TestCraftingHelpers {
         assertThat(j2.getId(), equalTo(2));
         assertThat(j2.getChannel(), equalTo(0));
         assertThat(j2.getAmount(), equalTo(1));
-        assertThat(j2.getRecipe().getRecipe(), equalTo(recipeBBatch));
+        assertThat(j2.getRecipe(), equalTo(recipeBBatch));
         assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
@@ -1824,7 +1823,7 @@ public class TestCraftingHelpers {
         CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
 
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeAMultiple));
+        assertThat(j0.getRecipe(), equalTo(recipeAMultiple));
         assertThat(j0.getAmount(), equalTo(2));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -1837,8 +1836,8 @@ public class TestCraftingHelpers {
     @Test(expected = UnknownCraftingRecipeException.class)
     public void testCalculateCraftingJobsDoubleCompressBatchMultiOutput2Few() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeAMultiple));
+        recipeIndex.addRecipe(recipeBBatch);
+        recipeIndex.addRecipe(recipeAMultiple);
 
         // Double crafting recipe where the dependencies are equal, and must be batched
         // Also, the dependencies have multiple outputs!
@@ -1855,8 +1854,8 @@ public class TestCraftingHelpers {
     @Test(expected = UnknownCraftingRecipeException.class)
     public void testCalculateCraftingJobsDoubleCompressBatchMultiOutput2FewCollect() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeAMultiple));
+        recipeIndex.addRecipe(recipeBBatch);
+        recipeIndex.addRecipe(recipeAMultiple);
 
         // Double crafting recipe where the dependencies are equal, and must be batched
         // Also, the dependencies have multiple outputs!
@@ -1875,7 +1874,7 @@ public class TestCraftingHelpers {
             CraftingJob validJob = new CraftingJob(
                     0,
                     0,
-                    new PrioritizedRecipe(recipeAMultiple),
+                    recipeAMultiple,
                     1,
                     new MixedIngredients(storageMapValidJob)
             );
@@ -1895,8 +1894,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleCompressBatchMultiOutput3() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch2));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeAMultiple));
+        recipeIndex.addRecipe(recipeBBatch2);
+        recipeIndex.addRecipe(recipeAMultiple);
 
         // Double crafting recipe where the dependencies are equal, and must be batched
         // Also, the dependencies have multiple outputs!
@@ -1913,7 +1912,7 @@ public class TestCraftingHelpers {
         assertThat(j3.getId(), equalTo(3));
         assertThat(j3.getChannel(), equalTo(0));
         assertThat(j3.getAmount(), equalTo(1));
-        assertThat(j3.getRecipe().getRecipe(), equalTo(recipeBBatch2));
+        assertThat(j3.getRecipe(), equalTo(recipeBBatch2));
         assertThat(j3.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
@@ -1921,7 +1920,7 @@ public class TestCraftingHelpers {
         CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
 
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeAMultiple));
+        assertThat(j0.getRecipe(), equalTo(recipeAMultiple));
         assertThat(j0.getAmount(), equalTo(3));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -1934,8 +1933,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleCompressBatchMultiOutput4() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch2));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeAMultipleAux));
+        recipeIndex.addRecipe(recipeBBatch2);
+        recipeIndex.addRecipe(recipeAMultipleAux);
 
         // Double crafting recipe where the dependencies are equal, and must be batched
         // Also, the dependencies have multiple outputs!
@@ -1953,7 +1952,7 @@ public class TestCraftingHelpers {
         assertThat(j3.getId(), equalTo(3));
         assertThat(j3.getChannel(), equalTo(0));
         assertThat(j3.getAmount(), equalTo(1));
-        assertThat(j3.getRecipe().getRecipe(), equalTo(recipeBBatch2));
+        assertThat(j3.getRecipe(), equalTo(recipeBBatch2));
         assertThat(j3.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
@@ -1961,7 +1960,7 @@ public class TestCraftingHelpers {
         CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
 
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeAMultipleAux));
+        assertThat(j0.getRecipe(), equalTo(recipeAMultipleAux));
         assertThat(j0.getAmount(), equalTo(3));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -1974,7 +1973,7 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleCompressBatchEmpty() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch3));
+        recipeIndex.addRecipe(recipeBBatch3);
 
         // Crafting recipe where the dependencies are equal, and must be batched
         // but also, there is an empty instance in the recipe
@@ -1992,7 +1991,7 @@ public class TestCraftingHelpers {
         assertThat(j0.getId(), equalTo(0));
         assertThat(j0.getChannel(), equalTo(0));
         assertThat(j0.getAmount(), equalTo(1));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeBBatch3));
+        assertThat(j0.getRecipe(), equalTo(recipeBBatch3));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA04_
@@ -2002,8 +2001,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleCompressBatchEmptySub() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch3));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeA));
+        recipeIndex.addRecipe(recipeBBatch3);
+        recipeIndex.addRecipe(recipeA);
 
         // Crafting recipe where the dependencies are equal, are crafted via a sub-recipe, and must be batched
         // but also, there is an empty instance in the recipe.
@@ -2021,7 +2020,7 @@ public class TestCraftingHelpers {
         assertThat(j4.getId(), equalTo(4));
         assertThat(j4.getChannel(), equalTo(0));
         assertThat(j4.getAmount(), equalTo(1));
-        assertThat(j4.getRecipe().getRecipe(), equalTo(recipeBBatch3));
+        assertThat(j4.getRecipe(), equalTo(recipeBBatch3));
         assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
@@ -2029,7 +2028,7 @@ public class TestCraftingHelpers {
         CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
 
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeA));
+        assertThat(j0.getRecipe(), equalTo(recipeA));
         assertThat(j0.getAmount(), equalTo(4));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -2042,8 +2041,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleCompressBatchEmptySubMultiOutput() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch3));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeAMultiple2));
+        recipeIndex.addRecipe(recipeBBatch3);
+        recipeIndex.addRecipe(recipeAMultiple2);
 
         // Crafting recipe where the dependencies are equal, are crafted via a sub-recipe, and must be batched
         // but also, there is an empty instance in the recipe.
@@ -2059,7 +2058,7 @@ public class TestCraftingHelpers {
         assertThat(j2.getId(), equalTo(2));
         assertThat(j2.getChannel(), equalTo(0));
         assertThat(j2.getAmount(), equalTo(1));
-        assertThat(j2.getRecipe().getRecipe(), equalTo(recipeBBatch3));
+        assertThat(j2.getRecipe(), equalTo(recipeBBatch3));
         assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
@@ -2067,7 +2066,7 @@ public class TestCraftingHelpers {
         CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
 
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeAMultiple2));
+        assertThat(j0.getRecipe(), equalTo(recipeAMultiple2));
         assertThat(j0.getAmount(), equalTo(2));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -2080,8 +2079,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleCompressBatchEmptySubMultiOutputChest1() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch4));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeAMultiple4));
+        recipeIndex.addRecipe(recipeBBatch4);
+        recipeIndex.addRecipe(recipeAMultiple4);
 
         // This corresponds to crafting 1 minecraft chest (CB02_), where 4 planks (CA04_) are available,
         // but 4 more need to be crafted with 4 available logs (CA91B).
@@ -2097,7 +2096,7 @@ public class TestCraftingHelpers {
         assertThat(j1.getId(), equalTo(1));
         assertThat(j1.getChannel(), equalTo(0));
         assertThat(j1.getAmount(), equalTo(1));
-        assertThat(j1.getRecipe().getRecipe(), equalTo(recipeBBatch4));
+        assertThat(j1.getRecipe(), equalTo(recipeBBatch4));
         assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA04_
@@ -2108,7 +2107,7 @@ public class TestCraftingHelpers {
         CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
 
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeAMultiple4));
+        assertThat(j0.getRecipe(), equalTo(recipeAMultiple4));
         assertThat(j0.getAmount(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -2121,8 +2120,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleCompressBatchEmptySubMultiOutputChest4() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch4));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeAMultiple4));
+        recipeIndex.addRecipe(recipeBBatch4);
+        recipeIndex.addRecipe(recipeAMultiple4);
 
         // This corresponds to crafting 4 minecraft chest (CB08_), where 4 planks (CA04_) are available,
         // but 28 more need to be crafted with 7 available logs (CA97B).
@@ -2138,7 +2137,7 @@ public class TestCraftingHelpers {
         assertThat(j7.getId(), equalTo(7));
         assertThat(j7.getChannel(), equalTo(0));
         assertThat(j7.getAmount(), equalTo(4));
-        assertThat(j7.getRecipe().getRecipe(), equalTo(recipeBBatch4));
+        assertThat(j7.getRecipe(), equalTo(recipeBBatch4));
         assertThat(j7.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j7.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA04_
@@ -2149,7 +2148,7 @@ public class TestCraftingHelpers {
         CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
 
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeAMultiple4));
+        assertThat(j0.getRecipe(), equalTo(recipeAMultiple4));
         assertThat(j0.getAmount(), equalTo(7));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -2162,8 +2161,8 @@ public class TestCraftingHelpers {
     @Test
     public void testCalculateCraftingJobsDoubleCompressBatchEmptySubMultiOutputChest5() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeBBatch4));
-        recipeIndex.addRecipe(new PrioritizedRecipe(recipeAMultiple4));
+        recipeIndex.addRecipe(recipeBBatch4);
+        recipeIndex.addRecipe(recipeAMultiple4);
 
         // This corresponds to crafting 5 minecraft chest (CB010_), where 4 planks (CA04_) are available,
         // but 36 more need to be crafted with 9 available logs (CA99B).
@@ -2179,7 +2178,7 @@ public class TestCraftingHelpers {
         assertThat(j8.getId(), equalTo(8));
         assertThat(j8.getChannel(), equalTo(0));
         assertThat(j8.getAmount(), equalTo(5));
-        assertThat(j8.getRecipe().getRecipe(), equalTo(recipeBBatch4));
+        assertThat(j8.getRecipe(), equalTo(recipeBBatch4));
         assertThat(j8.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j8.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA04_
@@ -2190,7 +2189,7 @@ public class TestCraftingHelpers {
         CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
 
         assertThat(j0.getChannel(), equalTo(0));
-        assertThat(j0.getRecipe().getRecipe(), equalTo(recipeAMultiple4));
+        assertThat(j0.getRecipe(), equalTo(recipeAMultiple4));
         assertThat(j0.getAmount(), equalTo(9));
         assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
         assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(

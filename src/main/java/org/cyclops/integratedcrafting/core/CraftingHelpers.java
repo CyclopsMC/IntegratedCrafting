@@ -29,7 +29,6 @@ import org.cyclops.integratedcrafting.api.crafting.RecursiveCraftingRecipeExcept
 import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeException;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
-import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
 import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
@@ -156,7 +155,7 @@ public class CraftingHelpers {
      * @throws RecursiveCraftingRecipeException If an infinite recursive recipe was detected.
      */
     public static CraftingJob calculateCraftingJobs(INetwork network, int channel,
-                                                    PrioritizedRecipe recipe, int amount, boolean craftMissing,
+                                                    IRecipeDefinition recipe, int amount, boolean craftMissing,
                                                     IIdentifierGenerator identifierGenerator,
                                                     CraftingJobDependencyGraph craftingJobsGraph,
                                                     boolean collectMissingRecipes)
@@ -251,15 +250,15 @@ public class CraftingHelpers {
         long instanceQuantity = matcher.getQuantity(instance);
 
         // Loop over all available recipes, and return the first valid one.
-        Iterator<PrioritizedRecipe> recipes = recipeIndex.getRecipes(ingredientComponent, instance, quantifierlessCondition);
+        Iterator<IRecipeDefinition> recipes = recipeIndex.getRecipes(ingredientComponent, instance, quantifierlessCondition);
         List<UnknownCraftingRecipeException> firstMissingDependencies = Lists.newArrayList();
         Map<IngredientComponent<?, ?>, List<?>> firstIngredientsStorage = Collections.emptyMap();
         List<CraftingJob> firstPartialCraftingJobs = Lists.newArrayList();
         while (recipes.hasNext()) {
-            PrioritizedRecipe recipe = recipes.next();
+            IRecipeDefinition recipe = recipes.next();
 
             // Calculate the quantity for the given instance that the recipe outputs
-            long recipeOutputQuantity = getOutputQuantityForRecipe(recipe.getRecipe(), ingredientComponent, instance, quantifierlessCondition);
+            long recipeOutputQuantity = getOutputQuantityForRecipe(recipe, ingredientComponent, instance, quantifierlessCondition);
             // Based on the quantity of the recipe output, calculate the amount of required recipe jobs.
             int amount = (int) Math.ceil(((float) instanceQuantity) / (float) recipeOutputQuantity);
 
@@ -313,7 +312,7 @@ public class CraftingHelpers {
     protected static PartialCraftingJobCalculation calculateCraftingJobs(
             IRecipeIndex recipeIndex, int channel,
             Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
-            PrioritizedRecipe recipe, int amount, boolean craftMissing,
+            IRecipeDefinition recipe, int amount, boolean craftMissing,
             Map<IngredientComponent<?, ?>,
                     IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemory,
             IIdentifierGenerator identifierGenerator,
@@ -326,7 +325,7 @@ public class CraftingHelpers {
 
         // Check if all requirements are met for this recipe, if so return directly (don't schedule yet)
         Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> simulation =
-                getRecipeInputs(storageGetter, recipe.getRecipe(), true, simulatedExtractionMemory,
+                getRecipeInputs(storageGetter, recipe, true, simulatedExtractionMemory,
                         true, amount);
         Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> missingIngredients = simulation.getRight();
         if (!craftMissing && !missingIngredients.isEmpty()) {
@@ -509,13 +508,13 @@ public class CraftingHelpers {
                     Object dependencyQuantifierlessCondition = dependencyMatcher.withoutCondition(prototype.getCondition(),
                             dependencyComponent.getPrimaryQuantifier().getMatchCondition());
                     long requestedQuantity = dependencyMatcher.getQuantity(prototype.getPrototype());
-                    for (IngredientComponent outputComponent : dependency.getRecipe().getRecipe().getOutput().getComponents()) {
+                    for (IngredientComponent outputComponent : dependency.getRecipe().getOutput().getComponents()) {
                         IngredientCollectionPrototypeMap<?, ?> componentSurplus = dependenciesOutputSurplus.get(outputComponent);
                         if (componentSurplus == null) {
                             componentSurplus = new IngredientCollectionPrototypeMap<>(outputComponent, true);
                             dependenciesOutputSurplus.put(outputComponent, componentSurplus);
                         }
-                        List<Object> instances = dependency.getRecipe().getRecipe().getOutput().getInstances(outputComponent);
+                        List<Object> instances = dependency.getRecipe().getOutput().getInstances(outputComponent);
                         long recipeAmount = dependency.getAmount();
                         if (recipeAmount > 1) {
                             IIngredientMatcher matcher = outputComponent.getMatcher();
@@ -566,9 +565,9 @@ public class CraftingHelpers {
 
             // Add the valid sub-recipe it to our dependencies
             // If the recipe was already present at this level, just increment the amount of the existing job.
-            CraftingJob existingJob = dependencies.get(dependency.getRecipe().getRecipe());
+            CraftingJob existingJob = dependencies.get(dependency.getRecipe());
             if (existingJob == null) {
-                dependencies.put(dependency.getRecipe().getRecipe(), dependency);
+                dependencies.put(dependency.getRecipe(), dependency);
             } else {
                 existingJob.setAmount(existingJob.getAmount() + dependency.getAmount());
                 existingJob.setIngredientsStorage(mergeMixedIngredients(

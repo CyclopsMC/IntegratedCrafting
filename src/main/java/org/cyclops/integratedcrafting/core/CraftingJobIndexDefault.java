@@ -63,7 +63,7 @@ public class CraftingJobIndexDefault implements ICraftingJobIndexModifiable {
     @Override
     public void addCraftingJob(CraftingJob craftingJob) {
         craftingJobs.put(craftingJob.getId(), craftingJob);
-        for (IngredientComponent<?, ?> recipeComponent : craftingJob.getRecipe().getRecipe().getOutput().getComponents()) {
+        for (IngredientComponent<?, ?> recipeComponent : craftingJob.getRecipe().getOutput().getComponents()) {
             IIngredientMapMutable<?, ?, Collection<CraftingJob>> index = recipeComponentIndexes.computeIfAbsent(recipeComponent, this::initializeIndex);
             if (index != null) {
                 addCraftingJobForComponent(index, craftingJob);
@@ -73,7 +73,7 @@ public class CraftingJobIndexDefault implements ICraftingJobIndexModifiable {
 
     protected <T, M> void addCraftingJobForComponent(IIngredientMapMutable<T, M, Collection<CraftingJob>> index,
                                                      CraftingJob craftingJob) {
-        for (T instance : craftingJob.getRecipe().getRecipe().getOutput().getInstances(index.getComponent())) {
+        for (T instance : craftingJob.getRecipe().getOutput().getInstances(index.getComponent())) {
             Collection<CraftingJob> set = index.get(instance);
             if (set == null) {
                 set = Sets.newIdentityHashSet();
@@ -86,7 +86,7 @@ public class CraftingJobIndexDefault implements ICraftingJobIndexModifiable {
     @Override
     public void removeCraftingJob(CraftingJob craftingJob) {
         craftingJobs.remove(craftingJob.getId());
-        for (IngredientComponent<?, ?> recipeComponent : craftingJob.getRecipe().getRecipe().getOutput().getComponents()) {
+        for (IngredientComponent<?, ?> recipeComponent : craftingJob.getRecipe().getOutput().getComponents()) {
             IIngredientMapMutable<?, ?, Collection<CraftingJob>> index = recipeComponentIndexes.get(recipeComponent);
             if (index != null) {
                 removeCraftingJobForComponent(index, craftingJob);
@@ -96,7 +96,7 @@ public class CraftingJobIndexDefault implements ICraftingJobIndexModifiable {
 
     protected <T, M> void removeCraftingJobForComponent(IIngredientMapMutable<T, M, Collection<CraftingJob>> index,
                                                         CraftingJob craftingJob) {
-        for (T instance : craftingJob.getRecipe().getRecipe().getOutput().getInstances(index.getComponent())) {
+        for (T instance : craftingJob.getRecipe().getOutput().getInstances(index.getComponent())) {
             Collection<CraftingJob> set = index.get(instance);
             if (set != null) {
                 if (set.remove(craftingJob)) {

@@ -1,11 +1,13 @@
 package org.cyclops.integratedcrafting.api.crafting;
 
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
-import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
+import org.cyclops.integrateddynamics.api.part.PrioritizedPartPos;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +21,7 @@ public interface ICraftingInterface {
     /**
      * @return The collection of recipes that is exposed by this crafting interface.
      */
-    public Collection<PrioritizedRecipe> getRecipes();
+    public Collection<IRecipeDefinition> getRecipes();
 
     /**
      * Add the given crafting job to the list of crafting jobs.
@@ -63,5 +65,14 @@ public interface ICraftingInterface {
      * @param craftingJobId A crafting job id.
      */
     public void cancelCraftingJob(int channel, int craftingJobId);
+
+    /**
+     * @return The prioritized position of this interface.
+     */
+    public PrioritizedPartPos getPosition();
+
+    public static Comparator<ICraftingInterface> createComparator() {
+        return Comparator.comparing(ICraftingInterface::getPosition);
+    }
 
 }

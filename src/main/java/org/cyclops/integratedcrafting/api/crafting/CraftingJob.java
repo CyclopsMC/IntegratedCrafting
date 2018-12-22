@@ -6,9 +6,9 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagIntArray;
 import net.minecraftforge.common.util.Constants;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 import org.cyclops.integratedcrafting.core.MissingIngredients;
 
 import java.util.Map;
@@ -20,7 +20,7 @@ public class CraftingJob {
 
     private final int id;
     private final int channel;
-    private final PrioritizedRecipe recipe;
+    private final IRecipeDefinition recipe;
     private final IntList dependencyCraftingJobs;
     private final IntList dependentCraftingJobs;
     private int amount;
@@ -29,7 +29,7 @@ public class CraftingJob {
     private long startTick;
     private boolean invalidInputs;
 
-    public CraftingJob(int id, int channel, PrioritizedRecipe recipe, int amount, IMixedIngredients ingredientsStorage) {
+    public CraftingJob(int id, int channel, IRecipeDefinition recipe, int amount, IMixedIngredients ingredientsStorage) {
         this.id = id;
         this.channel = channel;
         this.recipe = recipe;
@@ -49,7 +49,7 @@ public class CraftingJob {
         return this.channel;
     }
 
-    public PrioritizedRecipe getRecipe() {
+    public IRecipeDefinition getRecipe() {
         return this.recipe;
     }
 
@@ -117,7 +117,7 @@ public class CraftingJob {
         NBTTagCompound tag = new NBTTagCompound();
         tag.setInteger("id", craftingJob.id);
         tag.setInteger("channel", craftingJob.channel);
-        tag.setTag("recipe", PrioritizedRecipe.serialize(craftingJob.recipe));
+        tag.setTag("recipe", IRecipeDefinition.serialize(craftingJob.recipe));
         tag.setTag("dependencies", new NBTTagIntArray(craftingJob.getDependencyCraftingJobs()));
         tag.setTag("dependents", new NBTTagIntArray(craftingJob.getDependentCraftingJobs()));
         tag.setInteger("amount", craftingJob.amount);
@@ -161,10 +161,10 @@ public class CraftingJob {
         }
         int id = tag.getInteger("id");
         int channel = tag.getInteger("channel");
-        PrioritizedRecipe prioritizedRecipe = PrioritizedRecipe.deserialize(tag.getCompoundTag("recipe"));
+        IRecipeDefinition recipe = IRecipeDefinition.deserialize(tag.getCompoundTag("recipe"));
         int amount = tag.getInteger("amount");
         IMixedIngredients ingredientsStorage = IMixedIngredients.deserialize(tag.getCompoundTag("ingredientsStorage"));
-        CraftingJob craftingJob = new CraftingJob(id, channel, prioritizedRecipe, amount, ingredientsStorage);
+        CraftingJob craftingJob = new CraftingJob(id, channel, recipe, amount, ingredientsStorage);
         for (int dependency : tag.getIntArray("dependencies")) {
             craftingJob.dependencyCraftingJobs.add(dependency);
         }

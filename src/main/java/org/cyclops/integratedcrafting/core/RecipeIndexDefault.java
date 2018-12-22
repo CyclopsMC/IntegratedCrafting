@@ -2,6 +2,8 @@ package org.cyclops.integratedcrafting.core;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.datastructure.DistinctIterator;
 import org.cyclops.cyclopscore.datastructure.MultitransformIterator;
@@ -9,7 +11,6 @@ import org.cyclops.cyclopscore.ingredient.collection.IIngredientMapMutable;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientHashMap;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndexModifiable;
-import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -23,52 +24,52 @@ import java.util.Set;
  */
 public class RecipeIndexDefault implements IRecipeIndexModifiable {
 
-    private final Map<IngredientComponent<?, ?>, IIngredientMapMutable<?, ?, Set<PrioritizedRecipe>>> recipeComponentIndexes;
-    private final Set<PrioritizedRecipe> recipes;
+    private final Map<IngredientComponent<?, ?>, IIngredientMapMutable<?, ?, Set<IRecipeDefinition>>> recipeComponentIndexes;
+    private final Set<IRecipeDefinition> recipes;
 
     public RecipeIndexDefault() {
         this.recipeComponentIndexes = Maps.newIdentityHashMap();
-        this.recipes = PrioritizedRecipe.newOutputSortedSet();
+        this.recipes = Sets.newHashSet();
     }
 
     @Override
-    public Set<PrioritizedRecipe> getRecipes() {
+    public Set<IRecipeDefinition> getRecipes() {
         return Collections.unmodifiableSet(recipes);
     }
 
     @Override
-    public <T, M> Iterator<PrioritizedRecipe> getRecipes(IngredientComponent<T, M> outputType, T output, M matchCondition) {
-        IIngredientMapMutable<?, ?, Set<PrioritizedRecipe>> index = recipeComponentIndexes.get(outputType);
+    public <T, M> Iterator<IRecipeDefinition> getRecipes(IngredientComponent<T, M> outputType, T output, M matchCondition) {
+        IIngredientMapMutable<?, ?, Set<IRecipeDefinition>> index = recipeComponentIndexes.get(outputType);
         if (index == null) {
             return Iterators.forArray();
         }
         return new DistinctIterator<>(MultitransformIterator.flattenIterableIterator(
-                Iterators.transform(((IIngredientMapMutable<T, M, Set<PrioritizedRecipe>>) index)
+                Iterators.transform(((IIngredientMapMutable<T, M, Set<IRecipeDefinition>>) index)
                         .iterator(output, matchCondition), (entry) -> entry.getValue())), true);
     }
 
     @Nullable
-    protected <T, M> IIngredientMapMutable<T, M, Set<PrioritizedRecipe>> initializeIndex(IngredientComponent<T, M> recipeComponent) {
+    protected <T, M> IIngredientMapMutable<T, M, Set<IRecipeDefinition>> initializeIndex(IngredientComponent<T, M> recipeComponent) {
         return new IngredientHashMap<>(recipeComponent);
     }
 
     @Override
-    public void addRecipe(PrioritizedRecipe prioritizedRecipe) {
+    public void addRecipe(IRecipeDefinition prioritizedRecipe) {
         recipes.add(prioritizedRecipe);
-        for (IngredientComponent<?, ?> recipeComponent : prioritizedRecipe.getRecipe().getOutput().getComponents()) {
-            IIngredientMapMutable<?, ?, Set<PrioritizedRecipe>> index = recipeComponentIndexes.computeIfAbsent(recipeComponent, this::initializeIndex);
+        for (IngredientComponent<?, ?> recipeComponent : prioritizedRecipe.getOutput().getComponents()) {
+            IIngredientMapMutable<?, ?, Set<IRecipeDefinition>> index = recipeComponentIndexes.computeIfAbsent(recipeComponent, this::initializeIndex);
             if (index != null) {
                 addRecipeForComponent(index, prioritizedRecipe);
             }
         }
     }
 
-    protected <T, M> void addRecipeForComponent(IIngredientMapMutable<T, M, Set<PrioritizedRecipe>> index,
-                                                PrioritizedRecipe prioritizedRecipe) {
-        for (T instance : prioritizedRecipe.getRecipe().getOutput().getInstances(index.getComponent())) {
-            Set<PrioritizedRecipe> set = index.get(instance);
+    protected <T, M> void addRecipeForComponent(IIngredientMapMutable<T, M, Set<IRecipeDefinition>> index,
+                                                IRecipeDefinition prioritizedRecipe) {
+        for (T instance : prioritizedRecipe.getOutput().getInstances(index.getComponent())) {
+            Set<IRecipeDefinition> set = index.get(instance);
             if (set == null) {
-                set = PrioritizedRecipe.newOutputSortedSet();
+                set = Sets.newHashSet();
                 index.put(instance, set);
             }
             set.add(prioritizedRecipe);
@@ -76,20 +77,20 @@ public class RecipeIndexDefault implements IRecipeIndexModifiable {
     }
 
     @Override
-    public void removeRecipe(PrioritizedRecipe prioritizedRecipe) {
+    public void removeRecipe(IRecipeDefinition prioritizedRecipe) {
         recipes.remove(prioritizedRecipe);
-        for (IngredientComponent<?, ?> recipeComponent : prioritizedRecipe.getRecipe().getOutput().getComponents()) {
-            IIngredientMapMutable<?, ?, Set<PrioritizedRecipe>> index = recipeComponentIndexes.get(recipeComponent);
+        for (IngredientComponent<?, ?> recipeComponent : prioritizedRecipe.getOutput().getComponents()) {
+            IIngredientMapMutable<?, ?, Set<IRecipeDefinition>> index = recipeComponentIndexes.get(recipeComponent);
             if (index != null) {
                 removeRecipeForComponent(index, prioritizedRecipe);
             }
         }
     }
 
-    protected <T, M> void removeRecipeForComponent(IIngredientMapMutable<T, M, Set<PrioritizedRecipe>> index,
-                                                   PrioritizedRecipe prioritizedRecipe) {
-        for (T instance : prioritizedRecipe.getRecipe().getOutput().getInstances(index.getComponent())) {
-            Set<PrioritizedRecipe> set = index.get(instance);
+    protected <T, M> void removeRecipeForComponent(IIngredientMapMutable<T, M, Set<IRecipeDefinition>> index,
+                                                   IRecipeDefinition prioritizedRecipe) {
+        for (T instance : prioritizedRecipe.getOutput().getInstances(index.getComponent())) {
+            Set<IRecipeDefinition> set = index.get(instance);
             if (set != null) {
                 if (set.remove(prioritizedRecipe)) {
                     if (set.isEmpty()) {

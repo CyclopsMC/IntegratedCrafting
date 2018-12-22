@@ -1,7 +1,7 @@
 package org.cyclops.integratedcrafting.api.crafting;
 
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
-import org.cyclops.integratedcrafting.api.recipe.PrioritizedRecipe;
 
 import java.util.List;
 
@@ -15,13 +15,13 @@ import java.util.List;
  */
 public class FailedCraftingRecipeException extends Exception {
 
-    private final PrioritizedRecipe recipe;
+    private final IRecipeDefinition recipe;
     private final long quantityMissing;
     private final List<UnknownCraftingRecipeException> missingChildRecipes;
     private final IMixedIngredients ingredientsStorage;
     private final List<CraftingJob> partialCraftingJobs;
 
-    public FailedCraftingRecipeException(PrioritizedRecipe recipe, long quantityMissing,
+    public FailedCraftingRecipeException(IRecipeDefinition recipe, long quantityMissing,
                                          List<UnknownCraftingRecipeException> missingChildRecipes,
                                          IMixedIngredients ingredientsStorage, List<CraftingJob> partialCraftingJobs) {
         super();
@@ -32,7 +32,7 @@ public class FailedCraftingRecipeException extends Exception {
         this.partialCraftingJobs = partialCraftingJobs;
     }
 
-    public PrioritizedRecipe getRecipe() {
+    public IRecipeDefinition getRecipe() {
         return recipe;
     }
 
@@ -55,7 +55,7 @@ public class FailedCraftingRecipeException extends Exception {
     @Override
     public String getMessage() {
         return String.format("Could craft the recipe %s (with %s missing, and %s stored, and %s partial), with missing sub-recipes: %s",
-                getRecipe().getRecipe(), getQuantityMissing(), getIngredientsStorage(), getPartialCraftingJobs(), getMissingChildRecipes());
+                getRecipe(), getQuantityMissing(), getIngredientsStorage(), getPartialCraftingJobs(), getMissingChildRecipes());
     }
 
     @Override
