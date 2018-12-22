@@ -29,6 +29,7 @@ import java.util.UUID;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * A crafting process override for crafting tables.
@@ -117,7 +118,9 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
     }
 
     @Override
-    public boolean craft(PartPos target, IMixedIngredients ingredients, ICraftingResultsSink resultsSink, boolean simulate) {
+    public boolean craft(Function<IngredientComponent<?, ?>, PartPos> targetGetter,
+                         IMixedIngredients ingredients, ICraftingResultsSink resultsSink, boolean simulate) {
+        PartPos target = targetGetter.apply(IngredientComponent.ITEMSTACK);
         CraftingGrid grid = new CraftingGrid(ingredients, 3, 3);
         IRecipe recipe = getRecipe(grid, target.getPos().getWorld());
         if (recipe != null) {

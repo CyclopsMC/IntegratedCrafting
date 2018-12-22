@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
@@ -462,6 +463,23 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         @Override
         public <T, M> void addResult(IngredientComponent<T, M> ingredientComponent, T instance) {
             this.getInventoryOutputBuffer().add(new IngredientInstanceWrapper<>(ingredientComponent, instance));
+        }
+
+        public void setIngredientComponentTargetSideOverride(IngredientComponent<?, ?> ingredientComponent, EnumFacing side) {
+            if (getTarget().getTarget().getSide() == side) {
+                craftingJobHandler.setIngredientComponentTarget(ingredientComponent, null);
+            } else {
+                craftingJobHandler.setIngredientComponentTarget(ingredientComponent, side);
+            }
+            sendUpdate();
+        }
+
+        public EnumFacing getIngredientComponentTargetSideOverride(IngredientComponent<?, ?> ingredientComponent) {
+            EnumFacing side = craftingJobHandler.getIngredientComponentTarget(ingredientComponent);
+            if (side == null) {
+                side = getTarget().getTarget().getSide();
+            }
+            return side;
         }
     }
 }

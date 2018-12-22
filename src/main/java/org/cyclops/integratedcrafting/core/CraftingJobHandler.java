@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 import org.apache.commons.lang3.tuple.Pair;
@@ -31,9 +32,11 @@ import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * A CraftingJobHandler maintains a list of processing and pending crafting job.
@@ -59,6 +62,7 @@ public class CraftingJobHandler {
     private final List<IngredientComponent<?, ?>> observersPendingCreation;
     private final List<IngredientComponent<?, ?>> observersPendingDeletion;
     private final Int2ObjectMap<CraftingJob> finishedCraftingJobs;
+    private final Map<IngredientComponent<?, ?>, EnumFacing> ingredientComponentTargetOverrides;
 
     public CraftingJobHandler(int maxProcessingJobs, Collection<ICraftingProcessOverride> craftingProcessOverrides,
                               ICraftingResultsSink resultsSink) {
@@ -75,6 +79,7 @@ public class CraftingJobHandler {
         this.observersPendingCreation = Lists.newArrayList();
         this.observersPendingDeletion = Lists.newArrayList();
         this.finishedCraftingJobs = new Int2ObjectOpenHashMap<>();
+        this.ingredientComponentTargetOverrides = Maps.newIdentityHashMap();
     }
 
     public void writeToNBT(NBTTagCompound tag) {
@@ -113,6 +118,12 @@ public class CraftingJobHandler {
             pendingCraftingJobs.appendTag(CraftingJob.serialize(craftingJob));
         }
         tag.setTag("pendingCraftingJobs", pendingCraftingJobs);
+
+        NBTTagCompound targetOverrides = new NBTTagCompound();
+        for (Map.Entry<IngredientComponent<?, ?>, EnumFacing> entry : this.ingredientComponentTargetOverrides.entrySet()) {
+            targetOverrides.setInteger(entry.getKey().getName().toString(), entry.getValue().ordinal());
+        }
+        tag.setTag("targetOverrides", targetOverrides);
     }
 
     public void readFromNBT(NBTTagCompound tag) {
@@ -163,6 +174,13 @@ public class CraftingJobHandler {
             // It's possible that the same component is added multiple times over different jobs,
             // this is because we want to make sure our counters are correct.
             observersPendingCreation.addAll(value.keySet());
+        }
+
+        this.ingredientComponentTargetOverrides.clear();
+        NBTTagCompound targetOverrides = tag.getCompoundTag("targetOverrides");
+        for (String componentName : targetOverrides.getKeySet()) {
+            IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(new ResourceLocation(componentName));
+            this.ingredientComponentTargetOverrides.put(component, EnumFacing.VALUES[targetOverrides.getInteger(componentName)]);
         }
     }
 
@@ -367,15 +385,16 @@ public class CraftingJobHandler {
     }
 
     protected boolean insertCrafting(PartPos target, IMixedIngredients ingredients, boolean simulate) {
+        Function<IngredientComponent<?, ?>, PartPos> targetGetter = getTargetGetter(target);
         // First check our crafting overrides
         for (ICraftingProcessOverride craftingProcessOverride : this.craftingProcessOverrides) {
             if (craftingProcessOverride.isApplicable(target)) {
-                return craftingProcessOverride.craft(target, ingredients, this.resultsSink, simulate);
+                return craftingProcessOverride.craft(targetGetter, ingredients, this.resultsSink, simulate);
             }
         }
 
         // Fallback to default crafting insertion
-        return CraftingHelpers.insertCrafting(target, ingredients, simulate);
+        return CraftingHelpers.insertCrafting(targetGetter, ingredients, simulate);
     }
 
     public CraftingJobStatus getCraftingJobStatus(ICraftingNetwork network, int channel, int craftingJobId) {
@@ -401,6 +420,30 @@ public class CraftingJobHandler {
 
     public Int2ObjectMap<CraftingJob> getAllCraftingJobs() {
         return allCraftingJobs;
+    }
+
+    public void setIngredientComponentTarget(IngredientComponent<?, ?> ingredientComponent, @Nullable EnumFacing side) {
+        if (side == null) {
+            this.ingredientComponentTargetOverrides.remove(ingredientComponent);
+        } else {
+            this.ingredientComponentTargetOverrides.put(ingredientComponent, side);
+        }
+    }
+
+    @Nullable
+    public EnumFacing getIngredientComponentTarget(IngredientComponent<?, ?> ingredientComponent) {
+        return this.ingredientComponentTargetOverrides.get(ingredientComponent);
+    }
+
+    public Function<IngredientComponent<?, ?>, PartPos> getTargetGetter(PartPos defaultPosition) {
+        return ingredientComponent -> {
+            EnumFacing sideOverride = this.ingredientComponentTargetOverrides.get(ingredientComponent);
+            if (sideOverride == null) {
+                return defaultPosition;
+            } else {
+                return PartPos.of(defaultPosition.getPos(), sideOverride);
+            }
+        };
     }
 
 }

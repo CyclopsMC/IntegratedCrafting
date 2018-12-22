@@ -1248,21 +1248,34 @@ public class CraftingHelpers {
 
     /**
      * Insert the ingredients of all applicable ingredient component types into the target to make it start crafting.
-     * @param target The target position.
+     * @param targetGetter A function to get the target position.
      * @param ingredients The ingredients to insert.
      * @param simulate If insertion should be simulated.
      * @return If all instances could be inserted.
      */
-    public static boolean insertCrafting(PartPos target, IMixedIngredients ingredients, boolean simulate) {
-        EnumFacing side = target.getSide();
-        TileEntity tile = TileHelpers.getSafeTile(target.getPos(), TileEntity.class);
-        if (tile != null) {
-            for (IngredientComponent<?, ?> ingredientComponent : ingredients.getComponents()) {
-                if (!insertIngredientCrafting(ingredientComponent, tile, side, ingredients, simulate)) {
-                    return false;
-                }
+    public static boolean insertCrafting(Function<IngredientComponent<?, ?>, PartPos> targetGetter,
+                                         IMixedIngredients ingredients,
+                                         boolean simulate) {
+        Map<IngredientComponent<?, ?>, TileEntity> tileMap = Maps.newIdentityHashMap();
+
+        // First, check if we can find valid tiles for all ingredient components
+        for (IngredientComponent<?, ?> ingredientComponent : ingredients.getComponents()) {
+            TileEntity tile = TileHelpers.getSafeTile(targetGetter.apply(ingredientComponent).getPos(), TileEntity.class);
+            if (tile != null) {
+                tileMap.put(ingredientComponent, tile);
+            } else {
+                return false;
             }
         }
+
+        // Next, insert the instances into the respective tiles
+        for (Map.Entry<IngredientComponent<?, ?>, TileEntity> entry : tileMap.entrySet()) {
+            if (!insertIngredientCrafting(entry.getKey(), entry.getValue(),
+                    targetGetter.apply(entry.getKey()).getSide(), ingredients, simulate)) {
+                return false;
+            }
+        }
+
         return true;
     }
 
