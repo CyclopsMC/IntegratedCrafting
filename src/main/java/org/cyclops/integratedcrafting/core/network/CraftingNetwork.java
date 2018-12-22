@@ -1,6 +1,7 @@
 package org.cyclops.integratedcrafting.core.network;
 
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Sets;
@@ -17,6 +18,7 @@ import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.ICraftingJobIndexModifiable;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndexModifiable;
+import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.core.CraftingJobIndexDefault;
 import org.cyclops.integratedcrafting.core.RecipeIndexDefault;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetwork;
@@ -24,6 +26,7 @@ import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetwork;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -171,9 +174,22 @@ public class CraftingNetwork implements ICraftingNetwork {
     }
 
     @Override
-    public void scheduleCraftingJob(CraftingJob craftingJob) {
+    public void scheduleCraftingJob(CraftingJob craftingJob, boolean allowDistribution) {
         Multimap<IRecipeDefinition, ICraftingInterface> recipeInterfaces = getRecipeCraftingInterfaces(craftingJob.getChannel());
         Collection<ICraftingInterface> craftingInterfaces = recipeInterfaces.get(craftingJob.getRecipe());
+
+        // If our crafting job amount is larger than 1,
+        // and we have multiple crafting interfaces available,
+        // split our crafting job so we can distribute
+        if (allowDistribution && craftingInterfaces.size() > 1 && craftingJob.getAmount() > 1) {
+            Collection<CraftingJob> splitCraftingJobs = CraftingHelpers.splitCraftingJobs(craftingJob,
+                    craftingInterfaces.size(), getCraftingJobDependencyGraph(),
+                    CraftingHelpers.getGlobalCraftingJobIdentifier());
+            for (CraftingJob splitCraftingJob : splitCraftingJobs) {
+                scheduleCraftingJob(splitCraftingJob, false);
+            }
+            return;
+        }
 
         // Find the crafting interface that has the least number of crafting jobs.
         // This will achieve parallelized jobs.

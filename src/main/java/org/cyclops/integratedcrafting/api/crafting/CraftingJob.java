@@ -9,6 +9,7 @@ import net.minecraftforge.common.util.Constants;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.core.MissingIngredients;
 
 import java.util.Map;
@@ -72,6 +73,11 @@ public class CraftingJob {
     public void addDependency(CraftingJob dependency) {
         dependencyCraftingJobs.add(dependency.getId());
         dependency.dependentCraftingJobs.add(this.getId());
+    }
+
+    public void removeDependency(CraftingJob dependency) {
+        dependencyCraftingJobs.rem(dependency.getId());
+        dependency.dependentCraftingJobs.rem(this.getId());
     }
 
     /**
@@ -198,5 +204,15 @@ public class CraftingJob {
                 && this.getDependentCraftingJobs().equals(that.getDependentCraftingJobs())
                 && this.getAmount() == that.getAmount()
                 && this.getIngredientsStorage().equals(that.getIngredientsStorage());
+    }
+
+    public CraftingJob clone(CraftingHelpers.IIdentifierGenerator identifierGenerator) {
+        return new CraftingJob(
+                identifierGenerator.getNext(),
+                getChannel(),
+                getRecipe(),
+                getAmount(),
+                getIngredientsStorage()
+        );
     }
 }

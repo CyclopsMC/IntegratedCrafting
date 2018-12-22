@@ -63,8 +63,9 @@ public interface ICraftingNetwork {
     /**
      * Add the given crafting job to the list of crafting jobs.
      * @param craftingJob The crafting job.
+     * @param allowDistribution If the crafting job is allowed to be split over multiple crafting interfaces.
      */
-    public void scheduleCraftingJob(CraftingJob craftingJob);
+    public void scheduleCraftingJob(CraftingJob craftingJob, boolean allowDistribution);
 
     /**
      * Called by crafting interfaces when the crafting job is finished and should be removed from all lists.

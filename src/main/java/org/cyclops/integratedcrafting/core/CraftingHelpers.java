@@ -35,6 +35,7 @@ import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngred
 import org.cyclops.integrateddynamics.api.part.PartPos;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -605,12 +606,14 @@ public class CraftingHelpers {
      * Schedule all crafting jobs in the given dependency graph in the given network.
      * @param craftingNetwork The target crafting network.
      * @param craftingJobDependencyGraph The crafting job dependency graph.
+     * @param allowDistribution If the crafting jobs are allowed to be split over multiple crafting interfaces.
      */
     public static void scheduleCraftingJobs(ICraftingNetwork craftingNetwork,
-                                            CraftingJobDependencyGraph craftingJobDependencyGraph) {
+                                            CraftingJobDependencyGraph craftingJobDependencyGraph,
+                                            boolean allowDistribution) {
         craftingNetwork.getCraftingJobDependencyGraph().importDependencies(craftingJobDependencyGraph);
         for (CraftingJob craftingJob : craftingJobDependencyGraph.getCraftingJobs()) {
-            craftingNetwork.scheduleCraftingJob(craftingJob);
+            craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution);
         }
     }
 
@@ -618,11 +621,13 @@ public class CraftingHelpers {
      * Schedule the given crafting job  in the given network.
      * @param craftingNetwork The target crafting network.
      * @param craftingJob The crafting job to schedule.
+     * @param allowDistribution If the crafting job is allowed to be split over multiple crafting interfaces.
      * @return The scheduled crafting job.
      */
     public static CraftingJob scheduleCraftingJob(ICraftingNetwork craftingNetwork,
-                                                  CraftingJob craftingJob) {
-        craftingNetwork.scheduleCraftingJob(craftingJob);
+                                                  CraftingJob craftingJob,
+                                                  boolean allowDistribution) {
+        craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution);
         return craftingJob;
     }
 
@@ -634,6 +639,7 @@ public class CraftingHelpers {
      * @param instance The instance to craft.
      * @param matchCondition The match condition of the instance.
      * @param craftMissing If the missing required ingredients should also be crafted.
+     * @param allowDistribution If the crafting job is allowed to be split over multiple crafting interfaces.
      * @param identifierGenerator An ID generator for crafting jobs.
      * @param <T> The instance type.
      * @param <M> The matching condition parameter.
@@ -643,7 +649,7 @@ public class CraftingHelpers {
     public static <T, M> CraftingJob calculateAndScheduleCraftingJob(INetwork network, int channel,
                                                                      IngredientComponent<T, M> ingredientComponent,
                                                                      T instance, M matchCondition,
-                                                                     boolean craftMissing,
+                                                                     boolean craftMissing, boolean allowDistribution,
                                                                      IIdentifierGenerator identifierGenerator) {
         try {
             CraftingJobDependencyGraph dependencyGraph = new CraftingJobDependencyGraph();
@@ -652,7 +658,7 @@ public class CraftingHelpers {
 
             ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
 
-            scheduleCraftingJobs(craftingNetwork, dependencyGraph);
+            scheduleCraftingJobs(craftingNetwork, dependencyGraph, allowDistribution);
 
             return craftingJob;
         } catch (UnknownCraftingRecipeException | RecursiveCraftingRecipeException e) {
@@ -1276,6 +1282,68 @@ public class CraftingHelpers {
         }
 
         return true;
+    }
+
+    /**
+     * Split the given crafting job amount into new jobs with a given split factor.
+     * @param craftingJob A crafting job to split.
+     * @param splitFactor The number of jobs to split the job over.
+     * @param dependencyGraph The dependency graph that will be updated if there are dependencies in the original job.
+     * @param identifierGenerator An identifier generator for the crafting jobs ids.
+     * @return The newly created crafting jobs.
+     */
+    public static List<CraftingJob> splitCraftingJobs(CraftingJob craftingJob, int splitFactor,
+                                                      CraftingJobDependencyGraph dependencyGraph,
+                                                      IIdentifierGenerator identifierGenerator) {
+        splitFactor = Math.min(splitFactor, craftingJob.getAmount());
+        int division = craftingJob.getAmount() / splitFactor;
+        int modulus = craftingJob.getAmount() % splitFactor;
+
+        // Clone original job into splitFactor jobs
+        List<CraftingJob> newCraftingJobs = Lists.newArrayList();
+        for (int i = 0; i < splitFactor; i++) {
+            CraftingJob clonedJob = craftingJob.clone(identifierGenerator);
+            newCraftingJobs.add(clonedJob);
+
+            // Update amount
+            int newAmount = division;
+            if (modulus > 0) {
+                // No amounts will be lost, as modulus is guaranteed to be smaller than splitFactor
+                newAmount++;
+                modulus--;
+            }
+            clonedJob.setAmount(newAmount);
+        }
+
+        // Collect dependency links
+        Collection<CraftingJob> originalDependencies = dependencyGraph.getDependencies(craftingJob);
+        Collection<CraftingJob> originalDependents = dependencyGraph.getDependents(craftingJob);
+
+        // Remove dependency links to and from the original jobs
+        for (CraftingJob dependency : originalDependencies) {
+            craftingJob.removeDependency(dependency);
+            dependencyGraph.removeDependency(craftingJob.getId(), dependency.getId());
+        }
+        for (CraftingJob dependent : originalDependents) {
+            dependent.removeDependency(craftingJob);
+            dependencyGraph.removeDependency(dependent.getId(), craftingJob.getId());
+        }
+
+        // Create dependency links to and from the new crafting jobs
+        for (CraftingJob dependency : originalDependencies) {
+            for (CraftingJob newCraftingJob : newCraftingJobs) {
+                newCraftingJob.addDependency(dependency);
+                dependencyGraph.addDependency(newCraftingJob, dependency);
+            }
+        }
+        for (CraftingJob originalDependent : originalDependents) {
+            for (CraftingJob newCraftingJob : newCraftingJobs) {
+                originalDependent.addDependency(newCraftingJob);
+                dependencyGraph.addDependency(originalDependent, newCraftingJob);
+            }
+        }
+
+        return newCraftingJobs;
     }
 
     /**

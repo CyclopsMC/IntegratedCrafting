@@ -4,6 +4,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
@@ -26,6 +27,7 @@ import org.cyclops.integratedcrafting.ingredient.IngredientComponentStubs;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -2266,6 +2268,157 @@ public class TestCraftingHelpers {
         IMixedIngredients b = new MixedIngredients(map2);
         IMixedIngredients c = new MixedIngredients(map3);
         assertThat(CraftingHelpers.mergeMixedIngredients(a, b), equalTo(c));
+    }
+
+    /* ------------ splitCraftingJobs ------------ */
+
+    @Test
+    public void testSplitCraftingJobsOneOverOne() {
+        CraftingJob job = new CraftingJob(-1, 0, recipeA, 1, new MixedIngredients(Maps.newIdentityHashMap()));
+        assertThat(CraftingHelpers.splitCraftingJobs(job, 1, craftingJobDependencyGraph, identifierGenerator),
+                equalTo(Lists.newArrayList(
+                        new CraftingJob(0, 0, recipeA, 1, new MixedIngredients(Maps.newIdentityHashMap()))
+                )));
+    }
+
+    @Test
+    public void testSplitCraftingJobsOneOverTwo() {
+        CraftingJob job = new CraftingJob(-1, 0, recipeA, 1, new MixedIngredients(Maps.newIdentityHashMap()));
+        assertThat(CraftingHelpers.splitCraftingJobs(job, 2, craftingJobDependencyGraph, identifierGenerator),
+                equalTo(Lists.newArrayList(
+                        new CraftingJob(0, 0, recipeA, 1, new MixedIngredients(Maps.newIdentityHashMap()))
+                )));
+    }
+
+    @Test
+    public void testSplitCraftingJobsTwoOverOne() {
+        CraftingJob job = new CraftingJob(-1, 0, recipeA, 2, new MixedIngredients(Maps.newIdentityHashMap()));
+        assertThat(CraftingHelpers.splitCraftingJobs(job, 1, craftingJobDependencyGraph, identifierGenerator),
+                equalTo(Lists.newArrayList(
+                        new CraftingJob(0, 0, recipeA, 2, new MixedIngredients(Maps.newIdentityHashMap()))
+                )));
+    }
+
+    @Test
+    public void testSplitCraftingJobsTwoOverTwo() {
+        CraftingJob job = new CraftingJob(-1, 0, recipeA, 2, new MixedIngredients(Maps.newIdentityHashMap()));
+        assertThat(CraftingHelpers.splitCraftingJobs(job, 2, craftingJobDependencyGraph, identifierGenerator),
+                equalTo(Lists.newArrayList(
+                        new CraftingJob(0, 0, recipeA, 1, new MixedIngredients(Maps.newIdentityHashMap())),
+                        new CraftingJob(1, 0, recipeA, 1, new MixedIngredients(Maps.newIdentityHashMap()))
+                )));
+    }
+
+    @Test
+    public void testSplitCraftingJobsTwoOverThree() {
+        CraftingJob job = new CraftingJob(-1, 0, recipeA, 2, new MixedIngredients(Maps.newIdentityHashMap()));
+        assertThat(CraftingHelpers.splitCraftingJobs(job, 3, craftingJobDependencyGraph, identifierGenerator),
+                equalTo(Lists.newArrayList(
+                        new CraftingJob(0, 0, recipeA, 1, new MixedIngredients(Maps.newIdentityHashMap())),
+                        new CraftingJob(1, 0, recipeA, 1, new MixedIngredients(Maps.newIdentityHashMap()))
+                )));
+    }
+
+    @Test
+    public void testSplitCraftingJobsThreeOverOne() {
+        CraftingJob job = new CraftingJob(-1, 0, recipeA, 3, new MixedIngredients(Maps.newIdentityHashMap()));
+        assertThat(CraftingHelpers.splitCraftingJobs(job, 1, craftingJobDependencyGraph, identifierGenerator),
+                equalTo(Lists.newArrayList(
+                        new CraftingJob(0, 0, recipeA, 3, new MixedIngredients(Maps.newIdentityHashMap()))
+                )));
+    }
+
+    @Test
+    public void testSplitCraftingJobsThreeOverTwo() {
+        CraftingJob job = new CraftingJob(-1, 0, recipeA, 3, new MixedIngredients(Maps.newIdentityHashMap()));
+        assertThat(CraftingHelpers.splitCraftingJobs(job, 2, craftingJobDependencyGraph, identifierGenerator),
+                equalTo(Lists.newArrayList(
+                        new CraftingJob(0, 0, recipeA, 2, new MixedIngredients(Maps.newIdentityHashMap())),
+                        new CraftingJob(1, 0, recipeA, 1, new MixedIngredients(Maps.newIdentityHashMap()))
+                )));
+    }
+
+    @Test
+    public void testSplitCraftingJobsThreeOverThree() {
+        CraftingJob job = new CraftingJob(-1, 0, recipeA, 3, new MixedIngredients(Maps.newIdentityHashMap()));
+        assertThat(CraftingHelpers.splitCraftingJobs(job, 3, craftingJobDependencyGraph, identifierGenerator),
+                equalTo(Lists.newArrayList(
+                        new CraftingJob(0, 0, recipeA, 1, new MixedIngredients(Maps.newIdentityHashMap())),
+                        new CraftingJob(1, 0, recipeA, 1, new MixedIngredients(Maps.newIdentityHashMap())),
+                        new CraftingJob(2, 0, recipeA, 1, new MixedIngredients(Maps.newIdentityHashMap()))
+                )));
+    }
+
+    @Test
+    public void testSplitCraftingJobsOneOverOneWithDependencies() {
+        CraftingJob dependency = new CraftingJob(-2, 0, recipeB, 1, new MixedIngredients(Maps.newIdentityHashMap()));
+        CraftingJob dependent = new CraftingJob(-3, 0, recipeC, 1, new MixedIngredients(Maps.newIdentityHashMap()));
+
+        CraftingJob jobOriginal = new CraftingJob(-1, 0, recipeA, 1, new MixedIngredients(Maps.newIdentityHashMap()));
+        jobOriginal.addDependency(dependency);
+        craftingJobDependencyGraph.addDependency(jobOriginal, dependency);
+        dependent.addDependency(jobOriginal);
+        craftingJobDependencyGraph.addDependency(dependent, jobOriginal);
+
+        List<CraftingJob> splitJobs = CraftingHelpers.splitCraftingJobs(jobOriginal, 1, craftingJobDependencyGraph, identifierGenerator);
+        CraftingJob job0 = splitJobs.get(0);
+
+        // Original dependencies must be gone
+        assertThat(craftingJobDependencyGraph.getDependencies(jobOriginal), equalTo(Lists.newArrayList()));
+        assertThat(craftingJobDependencyGraph.getDependents(jobOriginal), equalTo(Lists.newArrayList()));
+
+        // New dependencies must be in place
+        assertThat(job0.getDependencyCraftingJobs(), equalTo(new IntArrayList(Lists.newArrayList(-2))));
+        assertThat(job0.getDependentCraftingJobs(), equalTo(new IntArrayList(Lists.newArrayList(-3))));
+        assertThat(craftingJobDependencyGraph.getDependencies(job0), equalTo(Lists.newArrayList(dependency)));
+        assertThat(craftingJobDependencyGraph.getDependents(job0), equalTo(Lists.newArrayList(dependent)));
+
+        assertThat(dependency.getDependentCraftingJobs(), equalTo(new IntArrayList(Lists.newArrayList(0))));
+        assertThat(dependent.getDependencyCraftingJobs(), equalTo(new IntArrayList(Lists.newArrayList(0))));
+        assertThat(craftingJobDependencyGraph.getDependents(dependency), equalTo(Lists.newArrayList(job0)));
+        assertThat(craftingJobDependencyGraph.getDependencies(dependent), equalTo(Lists.newArrayList(job0)));
+    }
+
+    @Test
+    public void testSplitCraftingJobsThreeOverThreeWithDependencies() {
+        CraftingJob dependency = new CraftingJob(-2, 0, recipeB, 1, new MixedIngredients(Maps.newIdentityHashMap()));
+        CraftingJob dependent = new CraftingJob(-3, 0, recipeC, 1, new MixedIngredients(Maps.newIdentityHashMap()));
+
+        CraftingJob jobOriginal = new CraftingJob(-1, 0, recipeA, 3, new MixedIngredients(Maps.newIdentityHashMap()));
+        jobOriginal.addDependency(dependency);
+        craftingJobDependencyGraph.addDependency(jobOriginal, dependency);
+        dependent.addDependency(jobOriginal);
+        craftingJobDependencyGraph.addDependency(dependent, jobOriginal);
+
+        List<CraftingJob> splitJobs = CraftingHelpers.splitCraftingJobs(jobOriginal, 3, craftingJobDependencyGraph, identifierGenerator);
+        CraftingJob job0 = splitJobs.get(0);
+        CraftingJob job1 = splitJobs.get(1);
+        CraftingJob job2 = splitJobs.get(2);
+
+        // Original dependencies must be gone
+        assertThat(craftingJobDependencyGraph.getDependencies(jobOriginal), equalTo(Lists.newArrayList()));
+        assertThat(craftingJobDependencyGraph.getDependents(jobOriginal), equalTo(Lists.newArrayList()));
+
+        // New dependencies must be in place
+        assertThat(job0.getDependencyCraftingJobs(), equalTo(new IntArrayList(Lists.newArrayList(-2))));
+        assertThat(job0.getDependentCraftingJobs(), equalTo(new IntArrayList(Lists.newArrayList(-3))));
+        assertThat(craftingJobDependencyGraph.getDependencies(job0), equalTo(Lists.newArrayList(dependency)));
+        assertThat(craftingJobDependencyGraph.getDependents(job0), equalTo(Lists.newArrayList(dependent)));
+
+        assertThat(job1.getDependencyCraftingJobs(), equalTo(new IntArrayList(Lists.newArrayList(-2))));
+        assertThat(job1.getDependentCraftingJobs(), equalTo(new IntArrayList(Lists.newArrayList(-3))));
+        assertThat(craftingJobDependencyGraph.getDependencies(job1), equalTo(Lists.newArrayList(dependency)));
+        assertThat(craftingJobDependencyGraph.getDependents(job1), equalTo(Lists.newArrayList(dependent)));
+
+        assertThat(job2.getDependencyCraftingJobs(), equalTo(new IntArrayList(Lists.newArrayList(-2))));
+        assertThat(job2.getDependentCraftingJobs(), equalTo(new IntArrayList(Lists.newArrayList(-3))));
+        assertThat(craftingJobDependencyGraph.getDependencies(job2), equalTo(Lists.newArrayList(dependency)));
+        assertThat(craftingJobDependencyGraph.getDependents(job2), equalTo(Lists.newArrayList(dependent)));
+
+        assertThat(dependency.getDependentCraftingJobs(), equalTo(new IntArrayList(Lists.newArrayList(0, 1, 2))));
+        assertThat(dependent.getDependencyCraftingJobs(), equalTo(new IntArrayList(Lists.newArrayList(0, 1, 2))));
+        assertThat(craftingJobDependencyGraph.getDependents(dependency), equalTo(Lists.newArrayList(job0, job1, job2)));
+        assertThat(craftingJobDependencyGraph.getDependencies(dependent), equalTo(Lists.newArrayList(job0, job1, job2)));
     }
 
 }

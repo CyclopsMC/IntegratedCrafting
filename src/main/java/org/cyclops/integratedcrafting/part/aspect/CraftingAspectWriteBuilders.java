@@ -111,7 +111,7 @@ public class CraftingAspectWriteBuilders {
                             && (ignoreCrafting || !CraftingHelpers.isCrafting(craftingNetwork, channel, ingredientComponent,
                             instance, matchCondition))) {
                         CraftingHelpers.calculateAndScheduleCraftingJob(network, channel,
-                                ingredientComponent, instance, matchCondition, craftMissing,
+                                ingredientComponent, instance, matchCondition, craftMissing, true,
                                 CraftingHelpers.getGlobalCraftingJobIdentifier());
                     }
                 }
