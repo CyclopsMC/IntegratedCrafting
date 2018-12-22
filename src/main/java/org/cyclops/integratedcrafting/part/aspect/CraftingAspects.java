@@ -2,6 +2,7 @@ package org.cyclops.integratedcrafting.part.aspect;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
@@ -85,11 +86,10 @@ public class CraftingAspects {
                                 if (data.getRight() != null) {
                                     int channel = data.getLeft().getValue(AspectReadBuilders.Network.PROPERTY_CHANNEL).getRawValue();
                                     ICraftingNetwork craftingNetwork = data.getRight();
-                                    Map<PrioritizedRecipe, ICraftingInterface> recipeCraftingInterfaces = craftingNetwork.getRecipeCraftingInterfaces(channel);
                                     Iterator<CraftingJob> it = craftingNetwork.getCraftingJobs(channel);
                                     while (it.hasNext()) {
                                         CraftingJob crafingJob = it.next();
-                                        ICraftingInterface craftingInterface = recipeCraftingInterfaces.get(crafingJob.getRecipe());
+                                        ICraftingInterface craftingInterface = craftingNetwork.getCraftingJobInterface(crafingJob.getChannel(), crafingJob.getId());
                                         if (craftingInterface == null) {
                                             IntegratedCrafting.clog(Level.WARN, "Removed a zombie crafting job");
                                             it.remove();

@@ -28,7 +28,12 @@ public interface ICraftingInterface {
     public void scheduleCraftingJob(CraftingJob craftingJob);
 
     /**
-     * @return Get all present crafting jobs.
+     * @return Get the number of scheduled and running crafting jobs in this interface.
+     */
+    public int getCraftingJobsCount();
+
+    /**
+     * @return Get the scheduled and running crafting jobs in this interface.
      */
     public Iterator<CraftingJob> getCraftingJobs();
 

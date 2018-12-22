@@ -1,13 +1,13 @@
 package org.cyclops.integratedcrafting.core.network;
 
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Sets;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.server.FMLServerHandler;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.datastructure.MultitransformIterator;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
@@ -22,8 +22,8 @@ import org.cyclops.integratedcrafting.core.RecipeIndexDefault;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetwork;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -35,8 +35,8 @@ public class CraftingNetwork implements ICraftingNetwork {
     private final Set<ICraftingInterface> allCraftingInterfaces = Sets.newHashSet();
     private final TIntObjectMap<Set<ICraftingInterface>> craftingInterfaces = new TIntObjectHashMap<>();
 
-    private final Map<PrioritizedRecipe, ICraftingInterface> allRecipeCraftingInterfaces = Maps.newHashMap();
-    private final TIntObjectMap<Map<PrioritizedRecipe, ICraftingInterface>> recipeCraftingInterfaces = new TIntObjectHashMap<>();
+    private final Multimap<PrioritizedRecipe, ICraftingInterface> allRecipeCraftingInterfaces = newRecipeCraftingInterfacesMap();
+    private final TIntObjectMap<Multimap<PrioritizedRecipe, ICraftingInterface>> recipeCraftingInterfaces = new TIntObjectHashMap<>();
 
     private final IRecipeIndexModifiable allRecipesIndex = new RecipeIndexDefault();
     private final TIntObjectMap<IRecipeIndexModifiable> recipeIndexes = new TIntObjectHashMap<>();
@@ -48,6 +48,10 @@ public class CraftingNetwork implements ICraftingNetwork {
     private final TIntObjectMap<TIntObjectMap<ICraftingInterface>> channeledCraftingJobsToInterface = new TIntObjectHashMap<>();
 
     private final CraftingJobDependencyGraph craftingJobDependencyGraph = new CraftingJobDependencyGraph();
+
+    protected static Multimap<PrioritizedRecipe, ICraftingInterface> newRecipeCraftingInterfacesMap() {
+        return MultimapBuilder.hashKeys().arrayListValues().build();
+    }
 
     @Override
     public int[] getChannels() {
@@ -68,13 +72,13 @@ public class CraftingNetwork implements ICraftingNetwork {
     }
 
     @Override
-    public Map<PrioritizedRecipe, ICraftingInterface> getRecipeCraftingInterfaces(int channel) {
+    public Multimap<PrioritizedRecipe, ICraftingInterface> getRecipeCraftingInterfaces(int channel) {
         if (channel == IPositionedAddonsNetwork.WILDCARD_CHANNEL) {
             return allRecipeCraftingInterfaces;
         }
-        Map<PrioritizedRecipe, ICraftingInterface> recipeCraftingInterfaces = this.recipeCraftingInterfaces.get(channel);
+        Multimap<PrioritizedRecipe, ICraftingInterface> recipeCraftingInterfaces = this.recipeCraftingInterfaces.get(channel);
         if (recipeCraftingInterfaces == null) {
-            recipeCraftingInterfaces = Maps.newHashMap();
+            recipeCraftingInterfaces = newRecipeCraftingInterfacesMap();
             this.recipeCraftingInterfaces.put(channel, recipeCraftingInterfaces);
         }
         return recipeCraftingInterfaces;
@@ -99,7 +103,7 @@ public class CraftingNetwork implements ICraftingNetwork {
         if (getCraftingInterfaces(channel).add(craftingInterface)) {
             allCraftingInterfaces.add(craftingInterface);
             IRecipeIndexModifiable recipeIndex = getRecipeIndex(channel);
-            Map<PrioritizedRecipe, ICraftingInterface> recipeCraftingInterfaces = getRecipeCraftingInterfaces(channel);
+            Multimap<PrioritizedRecipe, ICraftingInterface> recipeCraftingInterfaces = getRecipeCraftingInterfaces(channel);
             for (PrioritizedRecipe recipe : craftingInterface.getRecipes()) {
                 // Save the recipes in the index
                 recipeIndex.addRecipe(recipe);
@@ -136,7 +140,7 @@ public class CraftingNetwork implements ICraftingNetwork {
         if (getCraftingInterfaces(channel).remove(craftingInterface)) {
             allCraftingInterfaces.remove(craftingInterface);
             IRecipeIndexModifiable recipeIndex = getRecipeIndex(channel);
-            Map<PrioritizedRecipe, ICraftingInterface> recipeCraftingInterfaces = getRecipeCraftingInterfaces(channel);
+            Multimap<PrioritizedRecipe, ICraftingInterface> recipeCraftingInterfaces = getRecipeCraftingInterfaces(channel);
             for (PrioritizedRecipe recipe : craftingInterface.getRecipes()) {
                 // Remove the recipes from the index
                 recipeIndex.removeRecipe(recipe);
@@ -168,11 +172,30 @@ public class CraftingNetwork implements ICraftingNetwork {
 
     @Override
     public void scheduleCraftingJob(CraftingJob craftingJob) {
-        Map<PrioritizedRecipe, ICraftingInterface> recipeInterfaces = getRecipeCraftingInterfaces(craftingJob.getChannel());
-        ICraftingInterface craftingInterface = recipeInterfaces.get(craftingJob.getRecipe());
-        craftingInterface.scheduleCraftingJob(craftingJob);
-        addCraftingJob(craftingJob.getChannel(), craftingJob, craftingInterface);
-        craftingJob.setStartTick(getCurrentTick());
+        Multimap<PrioritizedRecipe, ICraftingInterface> recipeInterfaces = getRecipeCraftingInterfaces(craftingJob.getChannel());
+        Collection<ICraftingInterface> craftingInterfaces = recipeInterfaces.get(craftingJob.getRecipe());
+
+        // Find the crafting interface that has the least number of crafting jobs.
+        // This will achieve parallelized jobs.
+        int bestCraftingInterfaceJobCount = 0;
+        ICraftingInterface bestCraftingInterface = null;
+        for (ICraftingInterface craftingInterface : craftingInterfaces) {
+            int jobCount = craftingInterface.getCraftingJobsCount();
+            if (bestCraftingInterface == null || jobCount < bestCraftingInterfaceJobCount) {
+                bestCraftingInterfaceJobCount = jobCount;
+                bestCraftingInterface = craftingInterface;
+            }
+        }
+
+        // This should not be null, but let's check to be sure.
+        if (bestCraftingInterface != null) {
+            // Schedule the job in the interface
+            bestCraftingInterface.scheduleCraftingJob(craftingJob);
+            addCraftingJob(craftingJob.getChannel(), craftingJob, bestCraftingInterface);
+
+            // Store the starting tick in the job
+            craftingJob.setStartTick(getCurrentTick());
+        }
     }
 
     protected long getCurrentTick() {
