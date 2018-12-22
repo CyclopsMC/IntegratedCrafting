@@ -86,6 +86,7 @@ public class CraftingJobDependencyGraph {
 
         // Remove the dependents
         IntCollection removed = dependents.remove(craftingJob.getId());
+        craftingJob.getDependentCraftingJobs().clear();
 
         // Remove all backwards dependency links
         if (removed != null) {
@@ -94,6 +95,7 @@ public class CraftingJobDependencyGraph {
                 int dependent = removedIt.nextInt();
                 IntCollection dependentDependencies = dependencies.get(dependent);
                 dependentDependencies.rem(craftingJob.getId());
+                craftingJobs.get(dependent).getDependencyCraftingJobs().rem(craftingJob.getId());
                 if (dependentDependencies.isEmpty()) {
                     dependencies.remove(dependent);
                     if (!dependents.containsKey(dependent)) {
