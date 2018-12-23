@@ -20,6 +20,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.cyclopscore.helper.Helpers;
+import org.cyclops.cyclopscore.ingredient.storage.IngredientStorageHelpers;
 import org.cyclops.cyclopscore.inventory.IGuiContainerProvider;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
@@ -31,6 +32,7 @@ import org.cyclops.integratedcrafting.capability.network.CraftingInterfaceConfig
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
 import org.cyclops.integratedcrafting.client.gui.GuiPartInterfaceCrafting;
 import org.cyclops.integratedcrafting.client.gui.GuiPartInterfaceCraftingSettings;
+import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.core.CraftingJobHandler;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
 import org.cyclops.integratedcrafting.core.part.PartTypeCraftingBase;
@@ -243,6 +245,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
         private final List<IRecipeDefinition> currentRecipes;
         private PartTarget target = null;
+        private INetwork network = null;
         private ICraftingNetwork craftingNetwork = null;
         private IPartNetwork partNetwork = null;
         private int channel = -1;
@@ -378,6 +381,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
         public void setNetworks(@Nullable INetwork network, @Nullable ICraftingNetwork craftingNetwork,
                                 @Nullable IPartNetwork partNetwork, int channel) {
+            this.network = network;
             this.craftingNetwork = craftingNetwork;
             this.partNetwork = partNetwork;
             this.channel = channel;
@@ -462,6 +466,15 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
         @Override
         public boolean hasCapability(Capability<?> capability, IPartNetwork network, PartTarget target) {
+            if (this.network != null) {
+                IngredientComponent<?, ?> ingredientComponent = IngredientComponent.getIngredientComponentForStorageCapability(capability);
+                if (ingredientComponent != null) {
+                    if (CraftingHelpers.getNetworkStorage(this.network, this.channelCrafting,
+                            ingredientComponent, false) != null) {
+                        return true;
+                    }
+                }
+            }
             return capability == CraftingInterfaceConfig.CAPABILITY || super.hasCapability(capability, network, target);
         }
 
@@ -470,7 +483,26 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             if (capability == CraftingInterfaceConfig.CAPABILITY) {
                 return CraftingInterfaceConfig.CAPABILITY.cast(this);
             }
+
+            // Expose the whole storage
+            if (this.network != null) {
+                IngredientComponent<?, ?> ingredientComponent = IngredientComponent.getIngredientComponentForStorageCapability(capability);
+                if (ingredientComponent != null) {
+                    return wrapStorageCapability(capability, ingredientComponent);
+                }
+            }
+
             return super.getCapability(capability, network, target);
+        }
+
+        protected <C, T, M> C wrapStorageCapability(Capability<C> capability, IngredientComponent<T, M> ingredientComponent) {
+            IIngredientComponentStorage<T, M> storage = CraftingHelpers.getNetworkStorage(this.network, this.channelCrafting,
+                    ingredientComponent, false);
+
+            // Don't allow extraction, only insertion
+            storage = IngredientStorageHelpers.wrapStorage(storage, true, true, false);
+
+            return ingredientComponent.getStorageWrapperHandler(capability).wrapStorage(storage);
         }
 
         @Override
