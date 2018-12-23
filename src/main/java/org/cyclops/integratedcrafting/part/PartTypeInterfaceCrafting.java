@@ -86,6 +86,11 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }), ExtendedGuiHandler.PART);
     }
 
+    @Override
+    public int getConsumptionRate(State state) {
+        return state.getCraftingJobHandler().getProcessingCraftingJobs().size() * 5;
+    }
+
     public IGuiContainerProvider getSettingsGuiProvider() {
         return settingsGuiProvider;
     }
