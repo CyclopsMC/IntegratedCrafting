@@ -354,11 +354,23 @@ public class CraftingJobHandler {
                     }
                 } else {
                     pendingCraftingJob.setLastMissingIngredients(inputs.getRight());
+
+                    // Register listeners for pending ingredients
+                    for (IngredientComponent<?, ?> component : inputs.getRight().keySet()) {
+                        registerIngredientObserver(component, network);
+                    }
                 }
             }
 
             // Start the crafting job
             if (startingCraftingJob != null) {
+                // If the job previously had missing in ingredients, unregister the observers that were previously created for it.
+                if (!startingCraftingJob.getLastMissingIngredients().isEmpty()) {
+                    for (IngredientComponent<?, ?> component : startingCraftingJob.getLastMissingIngredients().keySet()) {
+                        unregisterIngredientObserver(component, network);
+                    }
+                }
+
                 // Remove ingredients from network
                 IMixedIngredients ingredients = CraftingHelpers.getRecipeInputs(network, startingCraftingJob.getChannel(),
                         startingCraftingJob.getRecipe(), false, 1);
