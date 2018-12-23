@@ -23,6 +23,7 @@ import org.cyclops.cyclopscore.helper.Helpers;
 import org.cyclops.cyclopscore.ingredient.storage.IngredientStorageHelpers;
 import org.cyclops.cyclopscore.inventory.IGuiContainerProvider;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
+import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobStatus;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
@@ -173,6 +174,11 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
     }
 
     @Override
+    public int getMinimumUpdateInterval(State state) {
+        return state.getDefaultUpdateInterval();
+    }
+
+    @Override
     public void update(INetwork network, IPartNetwork partNetwork, PartTarget target, State state) {
         super.update(network, partNetwork, target, state);
         int channel = state.getChannelCrafting();
@@ -258,6 +264,11 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             this.inventoryVariables.addDirtyMarkListener(this);
             this.inventoryOutputBuffer = Lists.newArrayList();
             this.currentRecipes = Lists.newArrayList();
+        }
+
+        @Override
+        protected int getDefaultUpdateInterval() {
+            return GeneralConfig.minCraftingInterfaceUpdateFreq;
         }
 
         /**

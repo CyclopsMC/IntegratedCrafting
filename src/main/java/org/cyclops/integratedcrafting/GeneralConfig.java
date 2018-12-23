@@ -54,6 +54,12 @@ public class GeneralConfig extends DummyConfig {
     public static boolean versionChecker = true;
 
     /**
+     * The minimal update frequency in ticks to use for crafting interfaces.
+     */
+    @ConfigurableProperty(category = ConfigurableTypeCategory.MACHINE, comment = "The minimal update frequency in ticks to use for crafting interfaces.", minimalValue = 1)
+    public static int minCraftingInterfaceUpdateFreq = 5;
+
+    /**
      * The type of this config.
      */
     public static ConfigurableType TYPE = ConfigurableType.DUMMY;
