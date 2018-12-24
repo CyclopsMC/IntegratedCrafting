@@ -346,19 +346,20 @@ public class CraftingJobHandler {
                 if (inputs.getRight().isEmpty()) { // If we have no missing ingredients
                     if (insertCrafting(targetPos, new MixedIngredients(inputs.getLeft()), true)) {
                         startingCraftingJob = pendingCraftingJob;
-                        pendingCraftingJob.setLastMissingIngredients(Maps.newIdentityHashMap());
-                        pendingCraftingJob.setInvalidInputs(false);
+                        startingCraftingJob.setInvalidInputs(false);
                         break;
                     } else {
                         pendingCraftingJob.setInvalidInputs(true);
                     }
                 } else {
-                    pendingCraftingJob.setLastMissingIngredients(inputs.getRight());
-
                     // Register listeners for pending ingredients
-                    for (IngredientComponent<?, ?> component : inputs.getRight().keySet()) {
-                        registerIngredientObserver(component, network);
+                    if (pendingCraftingJob.getLastMissingIngredients().isEmpty()) {
+                        for (IngredientComponent<?, ?> component : inputs.getRight().keySet()) {
+                            registerIngredientObserver(component, network);
+                        }
                     }
+
+                    pendingCraftingJob.setLastMissingIngredients(inputs.getRight());
                 }
             }
 
@@ -369,6 +370,7 @@ public class CraftingJobHandler {
                     for (IngredientComponent<?, ?> component : startingCraftingJob.getLastMissingIngredients().keySet()) {
                         unregisterIngredientObserver(component, network);
                     }
+                    startingCraftingJob.setLastMissingIngredients(Maps.newIdentityHashMap());
                 }
 
                 // Remove ingredients from network
