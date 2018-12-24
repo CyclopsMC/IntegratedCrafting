@@ -24,7 +24,6 @@ import org.cyclops.integrateddynamics.core.part.aspect.build.IAspectValuePropaga
 import org.cyclops.integrateddynamics.core.part.aspect.property.AspectProperties;
 import org.cyclops.integrateddynamics.core.part.aspect.property.AspectPropertyTypeInstance;
 import org.cyclops.integrateddynamics.part.aspect.write.AspectWriteBuilders;
-import org.cyclops.integratedtunnels.part.aspect.IChanneledTarget;
 
 /**
  * @author rubensworks
@@ -98,7 +97,7 @@ public class CraftingAspectWriteBuilders {
 
             M matchCondition = ingredientComponent.getMatcher().getExactMatchNoQuantityCondition();
             if (!ingredientComponent.getMatcher().isEmpty(instance)) {
-                INetwork network = IChanneledTarget.getNetworkChecked(center);
+                INetwork network = CraftingHelpers.getNetworkChecked(center);
                 ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetwork(network);
                 if (craftingNetwork != null) {
                     int channel = properties.getValue(PROP_CHANNEL).getRawValue();

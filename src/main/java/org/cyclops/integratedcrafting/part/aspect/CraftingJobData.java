@@ -6,7 +6,6 @@ import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.aspect.property.IAspectProperties;
-import org.cyclops.integratedtunnels.part.aspect.IChanneledTarget;
 
 /**
  * @author rubensworks
@@ -25,7 +24,7 @@ public class CraftingJobData<T, M> {
         this.ingredientComponent = ingredientComponent;
         this.instance = instance;
         this.center = center;
-        this.network = IChanneledTarget.getNetworkChecked(center);
+        this.network = CraftingHelpers.getNetworkChecked(center);
         this.craftingNetwork = CraftingHelpers.getCraftingNetwork(network);
     }
 

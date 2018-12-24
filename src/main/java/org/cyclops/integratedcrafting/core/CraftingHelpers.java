@@ -7,6 +7,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
@@ -30,9 +31,12 @@ import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeExceptio
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
+import org.cyclops.integrateddynamics.IntegratedDynamics;
+import org.cyclops.integrateddynamics.api.PartStateException;
 import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.api.part.PartPos;
+import org.cyclops.integrateddynamics.core.helper.NetworkHelpers;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -50,6 +54,22 @@ import java.util.stream.Collectors;
  * @author rubensworks
  */
 public class CraftingHelpers {
+
+    /**
+     * Get the network at the given position,
+     * or throw a PartStateException if it is null.
+     * @param pos A position.
+     * @return A network.
+     * @throws PartStateException If the network could not be found.
+     */
+    public static INetwork getNetworkChecked(PartPos pos) throws PartStateException {
+        INetwork network = NetworkHelpers.getNetwork(pos.getPos().getWorld(), pos.getPos().getBlockPos(), pos.getSide());
+        if (network == null) {
+            IntegratedDynamics.clog(Level.ERROR, "Could not get the network for transfer as no network was found.");
+            throw new PartStateException(pos.getPos(), pos.getSide());
+        }
+        return network;
+    }
 
     /**
      * Get the crafting network in the given network.

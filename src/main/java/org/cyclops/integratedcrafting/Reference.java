@@ -39,13 +39,10 @@ public class Reference {
     public static final String MOD_CYCLOPSCORE_VERSION_MIN = "0.11.4";
     public static final String MOD_INTEGRATEDDYNAMICS = "integrateddynamics";
     public static final String MOD_INTEGRATEDDYNAMICS_VERSION_MIN = "0.11.3";
-    public static final String MOD_INTEGRATEDTUNNELS = "integratedtunnels";
-    public static final String MOD_INTEGRATEDTUNNELS_VERSION_MIN = "1.5.2";
     
     // Dependencies
     public static final String MOD_DEPENDENCIES =
             "required-after:" + MOD_FORGE              + "@[" + MOD_FORGE_VERSION_MIN       + ",);" +
             "required-after:" + MOD_CYCLOPSCORE        + "@[" + MOD_CYCLOPSCORE_VERSION_MIN + ",);" +
-            "required-after:" + MOD_INTEGRATEDDYNAMICS + "@[" + MOD_INTEGRATEDDYNAMICS_VERSION_MIN + ",);" +
-            "required-after:" + MOD_INTEGRATEDTUNNELS  + "@[" + MOD_INTEGRATEDTUNNELS_VERSION_MIN + ",);";
+            "required-after:" + MOD_INTEGRATEDDYNAMICS + "@[" + MOD_INTEGRATEDDYNAMICS_VERSION_MIN + ",);";
 }
