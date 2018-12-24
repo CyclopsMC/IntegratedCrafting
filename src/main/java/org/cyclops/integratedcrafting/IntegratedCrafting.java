@@ -25,10 +25,13 @@ import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverrideRegis
 import org.cyclops.integratedcrafting.capability.network.CraftingInterfaceConfig;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkCapabilityConstructors;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
+import org.cyclops.integratedcrafting.capability.network.NetworkCraftingHandlerCraftingNetwork;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrideRegistry;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
+import org.cyclops.integrateddynamics.IntegratedDynamics;
+import org.cyclops.integrateddynamics.api.network.INetworkCraftingHandlerRegistry;
 
 /**
  * The main mod class of this mod.
@@ -98,6 +101,9 @@ public class IntegratedCrafting extends ModBaseVersionable {
     @Override
     public void init(FMLInitializationEvent event) {
         super.init(event);
+
+        IntegratedDynamics._instance.getRegistryManager().getRegistry(INetworkCraftingHandlerRegistry.class)
+                .register(new NetworkCraftingHandlerCraftingNetwork());
     }
     
     /**
