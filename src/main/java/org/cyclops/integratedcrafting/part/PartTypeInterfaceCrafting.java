@@ -4,6 +4,11 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import it.unimi.dsi.fastutil.ints.Int2BooleanArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
@@ -14,15 +19,22 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
+import org.cyclops.commoncapabilities.api.capability.block.BlockCapabilities;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeHandler;
+import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
+import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
+import org.cyclops.cyclopscore.datastructure.DimPos;
 import org.cyclops.cyclopscore.helper.Helpers;
+import org.cyclops.cyclopscore.helper.TileHelpers;
 import org.cyclops.cyclopscore.ingredient.storage.IngredientStorageHelpers;
 import org.cyclops.cyclopscore.inventory.IGuiContainerProvider;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
+import org.cyclops.integratedcrafting.Capabilities;
 import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobStatus;
@@ -153,8 +165,8 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         if (network.hasCapability(getNetworkCapability())) {
             int channelCrafting = state.getChannelCrafting();
             ICraftingNetwork craftingNetwork = network.getCapability(getNetworkCapability());
-            state.setNetworks(network, craftingNetwork, NetworkHelpers.getPartNetwork(network), channelCrafting);
             state.setTarget(pos);
+            state.setNetworks(network, craftingNetwork, NetworkHelpers.getPartNetwork(network), channelCrafting);
             state.setShouldAddToCraftingNetwork(true);
         }
     }
@@ -247,6 +259,8 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private final CraftingJobHandler craftingJobHandler;
         private final SimpleInventory inventoryVariables;
         private final List<IngredientInstanceWrapper<?, ?>> inventoryOutputBuffer;
+        private final Int2ObjectMap<String> recipeSlotMessages;
+        private final Int2BooleanMap recipeSlotValidated;
         private int channelCrafting = 0;
 
         private final List<IRecipeDefinition> currentRecipes;
@@ -263,6 +277,8 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             this.inventoryVariables = new SimpleInventory(9, "variables", 1);
             this.inventoryVariables.addDirtyMarkListener(this);
             this.inventoryOutputBuffer = Lists.newArrayList();
+            this.recipeSlotMessages = new Int2ObjectArrayMap<>();
+            this.recipeSlotValidated = new Int2BooleanArrayMap();
             this.currentRecipes = Lists.newArrayList();
         }
 
@@ -293,6 +309,18 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
             this.craftingJobHandler.writeToNBT(tag);
             tag.setInteger("channelCrafting", channelCrafting);
+
+            NBTTagCompound recipeSlotErrorsTag = new NBTTagCompound();
+            for (Int2ObjectMap.Entry<String> entry : this.recipeSlotMessages.int2ObjectEntrySet()) {
+                recipeSlotErrorsTag.setString(String.valueOf(entry.getIntKey()), entry.getValue());
+            }
+            tag.setTag("recipeSlotMessages", recipeSlotErrorsTag);
+
+            NBTTagCompound recipeSlotValidatedTag = new NBTTagCompound();
+            for (Int2BooleanMap.Entry entry : this.recipeSlotValidated.int2BooleanEntrySet()) {
+                recipeSlotValidatedTag.setBoolean(String.valueOf(entry.getIntKey()), entry.getBooleanValue());
+            }
+            tag.setTag("recipeSlotValidated", recipeSlotValidatedTag);
         }
 
         @Override
@@ -311,6 +339,18 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
             this.craftingJobHandler.readFromNBT(tag);
             this.channelCrafting = tag.getInteger("channelCrafting");
+
+            this.recipeSlotMessages.clear();
+            NBTTagCompound recipeSlotErrorsTag = tag.getCompoundTag("recipeSlotMessages");
+            for (String slot : recipeSlotErrorsTag.getKeySet()) {
+                this.recipeSlotMessages.put(Integer.parseInt(slot), recipeSlotErrorsTag.getString(slot));
+            }
+
+            this.recipeSlotValidated.clear();
+            NBTTagCompound recipeSlotValidatedTag = tag.getCompoundTag("recipeSlotValidated");
+            for (String slot : recipeSlotValidatedTag.getKeySet()) {
+                this.recipeSlotValidated.put(Integer.parseInt(slot), recipeSlotValidatedTag.getBoolean(slot));
+            }
         }
 
         public void setChannelCrafting(int channelCrafting) {
@@ -338,6 +378,8 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
         public void reloadRecipes() {
             this.currentRecipes.clear();
+            this.recipeSlotMessages.clear();
+            this.recipeSlotValidated.clear();
             if (this.partNetwork != null) {
                 SimpleInventory inventory = getInventoryVariables();
                 for (int i = 0; i < inventory.getSizeInventory(); i++) {
@@ -350,18 +392,47 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                                 if (value.getType() == ValueTypes.OBJECT_RECIPE) {
                                     Optional<IRecipeDefinition> recipeWrapper = ((ValueObjectTypeRecipe.ValueRecipe) value).getRawValue();
                                     if (recipeWrapper.isPresent()) {
-                                        this.currentRecipes.add(recipeWrapper.get());
+                                        IRecipeDefinition recipe = recipeWrapper.get();
+                                        if (isValid(recipe)) {
+                                            this.currentRecipes.add(recipe);
+                                            this.recipeSlotValidated.put(i, true);
+                                            this.recipeSlotMessages.put(i, "gui.integratedcrafting.partinterface.slot.message.valid");
+                                        } else {
+                                            this.recipeSlotMessages.put(i, "gui.integratedcrafting.partinterface.slot.message.invalid");
+                                        }
                                     }
-
+                                } else {
+                                    this.recipeSlotMessages.put(i, "gui.integratedcrafting.partinterface.slot.message.norecipe");
                                 }
                             } catch (EvaluationException e) {
-                                // Ignore erroring recipes
+                                this.recipeSlotMessages.put(i, e.getLocalizedMessage());
                             }
+                        } else {
+                            this.recipeSlotMessages.put(i, "gui.integratedcrafting.partinterface.slot.message.norecipe");
                         }
                     }
                 }
             }
-            // TODO: show an error symbol for all variables that somehow failed?
+            sendUpdate();
+        }
+
+        private boolean isValid(IRecipeDefinition recipe) {
+            DimPos dimPos = getTarget().getTarget().getPos();
+            EnumFacing side = getTarget().getTarget().getSide();
+            IRecipeHandler recipeHandler = TileHelpers.getCapability(dimPos.getWorld(), dimPos.getBlockPos(), side, Capabilities.RECIPE_HANDLER);
+            if (recipeHandler == null) {
+                IBlockState blockState = dimPos.getWorld().getBlockState(dimPos.getBlockPos());
+                recipeHandler = BlockCapabilities.getInstance().getCapability(blockState, Capabilities.RECIPE_HANDLER,
+                        dimPos.getWorld(), dimPos.getBlockPos(), side);
+            }
+            if (recipeHandler != null) {
+                IMixedIngredients simulatedOutput = recipeHandler.simulate(MixedIngredients.fromRecipeInput(recipe));
+                if (simulatedOutput != null) {
+                    return simulatedOutput.equals(recipe.getOutput());
+                }
+                return false;
+            }
+            return true; // No recipe handler capability is present, so we can't confirm that the recipe will work.
         }
 
         @Override
@@ -374,7 +445,9 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             }
 
             // Recalculate recipes
-            reloadRecipes();
+            if (getTarget() != null && !getTarget().getCenter().getPos().getWorld().isRemote) {
+                reloadRecipes();
+            }
 
             // Re-register to the network, to force an update for all new recipes
             if (craftingNetwork != null) {
@@ -536,6 +609,15 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 side = getTarget().getTarget().getSide();
             }
             return side;
+        }
+
+        public boolean isRecipeSlotValid(int slot) {
+            return this.recipeSlotValidated.containsKey(slot);
+        }
+
+        @Nullable
+        public String getRecipeSlotUnlocalizedMessage(int slot) {
+            return this.recipeSlotMessages.get(slot);
         }
     }
 }

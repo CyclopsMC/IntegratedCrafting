@@ -53,7 +53,7 @@ public class ContainerPartInterfaceCrafting extends ContainerMultipart<PartTypeI
 
         SimpleInventory inventory = getPartState().getInventoryVariables();
         addInventory(inventory, 0, 8, 22, 1, inventory.getSizeInventory());
-        addPlayerInventory(player.inventory, 8, 52);
+        addPlayerInventory(player.inventory, 8, 59);
     }
 
     @Override

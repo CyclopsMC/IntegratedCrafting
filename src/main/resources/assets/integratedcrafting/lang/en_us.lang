@@ -5,6 +5,10 @@ general.integratedcrafting.description=Craft stuff in Integrated Dynamics networ
 # Gui
 gui.integratedcrafting.partsettings.channel.interface=Crafting Channel
 
+gui.integratedcrafting.partinterface.slot.message.valid=Recipe is valid for the target.
+gui.integratedcrafting.partinterface.slot.message.invalid=Recipe is not acceptable by the target.
+gui.integratedcrafting.partinterface.slot.message.norecipe=The variable does not contain a recipe.
+
 # Part types
 parttype.parttypes.integratedcrafting.interface_crafting.name=Crafting Interface
 parttype.parttypes.integratedcrafting.interface_crafting.info=Holds crafting variables for crafting in the target machine.

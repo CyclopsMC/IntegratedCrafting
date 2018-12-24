@@ -1,9 +1,13 @@
 package org.cyclops.integratedcrafting.client.gui;
 
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import org.cyclops.cyclopscore.client.gui.component.button.GuiButtonImage;
+import org.cyclops.cyclopscore.client.gui.image.IImage;
 import org.cyclops.cyclopscore.client.gui.image.Images;
+import org.cyclops.cyclopscore.helper.GuiHelpers;
+import org.cyclops.cyclopscore.helper.L10NHelpers;
 import org.cyclops.cyclopscore.init.ModBase;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.Reference;
@@ -14,6 +18,9 @@ import org.cyclops.integrateddynamics.api.part.IPartContainer;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
 import org.cyclops.integrateddynamics.core.client.gui.ExtendedGuiHandler;
 import org.cyclops.integrateddynamics.core.client.gui.container.GuiMultipart;
+
+import java.util.Collections;
+import java.util.Optional;
 
 
 /**
@@ -68,5 +75,41 @@ public class GuiPartInterfaceCrafting extends GuiMultipart<PartTypeInterfaceCraf
     @Override
     protected int getBaseYSize() {
         return 134;
+    }
+
+    @Override
+    protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+        super.drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
+
+        GlStateManager.color(1, 1, 1);
+        PartTypeInterfaceCrafting.State state = getPartState();
+        int y = guiTop + 42;
+        for (int i = 0; i < state.getInventoryVariables().getSizeInventory(); i++) {
+            int x = guiLeft + 10 + i * GuiHelpers.SLOT_SIZE;
+            if (!state.getInventoryVariables().getStackInSlot(i).isEmpty()) {
+                IImage image = state.isRecipeSlotValid(i) ? Images.OK : Images.ERROR;
+                image.draw(this, x, y);
+            }
+        }
+    }
+
+    @Override
+    protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+        super.drawGuiContainerForegroundLayer(mouseX, mouseY);
+
+        PartTypeInterfaceCrafting.State state = getPartState();
+        int y = 42;
+        for (int i = 0; i < state.getInventoryVariables().getSizeInventory(); i++) {
+            int x = 10 + i * GuiHelpers.SLOT_SIZE;
+            int slot = i;
+            GuiHelpers.renderTooltipOptional(this, x, y, 14, 13, mouseX, mouseY,
+                    () -> {
+                        String unlocalizedMessage = state.getRecipeSlotUnlocalizedMessage(slot);
+                        if (unlocalizedMessage != null) {
+                            return Optional.of(Collections.singletonList(L10NHelpers.localize(unlocalizedMessage)));
+                        }
+                        return Optional.empty();
+                    });
+        }
     }
 }
