@@ -61,6 +61,32 @@ public interface ICraftingNetwork {
     public boolean removeCraftingInterface(int channel, ICraftingInterface craftingInterface);
 
     /**
+     * Add the given recipe that is owned by the given crafting interface.
+     *
+     * This should only be called for differential changes,
+     * otherwise {@link #addCraftingInterface(int, ICraftingInterface)} should be called.
+     *
+     * @param channel The channel of the interface.
+     * @param craftingInterface A crafting interface.
+     * @param recipe The recipe to add.
+     * @return If the recipe was added.
+     */
+    public boolean addCraftingInterfaceRecipe(int channel, ICraftingInterface craftingInterface, IRecipeDefinition recipe);
+
+    /**
+     * Remove the given recipe that is owned by the given crafting interface.
+     *
+     * This should only be called for differential changes,
+     * otherwise {@link #removeCraftingInterface(int, ICraftingInterface)} should be called.
+     *
+     * @param channel The channel of the interface.
+     * @param craftingInterface A crafting interface.
+     * @param recipe The recipe to remove.
+     * @return If the recipe was removed.
+     */
+    public boolean removeCraftingInterfaceRecipe(int channel, ICraftingInterface craftingInterface, IRecipeDefinition recipe);
+
+    /**
      * Add the given crafting job to the list of crafting jobs.
      * @param craftingJob The crafting job.
      * @param allowDistribution If the crafting job is allowed to be split over multiple crafting interfaces.

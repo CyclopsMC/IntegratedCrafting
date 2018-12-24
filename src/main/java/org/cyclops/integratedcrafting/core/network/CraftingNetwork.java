@@ -174,6 +174,36 @@ public class CraftingNetwork implements ICraftingNetwork {
     }
 
     @Override
+    public boolean addCraftingInterfaceRecipe(int channel, ICraftingInterface craftingInterface, IRecipeDefinition recipe) {
+        IRecipeIndexModifiable recipeIndex = getRecipeIndex(channel);
+        Multimap<IRecipeDefinition, ICraftingInterface> recipeCraftingInterfaces = getRecipeCraftingInterfaces(channel);
+
+        // Save the recipes in the index
+        recipeIndex.addRecipe(recipe);
+        allRecipesIndex.addRecipe(recipe);
+        // Save a mapping from each of the recipes to this crafting interface
+        boolean changed = recipeCraftingInterfaces.put(recipe, craftingInterface);
+        allRecipeCraftingInterfaces.put(recipe, craftingInterface);
+
+        return changed;
+    }
+
+    @Override
+    public boolean removeCraftingInterfaceRecipe(int channel, ICraftingInterface craftingInterface, IRecipeDefinition recipe) {
+        IRecipeIndexModifiable recipeIndex = getRecipeIndex(channel);
+        Multimap<IRecipeDefinition, ICraftingInterface> recipeCraftingInterfaces = getRecipeCraftingInterfaces(channel);
+
+        // Remove the recipes from the index
+        recipeIndex.removeRecipe(recipe);
+        allRecipesIndex.removeRecipe(recipe);
+        // Remove the mappings from each of the recipes to this crafting interface
+        boolean changed = recipeCraftingInterfaces.remove(recipe, craftingInterface);
+        allRecipeCraftingInterfaces.remove(recipe, craftingInterface);
+
+        return changed;
+    }
+
+    @Override
     public void scheduleCraftingJob(CraftingJob craftingJob, boolean allowDistribution) {
         Multimap<IRecipeDefinition, ICraftingInterface> recipeInterfaces = getRecipeCraftingInterfaces(craftingJob.getChannel());
         Collection<ICraftingInterface> craftingInterfaces = recipeInterfaces.get(craftingJob.getRecipe());

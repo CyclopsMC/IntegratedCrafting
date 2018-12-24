@@ -104,9 +104,9 @@ public class GuiPartInterfaceCrafting extends GuiMultipart<PartTypeInterfaceCraf
             int slot = i;
             GuiHelpers.renderTooltipOptional(this, x, y, 14, 13, mouseX, mouseY,
                     () -> {
-                        String unlocalizedMessage = state.getRecipeSlotUnlocalizedMessage(slot);
+                        L10NHelpers.UnlocalizedString unlocalizedMessage = state.getRecipeSlotUnlocalizedMessage(slot);
                         if (unlocalizedMessage != null) {
-                            return Optional.of(Collections.singletonList(L10NHelpers.localize(unlocalizedMessage)));
+                            return Optional.of(Collections.singletonList(unlocalizedMessage.localize()));
                         }
                         return Optional.empty();
                     });
