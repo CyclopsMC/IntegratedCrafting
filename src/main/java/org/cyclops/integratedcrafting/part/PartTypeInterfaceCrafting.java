@@ -585,16 +585,12 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
         @Override
         public int getCraftingJobsCount() {
-            return this.craftingJobHandler.getProcessingCraftingJobs().size()
-                    + this.craftingJobHandler.getPendingCraftingJobs().size();
+            return this.craftingJobHandler.getAllCraftingJobs().size();
         }
 
         @Override
         public Iterator<CraftingJob> getCraftingJobs() {
-            return Iterators.concat(
-                    this.craftingJobHandler.getProcessingCraftingJobs().iterator(),
-                    this.craftingJobHandler.getPendingCraftingJobs().iterator()
-            );
+            return this.craftingJobHandler.getAllCraftingJobs().values().iterator();
         }
 
         @Override
