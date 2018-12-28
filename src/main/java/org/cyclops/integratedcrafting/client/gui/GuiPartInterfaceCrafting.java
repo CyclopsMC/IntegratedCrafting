@@ -74,7 +74,7 @@ public class GuiPartInterfaceCrafting extends GuiMultipart<PartTypeInterfaceCraf
 
     @Override
     protected int getBaseYSize() {
-        return 134;
+        return 141;
     }
 
     @Override
