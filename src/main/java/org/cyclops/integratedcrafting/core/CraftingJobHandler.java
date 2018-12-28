@@ -265,6 +265,7 @@ public class CraftingJobHandler {
 
     // This does the same as above, just based on crafting job id
     public void markCraftingJobFinished(int craftingJobId) {
+        this.processingCraftingJobsPendingIngredients.remove(craftingJobId);
         this.processingCraftingJobs.remove(craftingJobId);
         this.pendingCraftingJobs.remove(craftingJobId);
 
