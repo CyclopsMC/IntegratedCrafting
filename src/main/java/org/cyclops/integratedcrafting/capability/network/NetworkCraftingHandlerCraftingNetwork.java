@@ -21,7 +21,7 @@ public class NetworkCraftingHandlerCraftingNetwork implements INetworkCraftingHa
     public <T, M> boolean craft(INetwork network, IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork, int channel,
                                 IngredientComponent<T, M> ingredientComponent, T instance, M matchCondition,
                                 boolean ignoreExistingJobs) {
-        if (ignoreExistingJobs) {
+        if (!ignoreExistingJobs) {
             // Check if a job was already running
             if (CraftingHelpers.getCraftingNetwork(network).getCraftingJobs(channel, ingredientComponent, instance, matchCondition).hasNext()) {
                 return true;
