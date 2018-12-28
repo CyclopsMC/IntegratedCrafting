@@ -189,7 +189,7 @@ public class CraftingHelpers {
                 collectMissingRecipes);
         if (result.getCraftingJob() == null) {
             throw new FailedCraftingRecipeException(recipe, amount, result.getMissingDependencies(),
-                    new MixedIngredients(result.getIngredientsStorage()), result.getPartialCraftingJobs());
+                    compressMixedIngredients(new MixedIngredients(result.getIngredientsStorage())), result.getPartialCraftingJobs());
         } else {
             craftingJobsGraph.addCraftingJobId(result.getCraftingJob());
             return result.getCraftingJob();
