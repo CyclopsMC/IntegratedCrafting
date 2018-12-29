@@ -20,6 +20,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
+import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
@@ -385,15 +386,25 @@ public class CraftingJobHandler {
                             CraftingHelpers.getRecipeOutputs(startingCraftingJob.getRecipe()));
 
                     // Push the ingredients to the crafting interface
-                    insertCrafting(targetPos, ingredients, false);
-
-                    // Register listeners for pending ingredients
-                    for (IngredientComponent<?, ?> component : ingredients.getComponents()) {
-                        registerIngredientObserver(component, network);
+                    if (insertCrafting(targetPos, ingredients, false)) {
+                        // Register listeners for pending ingredients
+                        for (IngredientComponent<?, ?> component : ingredients.getComponents()) {
+                            registerIngredientObserver(component, network);
+                        }
+                    } else {
+                        // If we reach this point, the target does not accept the recipe inputs,
+                        // even though they were acceptable in simulation mode.
+                        // In this case, we silently re-insert the ingredients back into the network,
+                        // and emit a warning if any ingredients were lost.
+                        IMixedIngredients remainder = CraftingHelpers.insertIngredients(ingredients,
+                                CraftingHelpers.getNetworkStorageGetter(network, channel), false);
+                        if (!remainder.getComponents().isEmpty()) {
+                            IntegratedCrafting.clog(Level.WARN, "Failed to insert crafting ingredients, lost: " + remainder);
+                        }
+                        onCraftingJobFinished(startingCraftingJob);
                     }
                 } else {
-                    // TODO: re-insert failed ingredients?
-                    IntegratedCrafting.clog(Level.WARN, "Corruption during crafting, lost: " + ingredients);
+                    IntegratedCrafting.clog(Level.WARN, "Failed to extract ingredients for crafting job " + startingCraftingJob.getId());
                 }
             }
         }

@@ -1367,7 +1367,36 @@ public class CraftingHelpers {
     }
 
     /**
-     * Generates semni-unique IDs.
+     * Insert the given ingredients into the given storage networks.
+     * @param ingredients A collection of ingredients.
+     * @param storageGetter A storage network getter.
+     * @param simulate If insertion should be simulated.
+     * @return The remaining ingredients that were not inserted.
+     */
+    public static IMixedIngredients insertIngredients(IMixedIngredients ingredients,
+                                                      Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
+                                                      boolean simulate) {
+        Map<IngredientComponent<?, ?>, List<?>> remainingIngredients = Maps.newIdentityHashMap();
+        for (IngredientComponent<?, ?> component : ingredients.getComponents()) {
+            IIngredientComponentStorage storage = storageGetter.apply(component);
+            IIngredientMatcher matcher = component.getMatcher();
+            for (Object instance : ingredients.getInstances(component)) {
+                Object remainder = storage.insert(instance, simulate);
+                if (!matcher.isEmpty(remainder)) {
+                    List remainingInstances = remainingIngredients.get(component);
+                    if (remainingInstances == null) {
+                        remainingInstances = Lists.newArrayList();
+                        remainingIngredients.put(component, remainingInstances);
+                    }
+                    remainingInstances.add(instance);
+                }
+            }
+        }
+        return new MixedIngredients(remainingIngredients);
+    }
+
+    /**
+     * Generates semi-unique IDs.
      */
     public static interface IIdentifierGenerator {
         public int getNext();
