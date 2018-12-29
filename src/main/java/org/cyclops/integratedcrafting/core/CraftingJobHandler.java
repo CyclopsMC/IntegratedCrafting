@@ -343,7 +343,7 @@ public class CraftingJobHandler {
                 // Check if pendingCraftingJob can start and set as startingCraftingJob
                 // This requires checking the available ingredients AND if the crafting handler can accept it.
                 Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputs = CraftingHelpers.getRecipeInputs(
-                        CraftingHelpers.getNetworkStorageGetter(network, pendingCraftingJob.getChannel()),
+                        CraftingHelpers.getNetworkStorageGetter(network, pendingCraftingJob.getChannel(), false),
                         pendingCraftingJob.getRecipe(), true, Maps.newIdentityHashMap(), true, 1);
                 if (inputs.getRight().isEmpty()) { // If we have no missing ingredients
                     if (insertCrafting(targetPos, new MixedIngredients(inputs.getLeft()), true)) {
@@ -397,7 +397,7 @@ public class CraftingJobHandler {
                         // In this case, we silently re-insert the ingredients back into the network,
                         // and emit a warning if any ingredients were lost.
                         IMixedIngredients remainder = CraftingHelpers.insertIngredients(ingredients,
-                                CraftingHelpers.getNetworkStorageGetter(network, channel), false);
+                                CraftingHelpers.getNetworkStorageGetter(network, channel, false), false);
                         if (!remainder.getComponents().isEmpty()) {
                             IntegratedCrafting.clog(Level.WARN, "Failed to insert crafting ingredients, lost: " + remainder);
                         }

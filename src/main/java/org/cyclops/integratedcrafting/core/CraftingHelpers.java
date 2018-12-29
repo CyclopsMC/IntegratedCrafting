@@ -151,7 +151,7 @@ public class CraftingHelpers {
             throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
         IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
-        Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel);
+        Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel, true);
         CraftingJob craftingJob = calculateCraftingJobs(recipeIndex, channel, storageGetter, ingredientComponent, instance, matchCondition,
                 craftMissing, Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),
                 collectMissingRecipes);
@@ -183,7 +183,7 @@ public class CraftingHelpers {
             throws FailedCraftingRecipeException, RecursiveCraftingRecipeException {
         ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
         IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
-        Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel);
+        Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel, true);
         PartialCraftingJobCalculation result = calculateCraftingJobs(recipeIndex, channel, storageGetter, recipe, amount,
                 craftMissing, Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),
                 collectMissingRecipes);
@@ -988,7 +988,7 @@ public class CraftingHelpers {
     public static IMixedIngredients getRecipeInputs(INetwork network, int channel,
                                                     IRecipeDefinition recipe, boolean simulate,
                                                     long recipeOutputQuantity) {
-        Map<IngredientComponent<?, ?>, List<?>> inputs = getRecipeInputs(getNetworkStorageGetter(network, channel),
+        Map<IngredientComponent<?, ?>, List<?>> inputs = getRecipeInputs(getNetworkStorageGetter(network, channel, true),
                 recipe, simulate, Maps.newIdentityHashMap(), false, recipeOutputQuantity).getLeft();
         return inputs == null ? null : new MixedIngredients(inputs);
     }
@@ -997,10 +997,11 @@ public class CraftingHelpers {
      * Create a callback function for getting a storage for an ingredient component from the given network channel.
      * @param network The target network.
      * @param channel The target channel.
+     * @param scheduleObservation If an observation inside the ingredients network should be scheduled.
      * @return A callback function for getting a storage for an ingredient component.
      */
-    public static Function<IngredientComponent<?, ?>, IIngredientComponentStorage> getNetworkStorageGetter(INetwork network, int channel) {
-        return ingredientComponent -> getNetworkStorage(network, channel, ingredientComponent, false);
+    public static Function<IngredientComponent<?, ?>, IIngredientComponentStorage> getNetworkStorageGetter(INetwork network, int channel, boolean scheduleObservation) {
+        return ingredientComponent -> getNetworkStorage(network, channel, ingredientComponent, scheduleObservation);
     }
 
     /**
