@@ -12,7 +12,9 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.core.MissingIngredients;
 
+import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author rubensworks
@@ -29,6 +31,8 @@ public class CraftingJob {
     private Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients;
     private long startTick;
     private boolean invalidInputs;
+    @Nullable
+    private String initiatorUuid;
 
     public CraftingJob(int id, int channel, IRecipeDefinition recipe, int amount, IMixedIngredients ingredientsStorage) {
         this.id = id;
@@ -119,6 +123,15 @@ public class CraftingJob {
         this.invalidInputs = invalidInputs;
     }
 
+    @Nullable
+    public String getInitiatorUuid() {
+        return initiatorUuid;
+    }
+
+    public void setInitiatorUuid(String initiatorUuid) {
+        this.initiatorUuid = initiatorUuid;
+    }
+
     public static NBTTagCompound serialize(CraftingJob craftingJob) {
         NBTTagCompound tag = new NBTTagCompound();
         tag.setInteger("id", craftingJob.id);
@@ -131,6 +144,9 @@ public class CraftingJob {
         tag.setTag("lastMissingIngredients", MissingIngredients.serialize(craftingJob.lastMissingIngredients));
         tag.setLong("startTick", craftingJob.startTick);
         tag.setBoolean("invalidInputs", craftingJob.invalidInputs);
+        if (craftingJob.initiatorUuid != null) {
+            tag.setString("initiatorUuid", craftingJob.initiatorUuid);
+        }
         return tag;
     }
 
@@ -182,6 +198,9 @@ public class CraftingJob {
         craftingJob.setLastMissingIngredients(lastMissingIngredients);
         craftingJob.setStartTick(tag.getLong("startTick"));
         craftingJob.setInvalidInputs(tag.getBoolean("invalidInputs"));
+        if (tag.hasKey("initiatorUuid", Constants.NBT.TAG_STRING)) {
+            craftingJob.setInitiatorUuid(tag.getString("initiatorUuid"));
+        }
         return craftingJob;
     }
 

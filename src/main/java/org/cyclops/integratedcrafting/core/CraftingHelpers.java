@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -627,13 +628,18 @@ public class CraftingHelpers {
      * @param craftingNetwork The target crafting network.
      * @param craftingJobDependencyGraph The crafting job dependency graph.
      * @param allowDistribution If the crafting jobs are allowed to be split over multiple crafting interfaces.
+     * @param initiator Optional UUID of the initiator.
      */
     public static void scheduleCraftingJobs(ICraftingNetwork craftingNetwork,
                                             CraftingJobDependencyGraph craftingJobDependencyGraph,
-                                            boolean allowDistribution) {
+                                            boolean allowDistribution,
+                                            @Nullable UUID initiator) {
         craftingNetwork.getCraftingJobDependencyGraph().importDependencies(craftingJobDependencyGraph);
         for (CraftingJob craftingJob : craftingJobDependencyGraph.getCraftingJobs()) {
             craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution);
+            if (initiator != null) {
+                craftingJob.setInitiatorUuid(initiator.toString());
+            }
         }
     }
 
@@ -642,12 +648,17 @@ public class CraftingHelpers {
      * @param craftingNetwork The target crafting network.
      * @param craftingJob The crafting job to schedule.
      * @param allowDistribution If the crafting job is allowed to be split over multiple crafting interfaces.
+     * @param initiator Optional UUID of the initiator.
      * @return The scheduled crafting job.
      */
     public static CraftingJob scheduleCraftingJob(ICraftingNetwork craftingNetwork,
                                                   CraftingJob craftingJob,
-                                                  boolean allowDistribution) {
+                                                  boolean allowDistribution,
+                                                  @Nullable UUID initiator) {
         craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution);
+        if (initiator != null) {
+            craftingJob.setInitiatorUuid(initiator.toString());
+        }
         return craftingJob;
     }
 
@@ -661,6 +672,7 @@ public class CraftingHelpers {
      * @param craftMissing If the missing required ingredients should also be crafted.
      * @param allowDistribution If the crafting job is allowed to be split over multiple crafting interfaces.
      * @param identifierGenerator An ID generator for crafting jobs.
+     * @param initiator Optional UUID of the initiator.
      * @param <T> The instance type.
      * @param <M> The matching condition parameter.
      * @return The scheduled crafting job, or null if no recipe was found.
@@ -670,7 +682,8 @@ public class CraftingHelpers {
                                                                      IngredientComponent<T, M> ingredientComponent,
                                                                      T instance, M matchCondition,
                                                                      boolean craftMissing, boolean allowDistribution,
-                                                                     IIdentifierGenerator identifierGenerator) {
+                                                                     IIdentifierGenerator identifierGenerator,
+                                                                     @Nullable UUID initiator) {
         try {
             CraftingJobDependencyGraph dependencyGraph = new CraftingJobDependencyGraph();
             CraftingJob craftingJob = calculateCraftingJobs(network, channel, ingredientComponent, instance,
@@ -678,7 +691,7 @@ public class CraftingHelpers {
 
             ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
 
-            scheduleCraftingJobs(craftingNetwork, dependencyGraph, allowDistribution);
+            scheduleCraftingJobs(craftingNetwork, dependencyGraph, allowDistribution, initiator);
 
             return craftingJob;
         } catch (UnknownCraftingRecipeException | RecursiveCraftingRecipeException e) {
@@ -695,13 +708,15 @@ public class CraftingHelpers {
      * @param craftMissing If the missing required ingredients should also be crafted.
      * @param allowDistribution If the crafting job is allowed to be split over multiple crafting interfaces.
      * @param identifierGenerator An ID generator for crafting jobs.
+     * @param initiator Optional UUID of the initiator.
      * @return The scheduled crafting job, or null if no recipe was found.
      */
     @Nullable
     public static CraftingJob calculateAndScheduleCraftingJob(INetwork network, int channel,
                                                               IRecipeDefinition recipe, int amount,
                                                               boolean craftMissing, boolean allowDistribution,
-                                                              IIdentifierGenerator identifierGenerator) {
+                                                              IIdentifierGenerator identifierGenerator,
+                                                              @Nullable UUID initiator) {
         try {
             CraftingJobDependencyGraph dependencyGraph = new CraftingJobDependencyGraph();
             CraftingJob craftingJob = calculateCraftingJobs(network, channel, recipe, amount, craftMissing,
@@ -709,7 +724,7 @@ public class CraftingHelpers {
 
             ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
 
-            scheduleCraftingJobs(craftingNetwork, dependencyGraph, allowDistribution);
+            scheduleCraftingJobs(craftingNetwork, dependencyGraph, allowDistribution, initiator);
 
             return craftingJob;
         } catch (RecursiveCraftingRecipeException | FailedCraftingRecipeException e) {

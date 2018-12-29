@@ -122,7 +122,7 @@ public class CraftingAspectWriteBuilders {
                 if ((ignoreCrafting || !CraftingHelpers.isCrafting(craftingNetwork, channel, recipe))) {
                     CraftingHelpers.calculateAndScheduleCraftingJob(network, channel,
                             recipe, amount, craftMissing, true,
-                            CraftingHelpers.getGlobalCraftingJobIdentifier());
+                            CraftingHelpers.getGlobalCraftingJobIdentifier(), null);
                 }
             }
         }
@@ -132,7 +132,6 @@ public class CraftingAspectWriteBuilders {
     public static <T, M> IAspectValuePropagator<CraftingJobData<T, M>, Void> PROP_CRAFT() {
         return input -> {
             IngredientComponent<T, M> ingredientComponent = input.getIngredientComponent();
-            PartPos center = input.getCenter();
             IAspectProperties properties = input.getProperties();
             T instance = input.getInstance();
 
@@ -152,7 +151,7 @@ public class CraftingAspectWriteBuilders {
                             instance, matchCondition))) {
                         CraftingHelpers.calculateAndScheduleCraftingJob(network, channel,
                                 ingredientComponent, instance, matchCondition, craftMissing, true,
-                                CraftingHelpers.getGlobalCraftingJobIdentifier());
+                                CraftingHelpers.getGlobalCraftingJobIdentifier(), null);
                     }
                 }
             }

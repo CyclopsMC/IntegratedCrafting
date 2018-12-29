@@ -28,6 +28,6 @@ public class NetworkCraftingHandlerCraftingNetwork implements INetworkCraftingHa
             }
         }
         return CraftingHelpers.calculateAndScheduleCraftingJob(network, channel, ingredientComponent,
-                instance, matchCondition, true, true, CraftingHelpers.getGlobalCraftingJobIdentifier()) != null;
+                instance, matchCondition, true, true, CraftingHelpers.getGlobalCraftingJobIdentifier(), null) != null;
     }
 }
