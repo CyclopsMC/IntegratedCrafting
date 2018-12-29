@@ -12,6 +12,7 @@ import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -49,6 +50,7 @@ public class CraftingJobDependencyGraph {
         return dependencies.getOrDefault(craftingJob.getId(), new IntArrayList())
                 .stream()
                 .map(craftingJobs::get)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -57,13 +59,23 @@ public class CraftingJobDependencyGraph {
     }
 
     public boolean hasDependencies(int craftingJobId) {
-        return dependencies.containsKey(craftingJobId);
+        IntCollection deps = dependencies.get(craftingJobId);
+        if (deps != null) {
+            IntIterator it = deps.iterator();
+            while (it.hasNext()) {
+                if (craftingJobs.get(it.next()) != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public Collection<CraftingJob> getDependents(CraftingJob craftingJob) {
         return dependents.getOrDefault(craftingJob.getId(), new IntArrayList())
                 .stream()
                 .map(craftingJobs::get)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -77,7 +89,7 @@ public class CraftingJobDependencyGraph {
 
     public void onCraftingJobFinished(CraftingJob craftingJob) {
         // Check if the crafting job can be finished.
-        if (dependencies.containsKey(craftingJob.getId())) {
+        if (hasDependencies(craftingJob)) {
             throw new IllegalStateException("A crafting job was finished while it still has unfinished dependencies.");
         }
 
@@ -102,6 +114,16 @@ public class CraftingJobDependencyGraph {
                         craftingJobs.remove(dependent);
                     }
                 }
+            }
+        }
+
+        // Remove invalid dependencies that are not present in craftingJobs
+        IntCollection removedDependencies = dependencies.remove(craftingJob.getId());
+        if (removedDependencies != null) {
+            IntIterator removedDependenciesIt = removedDependencies.iterator();
+            while (removedDependenciesIt.hasNext()) {
+                int dependency = removedDependenciesIt.nextInt();
+                dependents.remove(dependency);
             }
         }
     }
