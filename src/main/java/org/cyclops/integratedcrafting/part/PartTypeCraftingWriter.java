@@ -19,6 +19,7 @@ public class PartTypeCraftingWriter extends PartTypeWriteBase<PartTypeCraftingWr
     public PartTypeCraftingWriter(String name) {
         super(name);
         AspectRegistry.getInstance().register(this, Lists.<IAspect>newArrayList(
+                CraftingAspects.Write.RECIPE_CRAFT,
                 CraftingAspects.Write.ITEMSTACK_CRAFT,
                 CraftingAspects.Write.FLUIDSTACK_CRAFT,
                 CraftingAspects.Write.ENERGY_CRAFT

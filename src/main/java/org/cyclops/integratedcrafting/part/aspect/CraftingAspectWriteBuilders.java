@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 import org.apache.commons.lang3.tuple.Triple;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
@@ -16,6 +17,7 @@ import org.cyclops.integrateddynamics.api.part.aspect.property.IAspectProperties
 import org.cyclops.integrateddynamics.api.part.aspect.property.IAspectPropertyTypeInstance;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeFluidStack;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeItemStack;
+import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeBoolean;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeInteger;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
@@ -33,11 +35,19 @@ public class CraftingAspectWriteBuilders {
     public static final IAspectPropertyTypeInstance<ValueTypeInteger, ValueTypeInteger.ValueInteger> PROP_CHANNEL =
             new AspectPropertyTypeInstance<>(ValueTypes.INTEGER, "aspect.aspecttypes.integrateddynamics.integer.channel.name");
     public static final IAspectPropertyTypeInstance<ValueTypeBoolean, ValueTypeBoolean.ValueBoolean> PROP_IGNORE_STORAGE =
-            new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.integer.ignorestorage.name");
+            new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.boolean.ignorestorage.name");
     public static final IAspectPropertyTypeInstance<ValueTypeBoolean, ValueTypeBoolean.ValueBoolean> PROP_IGNORE_CRAFTING =
-            new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.integer.ignorecrafting.name");
+            new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.boolean.ignorecrafting.name");
     public static final IAspectPropertyTypeInstance<ValueTypeBoolean, ValueTypeBoolean.ValueBoolean> PROP_CRAFT_MISSING =
-            new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.integer.craftmissing.name");
+            new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.boolean.craftmissing.name");
+    public static final IAspectPropertyTypeInstance<ValueTypeInteger, ValueTypeInteger.ValueInteger> PROP_CRAFT_AMOUNT =
+            new AspectPropertyTypeInstance<>(ValueTypes.INTEGER, "aspect.aspecttypes.integratedcrafting.integer.craftamount.name");
+    public static final IAspectProperties PROPERTIES_CRAFTING_RECIPE = new AspectProperties(ImmutableList.<IAspectPropertyTypeInstance>of(
+            PROP_CHANNEL,
+            PROP_IGNORE_CRAFTING,
+            PROP_CRAFT_MISSING,
+            PROP_CRAFT_AMOUNT
+    ));
     public static final IAspectProperties PROPERTIES_CRAFTING = new AspectProperties(ImmutableList.<IAspectPropertyTypeInstance>of(
             PROP_CHANNEL,
             PROP_IGNORE_STORAGE,
@@ -45,12 +55,20 @@ public class CraftingAspectWriteBuilders {
             PROP_CRAFT_MISSING
     ));
     static {
+        PROPERTIES_CRAFTING_RECIPE.setValue(PROP_CHANNEL, ValueTypeInteger.ValueInteger.of(IPositionedAddonsNetworkIngredients.DEFAULT_CHANNEL));
+        PROPERTIES_CRAFTING_RECIPE.setValue(PROP_IGNORE_CRAFTING, ValueTypeBoolean.ValueBoolean.of(false));
+        PROPERTIES_CRAFTING_RECIPE.setValue(PROP_CRAFT_MISSING, ValueTypeBoolean.ValueBoolean.of(true));
+        PROPERTIES_CRAFTING_RECIPE.setValue(PROP_CRAFT_AMOUNT, ValueTypeInteger.ValueInteger.of(1));
+
         PROPERTIES_CRAFTING.setValue(PROP_CHANNEL, ValueTypeInteger.ValueInteger.of(IPositionedAddonsNetworkIngredients.DEFAULT_CHANNEL));
         PROPERTIES_CRAFTING.setValue(PROP_IGNORE_STORAGE, ValueTypeBoolean.ValueBoolean.of(false));
         PROPERTIES_CRAFTING.setValue(PROP_IGNORE_CRAFTING, ValueTypeBoolean.ValueBoolean.of(false));
         PROPERTIES_CRAFTING.setValue(PROP_CRAFT_MISSING, ValueTypeBoolean.ValueBoolean.of(true));
     }
 
+    public static final AspectBuilder<ValueObjectTypeRecipe.ValueRecipe, ValueObjectTypeRecipe, Triple<PartTarget, IAspectProperties, IRecipeDefinition>>
+            BUILDER_RECIPE = AspectWriteBuilders.BUILDER_RECIPE.byMod(IntegratedCrafting._instance)
+            .appendKind("craft").handle(AspectWriteBuilders.PROP_GET_RECIPE);
     public static final AspectBuilder<ValueObjectTypeItemStack.ValueItemStack, ValueObjectTypeItemStack, Triple<PartTarget, IAspectProperties, ItemStack>>
             BUILDER_ITEMSTACK = AspectWriteBuilders.BUILDER_ITEMSTACK.byMod(IntegratedCrafting._instance)
             .appendKind("craft").handle(AspectWriteBuilders.PROP_GET_ITEMSTACK);
@@ -88,6 +106,29 @@ public class CraftingAspectWriteBuilders {
         return new CraftingJobData<>(properties, ingredientComponent, instance, partTarget.getCenter());
     };
 
+    public static final IAspectValuePropagator<Triple<PartTarget, IAspectProperties, IRecipeDefinition>, Void> PROP_CRAFT_RECIPE = input -> {
+        PartPos center = input.getLeft().getCenter();
+        IAspectProperties properties = input.getMiddle();
+        IRecipeDefinition recipe = input.getRight();
+        if (recipe != null) {
+            INetwork network = CraftingHelpers.getNetworkChecked(center);
+            ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetwork(network);
+            if (craftingNetwork != null) {
+                int channel = properties.getValue(PROP_CHANNEL).getRawValue();
+                int amount = properties.getValue(PROP_CRAFT_AMOUNT).getRawValue();
+                boolean ignoreCrafting = properties.getValue(PROP_IGNORE_CRAFTING).getRawValue();
+                boolean craftMissing = properties.getValue(PROP_CRAFT_MISSING).getRawValue();
+
+                if ((ignoreCrafting || !CraftingHelpers.isCrafting(craftingNetwork, channel, recipe))) {
+                    CraftingHelpers.calculateAndScheduleCraftingJob(network, channel,
+                            recipe, amount, craftMissing, true,
+                            CraftingHelpers.getGlobalCraftingJobIdentifier());
+                }
+            }
+        }
+        return null;
+    };
+
     public static <T, M> IAspectValuePropagator<CraftingJobData<T, M>, Void> PROP_CRAFT() {
         return input -> {
             IngredientComponent<T, M> ingredientComponent = input.getIngredientComponent();
@@ -97,8 +138,8 @@ public class CraftingAspectWriteBuilders {
 
             M matchCondition = ingredientComponent.getMatcher().getExactMatchNoQuantityCondition();
             if (!ingredientComponent.getMatcher().isEmpty(instance)) {
-                INetwork network = CraftingHelpers.getNetworkChecked(center);
-                ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetwork(network);
+                INetwork network = input.getNetwork();
+                ICraftingNetwork craftingNetwork = input.getCraftingNetwork();
                 if (craftingNetwork != null) {
                     int channel = properties.getValue(PROP_CHANNEL).getRawValue();
                     boolean ignoreStorage = properties.getValue(PROP_IGNORE_STORAGE).getRawValue();

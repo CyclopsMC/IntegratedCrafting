@@ -687,6 +687,37 @@ public class CraftingHelpers {
     }
 
     /**
+     * Schedule a crafting job for the given recipe in the given network.
+     * @param network The target network.
+     * @param channel The target channel.
+     * @param recipe The recipe to craft.
+     * @param amount The amount to craft.
+     * @param craftMissing If the missing required ingredients should also be crafted.
+     * @param allowDistribution If the crafting job is allowed to be split over multiple crafting interfaces.
+     * @param identifierGenerator An ID generator for crafting jobs.
+     * @return The scheduled crafting job, or null if no recipe was found.
+     */
+    @Nullable
+    public static CraftingJob calculateAndScheduleCraftingJob(INetwork network, int channel,
+                                                              IRecipeDefinition recipe, int amount,
+                                                              boolean craftMissing, boolean allowDistribution,
+                                                              IIdentifierGenerator identifierGenerator) {
+        try {
+            CraftingJobDependencyGraph dependencyGraph = new CraftingJobDependencyGraph();
+            CraftingJob craftingJob = calculateCraftingJobs(network, channel, recipe, amount, craftMissing,
+                    identifierGenerator, dependencyGraph, false);
+
+            ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
+
+            scheduleCraftingJobs(craftingNetwork, dependencyGraph, allowDistribution);
+
+            return craftingJob;
+        } catch (RecursiveCraftingRecipeException | FailedCraftingRecipeException e) {
+            return null;
+        }
+    }
+
+    /**
      * Check if the given network contains the given instance in any of its storages.
      * @param network The target network.
      * @param channel The target channel.
@@ -722,6 +753,24 @@ public class CraftingHelpers {
         Iterator<CraftingJob> craftingJobs = craftingNetwork.getCraftingJobs(channel, ingredientComponent,
                 instance, matchCondition);
         return craftingJobs.hasNext();
+    }
+
+    /**
+     * Check if there is a scheduled crafting job for the given recipe.
+     * @param craftingNetwork The target crafting network.
+     * @param channel The target channel.
+     * @param recipe The recipe to check.
+     * @return If the instance has a crafting job.
+     */
+    public static boolean isCrafting(ICraftingNetwork craftingNetwork, int channel,
+                                     IRecipeDefinition recipe) {
+        Iterator<CraftingJob> it = craftingNetwork.getCraftingJobs(channel);
+        while (it.hasNext()) {
+            if (it.next().getRecipe().equals(recipe)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

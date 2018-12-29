@@ -37,6 +37,11 @@ public class CraftingAspects {
 
     public static final class Write {
 
+        public static final IAspectWrite<ValueObjectTypeRecipe.ValueRecipe, ValueObjectTypeRecipe> RECIPE_CRAFT =
+                CraftingAspectWriteBuilders.BUILDER_RECIPE
+                        .withProperties(CraftingAspectWriteBuilders.PROPERTIES_CRAFTING_RECIPE)
+                        .handle(CraftingAspectWriteBuilders.PROP_CRAFT_RECIPE)
+                        .buildWrite();
         public static final IAspectWrite<ValueObjectTypeItemStack.ValueItemStack, ValueObjectTypeItemStack> ITEMSTACK_CRAFT =
                 CraftingAspectWriteBuilders.BUILDER_ITEMSTACK
                         .withProperties(CraftingAspectWriteBuilders.PROPERTIES_CRAFTING)

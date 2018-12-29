@@ -17,9 +17,10 @@ parttype.parttypes.integratedcrafting.crafting_writer.name=Crafting Writer
 parttype.parttypes.integratedcrafting.crafting_writer.info=Starts crafting jobs
 
 # Aspect property types
-aspect.aspecttypes.integratedcrafting.integer.ignorestorage.name=Ignore storage contents
-aspect.aspecttypes.integratedcrafting.integer.ignorecrafting.name=Ignore crafting jobs
-aspect.aspecttypes.integratedcrafting.integer.craftmissing.name=Craft missing ingredients
+aspect.aspecttypes.integratedcrafting.boolean.ignorestorage.name=Ignore storage contents
+aspect.aspecttypes.integratedcrafting.boolean.ignorecrafting.name=Ignore crafting jobs
+aspect.aspecttypes.integratedcrafting.boolean.craftmissing.name=Craft missing ingredients
+aspect.aspecttypes.integratedcrafting.integer.craftamount.name=Craft amount
 
 # Aspects
 
@@ -32,6 +33,8 @@ aspect.aspects.integratedcrafting.read.list.network.craftingingredients.name=Cra
 aspect.aspects.integratedcrafting.read.list.network.craftingingredients.info=A list of all ingredients that are being crafted.
 
 ## Crafting
+aspect.aspects.integratedcrafting.write.recipe.craft.name=Craft Recipe
+aspect.aspects.integratedcrafting.write.recipe.craft.info=Craft the given recipe
 aspect.aspects.integratedcrafting.write.itemstack.craft.name=Craft Item
 aspect.aspects.integratedcrafting.write.itemstack.craft.info=Craft the given item
 aspect.aspects.integratedcrafting.write.fluidstack.craft.name=Craft Fluid
