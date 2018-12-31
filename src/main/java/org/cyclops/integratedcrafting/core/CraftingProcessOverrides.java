@@ -2,6 +2,7 @@ package org.cyclops.integratedcrafting.core;
 
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverrideRegistry;
+import org.cyclops.integratedcrafting.core.crafting.processoverride.CraftingProcessOverrideBrewingStand;
 import org.cyclops.integratedcrafting.core.crafting.processoverride.CraftingProcessOverrideCraftingTable;
 
 /**
@@ -13,6 +14,7 @@ public class CraftingProcessOverrides {
             .getRegistry(ICraftingProcessOverrideRegistry.class);
 
     public static final CraftingProcessOverrideCraftingTable CRAFTING_TABLE = REGISTRY.register(new CraftingProcessOverrideCraftingTable());
+    public static final CraftingProcessOverrideBrewingStand BREWING_STAND = REGISTRY.register(new CraftingProcessOverrideBrewingStand());
 
     public static void load() {}
 
