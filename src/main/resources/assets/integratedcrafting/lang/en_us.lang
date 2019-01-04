@@ -41,3 +41,19 @@ aspect.aspects.integratedcrafting.write.fluidstack.craft.name=Craft Fluid
 aspect.aspects.integratedcrafting.write.fluidstack.craft.info=Craft the given fluid
 aspect.aspects.integratedcrafting.write.integer.craft.name=Craft Energy
 aspect.aspects.integratedcrafting.write.integer.craft.info=Craft the given energy amount
+
+# ------ On the Dynamics of Integration contents ------
+
+info_book.integratedcrafting.section.main=Crafting
+
+info_book.integratedcrafting.introduction=Introduction
+info_book.integratedcrafting.introduction.text1=&lIntegrated Crafting&r is an extension to &lIntegrated Dynamics&r for autocrafting within &lIntegrated Dynamics&r networks.
+info_book.integratedcrafting.introduction.text2=For instance, the &lCrafting Interface&r can be placed next to any kind of crafting machine, and can be used to provide crafting options based on &lVariable Cards&r containing &8Recipes&0.
+info_book.integratedcrafting.introduction.text3=The &lCrafting Writer&r can then be used to automatically start crafting jobs based on the recipes that are exposed by all &lCrafting Interfaces&r in the network.
+info_book.integratedcrafting.introduction.text4=The following sections explain how this autocrafting process works.
+
+info_book.integratedcrafting.section.tutorials=Crafting Tutorials
+
+info_book.integratedcrafting.tutorials.introduction=Introduction
+info_book.integratedcrafting.tutorials.introduction.text1=This section contains several tutorials that help you to learn &lIntegrated Crafting&r, the &lIntegrated Dynamics&r add-on for autocrafting within &lIntegrated Dynamics&r networks.
+

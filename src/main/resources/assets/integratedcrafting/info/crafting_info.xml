@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section name="info_book.integratedcrafting.section.main">
+    <section name="info_book.integratedcrafting.introduction">
+        <paragraph>info_book.integratedcrafting.introduction.text1</paragraph>
+        <paragraph>info_book.integratedcrafting.introduction.text2</paragraph>
+        <paragraph>info_book.integratedcrafting.introduction.text3</paragraph>
+        <paragraph>info_book.integratedcrafting.introduction.text4</paragraph>
+    </section>
+</section>
