@@ -51,4 +51,13 @@
             <paragraph>info_book.integratedcrafting.crafting_interface.dynamic_recipes.text2</paragraph>
         </section>
     </section>
+
+    <section name="info_book.integratedcrafting.crafting_writer">
+        <tag>integratedcrafting:part_crafting_writer_item</tag>
+        <paragraph>info_book.integratedcrafting.crafting_writer.text1</paragraph>
+        <paragraph>info_book.integratedcrafting.crafting_writer.text2</paragraph>
+        <paragraph>info_book.integratedcrafting.crafting_writer.text3</paragraph>
+        <appendix type="crafting_recipe">integratedcrafting:part_crafting_writer_item</appendix>
+        <appendix_list factory="integrateddynamics:part_aspects">crafting_writer</appendix_list>
+    </section>
 </section>
