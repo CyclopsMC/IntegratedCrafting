@@ -20,4 +20,25 @@
             </rewards>
         </appendix>
     </section>
+
+    <section name="info_book.integratedcrafting.tutorials.autocrafting_trigger">
+        <paragraph>info_book.integratedcrafting.tutorials.autocrafting_trigger.text1</paragraph>
+        <paragraph>info_book.integratedcrafting.tutorials.autocrafting_trigger.text2</paragraph>
+        <paragraph>info_book.integratedcrafting.tutorials.autocrafting_trigger.text3</paragraph>
+        <paragraph>info_book.integratedcrafting.tutorials.autocrafting_trigger.text4</paragraph>
+        <paragraph>info_book.integratedcrafting.tutorials.autocrafting_trigger.text5</paragraph>
+        <paragraph>info_book.integratedcrafting.tutorials.autocrafting_trigger.text6</paragraph>
+        <appendix type="crafting_recipe">integratedcrafting:part_crafting_writer_item</appendix>
+        <appendix type="integrateddynamics:aspect">aspect.aspects.integratedcrafting.write.itemstack.craft.name</appendix>
+        <appendix type="image" width="120" height="51">integratedcrafting:textures/gui/infobook/tutorial_autocrafting_trigger.png</appendix>
+        <appendix type="advancement_rewards" id="integratedterminals:autocrafting_trigger">
+            <advancements>
+                <advancement id="integratedcrafting:autocrafting_trigger/craft_crafting_writer" />
+                <advancement id="integratedcrafting:autocrafting_trigger/craft_planks" />
+            </advancements>
+            <rewards>
+                <reward type="item" amount="5">integratedcrafting:part_crafting_writer_item</reward>
+            </rewards>
+        </appendix>
+    </section>
 </section>

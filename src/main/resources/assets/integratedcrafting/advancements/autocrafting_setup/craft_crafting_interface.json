@@ -4,10 +4,10 @@
       "item": "integratedcrafting:part_interface_crafting_item"
     },
     "title": {
-      "translate": "advancement.integratedcrafting.craft_storage_terminal"
+      "translate": "advancement.integratedcrafting.craft_crafting_interface"
     },
     "description": {
-      "translate": "advancement.integratedcrafting.craft_storage_terminal.desc"
+      "translate": "advancement.integratedcrafting.craft_crafting_interface.desc"
     }
   },
   "parent": "integratedcrafting:root",

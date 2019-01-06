@@ -1,0 +1,30 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:planks"
+    },
+    "title": {
+      "translate": "advancement.integratedcrafting.craft_planks"
+    },
+    "description": {
+      "translate": "advancement.integratedcrafting.craft_planks.desc"
+    }
+  },
+  "parent": "integratedcrafting:autocrafting_trigger/craft_crafting_writer",
+  "criteria": {
+    "criteria_0": {
+      "trigger": "integrateddynamics:part_writer_aspect",
+      "conditions": {
+        "parttype": "crafting_writer",
+        "aspect": "aspect.aspects.integratedcrafting.write.itemstack.craft.name",
+        "variable": {
+          "type": "valuetype",
+          "valuetype": "valuetype.valuetypes.integrateddynamics.itemstack.name",
+          "value": {
+            "item": "minecraft:planks"
+          }
+        }
+      }
+    }
+  }
+}

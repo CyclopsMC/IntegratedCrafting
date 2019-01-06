@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "integratedcrafting:part_crafting_writer_item"
+    },
+    "title": {
+      "translate": "advancement.integratedcrafting.craft_crafting_writer"
+    },
+    "description": {
+      "translate": "advancement.integratedcrafting.craft_crafting_writer.desc"
+    }
+  },
+  "parent": "integratedcrafting:autocrafting_setup/insert_recipe_planks",
+  "criteria": {
+    "criteria_0": {
+      "trigger": "cyclopscore:item_crafted",
+      "conditions": {
+        "items": [
+          {
+            "item": "integratedcrafting:part_crafting_writer_item"
+          }
+        ]
+      }
+    }
+  }
+}
