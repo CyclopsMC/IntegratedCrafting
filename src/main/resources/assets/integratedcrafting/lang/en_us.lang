@@ -87,6 +87,11 @@ info_book.integratedcrafting.crafting_interface.dynamic_recipes.text1=Following 
 info_book.integratedcrafting.crafting_interface.dynamic_recipes.text2=&lCrafting Interfaces&r will automatically detect when a recipe is updated, and all new crafting jobs will immediately use the new recipe. However, all running crafting jobs will still use the old recipe.
 info_book.integratedcrafting.crafting_interface.dynamic_recipes.text3=Note that the more your recipe changes, the more lag may be produced. So use this feature with caution.
 
+info_book.integratedcrafting.crafting_interface.debugging_jobs=Debugging Crafting Jobs
+info_book.integratedcrafting.crafting_interface.debugging_jobs.text1=While setting up autocrafting, you may run into situations where you crafting job does not work properly due to misconfiguration.
+info_book.integratedcrafting.crafting_interface.debugging_jobs.text2=You can debug these cases using crafting-related aspects from the &lNetwork Reader&r, such as getting the list of all available recipes in the network, getting all running crafting jobs, and getting all missing crafting job ingredients. Visualizing these lists in &lDisplay Panels&r can help you pinpoint the problem you are experiencing.
+info_book.integratedcrafting.crafting_interface.debugging_jobs.text3=Note that if you have &lIntegrated Terminals&r installed, you can use the &lCrafting Job Terminal&r to visualize all running crafting jobs, visualize any missing ingredients, or cancel the jobs.
+
 info_book.integratedcrafting.crafting_writer=Crafting Writer
 info_book.integratedcrafting.crafting_writer.text1=The &lCrafting Writer&r allows you to automatically start crafting jobs based on certain conditions using the recipes that are exposed by &lCrafting Interfaces&r.
 info_book.integratedcrafting.crafting_writer.text2=Using the following aspects, you can start crafting jobs for the given recipe, output item, output fluid or output energy. Using the aspect settings, you can configure the crafting channel, whether or not already-running crafting jobs should block any new jobs, if crafting jobs for any missing inputs should also be started, and whether or not the presence of ingredients in the storage network should block any new crafting jobs.

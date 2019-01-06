@@ -49,6 +49,13 @@
         <section name="info_book.integratedcrafting.crafting_interface.dynamic_recipes">
             <paragraph>info_book.integratedcrafting.crafting_interface.dynamic_recipes.text1</paragraph>
             <paragraph>info_book.integratedcrafting.crafting_interface.dynamic_recipes.text2</paragraph>
+            <paragraph>info_book.integratedcrafting.crafting_interface.dynamic_recipes.text3</paragraph>
+        </section>
+
+        <section name="info_book.integratedcrafting.crafting_interface.debugging_jobs">
+            <paragraph>info_book.integratedcrafting.crafting_interface.debugging_jobs.text1</paragraph>
+            <paragraph>info_book.integratedcrafting.crafting_interface.debugging_jobs.text2</paragraph>
+            <paragraph>info_book.integratedcrafting.crafting_interface.debugging_jobs.text3</paragraph>
         </section>
     </section>
 
