@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<recipes>
+
+	<recipe type="shaped">
+		<input>
+			<grid>
+				<gridrow>
+					<item type="oredict">ingotIron</item>
+					<item>minecraft:crafting_table</item>
+					<item type="oredict">ingotIron</item>
+				</gridrow>
+				<gridrow>
+					<item meta="0">integrateddynamics:variable_transformer</item>
+					<item>integrateddynamics:crystalized_menril_block</item>
+					<item meta="1">integrateddynamics:variable_transformer</item>
+				</gridrow>
+				<gridrow>
+					<item type="oredict">ingotIron</item>
+					<item>minecraft:crafting_table</item>
+					<item type="oredict">ingotIron</item>
+				</gridrow>
+			</grid>
+		</input>
+		<output>
+			<item>integratedcrafting:part_interface_crafting_item</item>
+		</output>
+	</recipe>
+
+	<recipe type="shaped">
+		<input>
+			<grid>
+				<gridrow>
+					<item>minecraft:crafting_table</item>
+					<item meta="0">integrateddynamics:variable_transformer</item>
+					<item>minecraft:crafting_table</item>
+				</gridrow>
+			</grid>
+		</input>
+		<output>
+			<item>integratedcrafting:part_crafting_writer_item</item>
+		</output>
+	</recipe>
+
+</recipes>
