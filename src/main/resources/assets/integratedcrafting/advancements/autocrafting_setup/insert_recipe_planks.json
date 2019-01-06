@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "item": "integrateddynamics:variable",
+      "nbt": "{\"typeName\":\"valuetype.valuetypes.integrateddynamics.recipe.name\",\"partId\":1,\"_type\":\"valuetype\",\"value\":\"{output:{\\\"minecraft:itemstack\\\":[{id:\\\"minecraft:chest\\\",Count:1b,Damage:0s}]},input:{\\\"minecraft:itemstack\\\":[[{condition:3,prototype:{id:\\\"minecraft:chest\\\",Count:1b,Damage:0s}}]]}}\",\"_id\":1}"
+    },
+    "title": {
+      "translate": "advancement.integratedcrafting.insert_recipe_planks"
+    },
+    "description": {
+      "translate": "advancement.integratedcrafting.insert_recipe_planks.desc"
+    }
+  },
+  "parent": "integratedcrafting:autocrafting_setup/craft_crafting_interface",
+  "criteria": {
+    "criteria_0": {
+      "trigger": "integrateddynamics:part_variable_driven",
+      "conditions": {
+        "parttype": "interface_crafting",
+        "variable": {
+          "type": "valuetype",
+          "valuetype": "valuetype.valuetypes.integrateddynamics.recipe.name",
+          "value": "{output:{\"minecraft:itemstack\":[{id:\"minecraft:planks\",Count:4b,Damage:0s}]},input:{\"minecraft:itemstack\":[[{condition:3,prototype:{id:\"minecraft:log\",Count:1b,Damage:0s}}]]}}"
+        }
+      }
+    }
+  }
+}

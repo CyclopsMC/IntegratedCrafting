@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "integratedcrafting:part_interface_crafting_item"
+    },
+    "title": {
+      "translate": "advancement.integratedcrafting.craft_storage_terminal"
+    },
+    "description": {
+      "translate": "advancement.integratedcrafting.craft_storage_terminal.desc"
+    }
+  },
+  "parent": "integratedcrafting:root",
+  "criteria": {
+    "criteria_0": {
+      "trigger": "cyclopscore:item_crafted",
+      "conditions": {
+        "items": [
+          {
+            "item": "integratedcrafting:part_interface_crafting_item"
+          }
+        ]
+      }
+    }
+  }
+}

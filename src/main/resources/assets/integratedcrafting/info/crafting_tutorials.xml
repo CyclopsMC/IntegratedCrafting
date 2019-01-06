@@ -3,4 +3,21 @@
     <section name="info_book.integratedcrafting.tutorials.introduction">
         <paragraph>info_book.integratedcrafting.tutorials.introduction.text1</paragraph>
     </section>
+
+    <section name="info_book.integratedcrafting.tutorials.autocrafting_setup">
+        <paragraph>info_book.integratedcrafting.tutorials.autocrafting_setup.text1</paragraph>
+        <paragraph>info_book.integratedcrafting.tutorials.autocrafting_setup.text2</paragraph>
+        <paragraph>info_book.integratedcrafting.tutorials.autocrafting_setup.text3</paragraph>
+        <paragraph>info_book.integratedcrafting.tutorials.autocrafting_setup.text4</paragraph>
+        <appendix type="crafting_recipe">integratedcrafting:part_interface_crafting_item</appendix>
+        <appendix type="advancement_rewards" id="integratedterminals:autocrafting_setup">
+            <advancements>
+                <advancement id="integratedcrafting:autocrafting_setup/craft_crafting_interface" />
+                <advancement id="integratedcrafting:autocrafting_setup/insert_recipe_planks" />
+            </advancements>
+            <rewards>
+                <reward type="item" amount="5">integratedcrafting:part_interface_crafting_item</reward>
+            </rewards>
+        </appendix>
+    </section>
 </section>

@@ -1,0 +1,35 @@
+{
+  "display": {
+    "icon": {
+      "item": "integratedcrafting:part_interface_crafting_item"
+    },
+    "title": {
+      "translate": "itemGroup.integratedcrafting"
+    },
+    "description": {
+      "translate": "general.integratedcrafting.description"
+    },
+    "show_toast": false,
+    "announce_to_chat": false
+  },
+  "parent": "integrateddynamics:recipe_handling/recipe_creation",
+  "rewards": {
+    "recipes": [
+      "integratedcrafting:part_interface_crafting_item",
+      "integratedcrafting:part_crafting_writer_item"
+
+    ]
+  },
+  "criteria": {
+    "criteria_0": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "integrateddynamics:variable"
+          }
+        ]
+      }
+    }
+  }
+}
