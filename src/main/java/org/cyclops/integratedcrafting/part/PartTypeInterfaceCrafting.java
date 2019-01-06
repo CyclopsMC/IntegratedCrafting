@@ -13,6 +13,7 @@ import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
@@ -20,6 +21,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import org.cyclops.commoncapabilities.api.capability.block.BlockCapabilities;
@@ -72,6 +74,7 @@ import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
 import org.cyclops.integrateddynamics.core.helper.NetworkHelpers;
 import org.cyclops.integrateddynamics.core.part.PartStateBase;
 import org.cyclops.integrateddynamics.core.part.PartTypeConfigurable;
+import org.cyclops.integrateddynamics.core.part.event.PartVariableDrivenVariableContentsUpdatedEvent;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -302,6 +305,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private IPartNetwork partNetwork = null;
         private int channel = -1;
         private boolean shouldAddToCraftingNetwork = false;
+        private EntityPlayer lastPlayer;
 
         public State() {
             this.craftingJobHandler = new CraftingJobHandler(1,
@@ -492,8 +496,22 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 } else {
                     this.recipeSlotMessages.put(slot, new L10NHelpers.UnlocalizedString("gui.integratedcrafting.partinterface.slot.message.norecipe"));
                 }
+
+                try {
+                    IPartNetwork partNetwork = NetworkHelpers.getPartNetwork(network);
+                    MinecraftForge.EVENT_BUS.post(new PartVariableDrivenVariableContentsUpdatedEvent<>(network,
+                            partNetwork, getTarget(),
+                            PartTypes.INTERFACE_CRAFTING, this, lastPlayer, variable,
+                            variable != null ? variable.getValue() : null));
+                } catch (EvaluationException e) {
+                    // Ignore error
+                }
             }
             sendUpdate();
+        }
+
+        public void setLastPlayer(EntityPlayer lastPlayer) {
+            this.lastPlayer = lastPlayer;
         }
 
         private void delayedReloadRecipe(int slot) {
