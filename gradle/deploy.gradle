@@ -13,6 +13,8 @@ curseforge {
         mainArtifact(jar) {
             relations {
                 requiredDependency 'cyclops-core'
+                requiredDependency 'integrated-dynamics'
+                requiredDependency 'integrated-tunnels'
             }
         }
 
