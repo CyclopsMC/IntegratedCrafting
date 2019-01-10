@@ -675,7 +675,10 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             if (this.network != null) {
                 IngredientComponent<?, ?> ingredientComponent = IngredientComponent.getIngredientComponentForStorageCapability(capability);
                 if (ingredientComponent != null) {
-                    return wrapStorageCapability(capability, ingredientComponent);
+                    T cap = wrapStorageCapability(capability, ingredientComponent);
+                    if (cap != null) {
+                        return cap;
+                    }
                 }
             }
 
