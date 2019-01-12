@@ -346,7 +346,7 @@ public class CraftingJobHandler {
                         CraftingHelpers.getNetworkStorageGetter(network, pendingCraftingJob.getChannel(), false),
                         pendingCraftingJob.getRecipe(), true, Maps.newIdentityHashMap(), true, 1);
                 if (inputs.getRight().isEmpty()) { // If we have no missing ingredients
-                    if (insertCrafting(targetPos, new MixedIngredients(inputs.getLeft()), true)) {
+                    if (insertCrafting(targetPos, new MixedIngredients(inputs.getLeft()), network, channel, true)) {
                         startingCraftingJob = pendingCraftingJob;
                         startingCraftingJob.setInvalidInputs(false);
                         break;
@@ -386,7 +386,7 @@ public class CraftingJobHandler {
                             CraftingHelpers.getRecipeOutputs(startingCraftingJob.getRecipe()));
 
                     // Push the ingredients to the crafting interface
-                    if (insertCrafting(targetPos, ingredients, false)) {
+                    if (insertCrafting(targetPos, ingredients, network, channel, false)) {
                         // Register listeners for pending ingredients
                         for (IngredientComponent<?, ?> component : ingredients.getComponents()) {
                             registerIngredientObserver(component, network);
@@ -394,13 +394,8 @@ public class CraftingJobHandler {
                     } else {
                         // If we reach this point, the target does not accept the recipe inputs,
                         // even though they were acceptable in simulation mode.
-                        // In this case, we silently re-insert the ingredients back into the network,
-                        // and emit a warning if any ingredients were lost.
-                        IMixedIngredients remainder = CraftingHelpers.insertIngredients(ingredients,
-                                CraftingHelpers.getNetworkStorageGetter(network, channel, false), false);
-                        if (!remainder.getComponents().isEmpty()) {
-                            IntegratedCrafting.clog(Level.WARN, "Failed to insert crafting ingredients, lost: " + remainder);
-                        }
+                        // The failed ingredients were already re-inserted into the network at this point,
+                        // so we just silently remove the job.
                         onCraftingJobFinished(startingCraftingJob);
                     }
                 } else {
@@ -410,7 +405,7 @@ public class CraftingJobHandler {
         }
     }
 
-    protected boolean insertCrafting(PartPos target, IMixedIngredients ingredients, boolean simulate) {
+    protected boolean insertCrafting(PartPos target, IMixedIngredients ingredients, INetwork network, int channel, boolean simulate) {
         Function<IngredientComponent<?, ?>, PartPos> targetGetter = getTargetGetter(target);
         // First check our crafting overrides
         for (ICraftingProcessOverride craftingProcessOverride : this.craftingProcessOverrides) {
@@ -420,7 +415,7 @@ public class CraftingJobHandler {
         }
 
         // Fallback to default crafting insertion
-        return CraftingHelpers.insertCrafting(targetGetter, ingredients, simulate);
+        return CraftingHelpers.insertCrafting(targetGetter, ingredients, network, channel, simulate);
     }
 
     public CraftingJobStatus getCraftingJobStatus(ICraftingNetwork network, int channel, int craftingJobId) {
