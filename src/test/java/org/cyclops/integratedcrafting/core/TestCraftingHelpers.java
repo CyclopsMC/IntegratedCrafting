@@ -476,14 +476,6 @@ public class TestCraftingHelpers {
     }
 
     @Test
-    public void testGetCompressedIngredientsEmpty2() {
-        Map<IngredientComponent<?, ?>, List<?>> map = Maps.newIdentityHashMap();
-        map.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList());
-        assertThat(CraftingHelpers.getCompressedIngredients(IngredientComponentStubs.COMPLEX, new MixedIngredients(map)),
-                equalTo(Lists.newArrayList()));
-    }
-
-    @Test
     public void testGetCompressedIngredientsSimple() {
         Map<IngredientComponent<?, ?>, List<?>> map = Maps.newIdentityHashMap();
         map.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
