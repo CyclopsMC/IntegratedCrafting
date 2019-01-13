@@ -50,7 +50,8 @@ public class PendingCraftingJobResultIndexObserver<T, M>
                 Int2ObjectMap.Entry<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> jobEntry = jobEntryIt.next();
                 // Only check jobs that have a matching channel with the event
                 CraftingJob craftingJob = handler.getAllCraftingJobs().get(jobEntry.getIntKey());
-                if (craftingJob.getChannel() == IPositionedAddonsNetwork.WILDCARD_CHANNEL || craftingJob.getChannel() == event.getChannel()) {
+                if (craftingJob != null
+                        && (craftingJob.getChannel() == IPositionedAddonsNetwork.WILDCARD_CHANNEL || craftingJob.getChannel() == event.getChannel())) {
                     List<IPrototypedIngredient<?, ?>> pendingIngredientsUnsafe = jobEntry.getValue().get(ingredientComponent);
                     if (pendingIngredientsUnsafe != null) {
                         // Remove pending ingredients that were added in the event
