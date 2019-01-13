@@ -8,7 +8,7 @@
 
 Craft stuff in Integrated Dynamics networks
 
-All stable releases (including deobfuscated builds) can be found on [CurseForge](http://minecraft.curseforge.com/mc-mods/287357/files).
+All stable releases (including deobfuscated builds) can be found on [CurseForge](http://minecraft.curseforge.com/projects/287357/files).
 
 [Development builds](https://oss.jfrog.org/artifactory/simple/libs-release/org/cyclops/integratedcrafting/Integrated Crafting/) are hosted by [JFrog Artifactory](https://www.jfrog.com/artifactory/).
 
