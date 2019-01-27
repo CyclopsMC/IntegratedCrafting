@@ -1,0 +1,6 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.0.0 or higher.
+
+Fixes:
+* Fix crash when calculating multi-step jobs when jobs are grouped, Closes #2
+* Fix stored variable cards not dropping when breaking crafting interface, Closes #9
