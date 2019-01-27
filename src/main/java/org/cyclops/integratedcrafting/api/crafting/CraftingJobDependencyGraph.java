@@ -88,8 +88,12 @@ public class CraftingJobDependencyGraph {
     }
 
     public void onCraftingJobFinished(CraftingJob craftingJob) {
+        this.onCraftingJobFinished(craftingJob, true);
+    }
+
+    public void onCraftingJobFinished(CraftingJob craftingJob, boolean validateDependencies) {
         // Check if the crafting job can be finished.
-        if (hasDependencies(craftingJob)) {
+        if (validateDependencies && hasDependencies(craftingJob)) {
             throw new IllegalStateException("A crafting job was finished while it still has unfinished dependencies.");
         }
 

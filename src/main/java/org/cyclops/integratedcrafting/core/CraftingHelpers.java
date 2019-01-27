@@ -594,7 +594,7 @@ public class CraftingHelpers {
                 existingJob.setAmount(existingJob.getAmount() + dependency.getAmount());
                 existingJob.setIngredientsStorage(mergeMixedIngredients(
                         existingJob.getIngredientsStorage(), dependency.getIngredientsStorage()));
-                craftingJobsGraph.onCraftingJobFinished(dependency);
+                craftingJobsGraph.onCraftingJobFinished(dependency, false);
             }
         }
 
