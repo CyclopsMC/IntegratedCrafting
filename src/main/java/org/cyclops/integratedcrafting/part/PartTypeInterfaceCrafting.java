@@ -283,6 +283,15 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             }
         }
         state.getInventoryOutputBuffer().clear();
+
+        // Drop the stored variables
+        for(int i = 0; i < state.getInventoryVariables().getSizeInventory(); i++) {
+            ItemStack itemStack = state.getInventoryVariables().getStackInSlot(i);
+            if(!itemStack.isEmpty()) {
+                itemStacks.add(itemStack);
+            }
+        }
+        state.getInventoryVariables().clear();
     }
 
     public static class State extends PartStateBase<PartTypeInterfaceCrafting>
