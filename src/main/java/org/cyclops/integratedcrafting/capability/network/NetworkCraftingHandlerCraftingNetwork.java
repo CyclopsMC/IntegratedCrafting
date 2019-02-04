@@ -13,6 +13,13 @@ import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngred
 public class NetworkCraftingHandlerCraftingNetwork implements INetworkCraftingHandler {
 
     @Override
+    public <T, M> boolean isCrafting(INetwork network, IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork, int channel,
+                                     IngredientComponent<T, M> ingredientComponent, T instance, M matchCondition) {
+        return CraftingHelpers.getCraftingNetwork(network)
+                .getCraftingJobs(channel, ingredientComponent, instance, matchCondition).hasNext();
+    }
+
+    @Override
     public <T, M> boolean canCraft(INetwork network, IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork, int channel) {
         return !CraftingHelpers.getCraftingNetwork(network).getRecipeIndex(channel).getRecipes().isEmpty();
     }
@@ -23,7 +30,7 @@ public class NetworkCraftingHandlerCraftingNetwork implements INetworkCraftingHa
                                 boolean ignoreExistingJobs) {
         if (!ignoreExistingJobs) {
             // Check if a job was already running
-            if (CraftingHelpers.getCraftingNetwork(network).getCraftingJobs(channel, ingredientComponent, instance, matchCondition).hasNext()) {
+            if (isCrafting(network, ingredientsNetwork, channel, ingredientComponent, instance, matchCondition)) {
                 return true;
             }
         }
