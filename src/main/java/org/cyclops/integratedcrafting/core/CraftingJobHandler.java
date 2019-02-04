@@ -388,7 +388,7 @@ public class CraftingJobHandler {
                     // Push the ingredients to the crafting interface
                     if (insertCrafting(targetPos, ingredients, network, channel, false)) {
                         // Register listeners for pending ingredients
-                        for (IngredientComponent<?, ?> component : ingredients.getComponents()) {
+                        for (IngredientComponent<?, ?> component : startingCraftingJob.getRecipe().getOutput().getComponents()) {
                             registerIngredientObserver(component, network);
                         }
                     } else {
