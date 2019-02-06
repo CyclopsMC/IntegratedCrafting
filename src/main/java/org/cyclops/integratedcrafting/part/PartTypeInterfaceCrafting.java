@@ -352,6 +352,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 NBTTagCompound instanceTag = new NBTTagCompound();
                 instanceTag.setString("component", instanceWrapper.getComponent().getRegistryName().toString());
                 instanceTag.setTag("instance", instanceWrapper.getComponent().getSerializer().serializeInstance(instanceWrapper.getInstance()));
+                instanceTags.appendTag(instanceTag);
             }
             tag.setTag("inventoryOutputBuffer", instanceTags);
 
@@ -382,7 +383,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 String componentName = instanceTag.getString("component");
                 IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(new ResourceLocation(componentName));
                 this.inventoryOutputBuffer.add(new IngredientInstanceWrapper(component,
-                        component.getSerializer().deserializeCondition(instanceTag.getTag("instance"))));
+                        component.getSerializer().deserializeInstance(instanceTag.getTag("instance"))));
             }
 
             this.craftingJobHandler.readFromNBT(tag);
