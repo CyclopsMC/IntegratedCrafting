@@ -142,7 +142,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
 
                 // Insert the remaining items into the sink
                 for (ItemStack remainingItem : recipe.getRemainingItems(grid)) {
-                    if (remainingItem.isEmpty()) {
+                    if (!remainingItem.isEmpty()) {
                         resultsSink.addResult(IngredientComponent.ITEMSTACK, remainingItem);
                     }
                 }
