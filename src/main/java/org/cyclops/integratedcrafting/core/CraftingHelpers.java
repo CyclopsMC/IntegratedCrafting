@@ -37,6 +37,7 @@ import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.core.helper.NetworkHelpers;
+import org.cyclops.integrateddynamics.core.network.IngredientChannelAdapter;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -956,7 +957,9 @@ public class CraftingHelpers {
                 } else {
                     M matchCondition = matcher.withoutCondition(inputPrototype.getCondition(),
                             ingredientComponent.getPrimaryQuantifier().getMatchCondition());
+                    if (storage instanceof IngredientChannelAdapter) ((IngredientChannelAdapter) storage).disableLimits();
                     T extracted = storage.extract(inputPrototype.getPrototype(), matchCondition, simulate);
+                    if (storage instanceof IngredientChannelAdapter) ((IngredientChannelAdapter) storage).enableLimits();
                     long quantityExtracted = matcher.getQuantity(extracted);
                     inputInstance = extracted;
                     if (simulate) {
