@@ -12,7 +12,7 @@ public class Reference {
     // Mod info
     public static final String MOD_ID = "integratedcrafting";
     public static final String MOD_NAME = "Integrated Crafting";
-    public static final String MOD_VERSION = "@VERSION@";
+    public static final String MOD_VERSION = "1.0.0";
     public static final String MOD_BUILD_NUMBER = "@BUILD_NUMBER@";
     public static final String MOD_CHANNEL = MOD_ID;
     public static final String MOD_MC_VERSION = "@MC_VERSION@";
@@ -38,7 +38,7 @@ public class Reference {
     public static final String MOD_CYCLOPSCORE_VERSION = "@CYCLOPSCORE_VERSION@";
     public static final String MOD_CYCLOPSCORE_VERSION_MIN = "1.0.0";
     public static final String MOD_INTEGRATEDDYNAMICS = "integrateddynamics";
-    public static final String MOD_INTEGRATEDDYNAMICS_VERSION_MIN = "1.0.0";
+    public static final String MOD_INTEGRATEDDYNAMICS_VERSION_MIN = "1.0.4";
     
     // Dependencies
     public static final String MOD_DEPENDENCIES =

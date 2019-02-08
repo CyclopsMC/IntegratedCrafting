@@ -1,0 +1,8 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.0.0 or higher.
+
+Fixes:
+* Fix crafting jobs with more than 64 ingredients failing to calculate, Closes CyclopsMC/IntegratedTerminals#16
+* Fix crafting interface output buffer not being serialized properly, Closes #11
+* Fix remaining items in crafting jobs not being returned properly
+* Fix recipe outputs not being detected for mixed type recipes, Closes #12, #13
