@@ -53,6 +53,10 @@ public class ComplexStack {
         return this.group.hashCode() ^ this.meta ^ this.amount ^ (this.tag == null ? 0 : this.tag.hashCode());
     }
 
+    public ComplexStack withAmount(int amount) {
+        return new ComplexStack(this.group, this.meta, amount, this.tag);
+    }
+
     public static enum Group {
         A, B, C, D, E
     }

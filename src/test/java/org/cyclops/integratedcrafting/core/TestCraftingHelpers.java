@@ -27,7 +27,6 @@ import org.cyclops.integratedcrafting.ingredient.IngredientComponentStubs;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +63,8 @@ public class TestCraftingHelpers {
     private static final ComplexStack CB0110_ = new ComplexStack(ComplexStack.Group.B, 0, 110, null);
     private static final ComplexStack CC01_ = new ComplexStack(ComplexStack.Group.C, 0, 1, null);
     private static final ComplexStack CC02_ = new ComplexStack(ComplexStack.Group.C, 0, 2, null);
+    private static final ComplexStack CD01_ = new ComplexStack(ComplexStack.Group.D, 0, 1, null);
+    private static final ComplexStack CE01_ = new ComplexStack(ComplexStack.Group.E, 0, 1, null);
     private static final ComplexStack CA91B = new ComplexStack(ComplexStack.Group.A, 9, 1, ComplexStack.Tag.B);
     private static final ComplexStack CA92B = new ComplexStack(ComplexStack.Group.A, 9, 2, ComplexStack.Tag.B);
     private static final ComplexStack CA93B = new ComplexStack(ComplexStack.Group.A, 9, 3, ComplexStack.Tag.B);
@@ -623,6 +624,7 @@ public class TestCraftingHelpers {
     private IRecipeDefinition recipeBBatch2;
     private IRecipeDefinition recipeBBatch3;
     private IRecipeDefinition recipeBBatch4;
+    private IRecipeDefinition recipeBBatch5;
     private IRecipeDefinition recipeBRecursive;
     private IRecipeDefinition recipeA;
     private IRecipeDefinition recipeAMultiple;
@@ -630,8 +632,11 @@ public class TestCraftingHelpers {
     private IRecipeDefinition recipeAMultiple4;
     private IRecipeDefinition recipeAMultipleAux;
     private IRecipeDefinition recipeAB;
+    private IRecipeDefinition recipeDA;
+    private IRecipeDefinition recipeED;
     private IRecipeDefinition recipeA9;
     private IRecipeDefinition recipeC;
+    private IRecipeDefinition recipeD;
     private Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetterEmpty;
     private Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter;
     private Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemory;
@@ -818,6 +823,28 @@ public class TestCraftingHelpers {
         mapBBatch4Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeBBatch4 = new RecipeDefinition(mapBBatch4, new MixedIngredients(mapBBatch4Output));
 
+        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapBBatch5 = Maps.newIdentityHashMap();
+        mapBBatch5.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
+                Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
+                ),
+                Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
+                ),
+                Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CC01_, ComplexStack.Match.EXACT)
+                ),
+                Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
+                ),
+                Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
+                )
+        ));
+        Map<IngredientComponent<?, ?>, List<?>> mapBBatch5Output = Maps.newIdentityHashMap();
+        mapBBatch5Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB01_));
+        recipeBBatch5 = new RecipeDefinition(mapBBatch5, new MixedIngredients(mapBBatch5Output));
+
         Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapA = Maps.newIdentityHashMap();
         mapA.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
                 Lists.newArrayList(
@@ -889,6 +916,26 @@ public class TestCraftingHelpers {
         mapABOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA01B));
         recipeAB = new RecipeDefinition(mapAB, new MixedIngredients(mapABOutput));
 
+        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapDA = Maps.newIdentityHashMap();
+        mapDA.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
+                Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CD01_, ComplexStack.Match.EXACT)
+                )
+        ));
+        Map<IngredientComponent<?, ?>, List<?>> mapDAOutput = Maps.newIdentityHashMap();
+        mapDAOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA01_));
+        recipeDA = new RecipeDefinition(mapDA, new MixedIngredients(mapDAOutput));
+
+        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapED = Maps.newIdentityHashMap();
+        mapED.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
+                Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CE01_, ComplexStack.Match.EXACT)
+                )
+        ));
+        Map<IngredientComponent<?, ?>, List<?>> mapEDOutput = Maps.newIdentityHashMap();
+        mapEDOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CD01_));
+        recipeED = new RecipeDefinition(mapED, new MixedIngredients(mapEDOutput));
+
         Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapC = Maps.newIdentityHashMap();
         mapC.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
                 Lists.newArrayList(
@@ -898,6 +945,16 @@ public class TestCraftingHelpers {
         Map<IngredientComponent<?, ?>, List<?>> mapCOutput = Maps.newIdentityHashMap();
         mapCOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CC01_));
         recipeC = new RecipeDefinition(mapC, new MixedIngredients(mapCOutput));
+
+        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapD = Maps.newIdentityHashMap();
+        mapD.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
+                Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT)
+                )
+        ));
+        Map<IngredientComponent<?, ?>, List<?>> mapDOutput = Maps.newIdentityHashMap();
+        mapDOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CD01_));
+        recipeD = new RecipeDefinition(mapD, new MixedIngredients(mapDOutput));
 
 
         storageGetterEmpty = IngredientComponentStorageEmpty::new;
@@ -2191,6 +2248,100 @@ public class TestCraftingHelpers {
         )));
         assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
         assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j8)));
+    }
+
+    @Test
+    public void testCalculateCraftingJobsCompressBatchNestedMultiple() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
+        RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
+        recipeIndex.addRecipe(recipeBBatch5);
+        recipeIndex.addRecipe(recipeA);
+
+        // A recipe that requires 1 CC01_ (in storage) as input, and 4 separated CA01_ (not in storage).
+        // The CA01_ must be crafted as dependency, but also batched.
+        // On top of that, the recipe is requested 4 times, so the batching must be multiplied.
+        IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+        storage.insert(CC01_.withAmount(4), false);
+        storage.insert(CA91B.withAmount(16), false);
+
+        storageGetter = (c) -> storage;
+
+        CraftingJob j4 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+                IngredientComponentStubs.COMPLEX, CB01_.withAmount(4), ComplexStack.Match.EXACT, true,
+                simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
+
+        assertThat(j4.getId(), equalTo(4));
+        assertThat(j4.getChannel(), equalTo(0));
+        assertThat(j4.getAmount(), equalTo(4));
+        assertThat(j4.getRecipe(), equalTo(recipeBBatch5));
+        assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j4.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                CC01_.withAmount(4)
+        )));
+
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
+
+        CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
+
+        assertThat(j0.getChannel(), equalTo(0));
+        assertThat(j0.getRecipe(), equalTo(recipeA));
+        assertThat(j0.getAmount(), equalTo(16));
+        assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                CA91B.withAmount(16)
+        )));
+        assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j4)));
+    }
+
+    @Test
+    public void testCalculateCraftingJobsCompressBatchNested2Multiple() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
+        RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
+        recipeIndex.addRecipe(recipeBBatch5);
+        recipeIndex.addRecipe(recipeDA);
+        recipeIndex.addRecipe(recipeED);
+
+        // A recipe that requires 1 CC01_ (in storage) as input, and 4 separated CA01_ (not in storage).
+        // The CA01_ must be crafted as 2-layer dependency, but also batched.
+        // On top of that, the recipe is requested 4 times, so the batching must be multiplied.
+        IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+        storage.insert(CC01_.withAmount(4), false);
+        storage.insert(CE01_.withAmount(16), false);
+        storageGetter = (c) -> storage;
+
+        CraftingJob j8 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+                IngredientComponentStubs.COMPLEX, CB01_.withAmount(4), ComplexStack.Match.EXACT, true,
+                simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
+
+        assertThat(j8.getId(), equalTo(8));
+        assertThat(j8.getChannel(), equalTo(0));
+        assertThat(j8.getAmount(), equalTo(4));
+        assertThat(j8.getRecipe(), equalTo(recipeBBatch5));
+        assertThat(j8.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j8.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                CC01_.withAmount(4)
+        )));
+
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(3));
+
+        CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
+        CraftingJob j1 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 1).findFirst().get();
+
+        assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(16));
+        assertThat(j1.getRecipe(), equalTo(recipeDA));
+        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(0));
+        assertThat(craftingJobDependencyGraph.getDependencies(j1), equalTo(Lists.newArrayList(j0)));
+        assertThat(craftingJobDependencyGraph.getDependents(j1), equalTo(Lists.newArrayList(j8)));
+
+        assertThat(j0.getChannel(), equalTo(0));
+        assertThat(j0.getRecipe(), equalTo(recipeED));
+        assertThat(j0.getAmount(), equalTo(16));
+        assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                CE01_.withAmount(16)
+        )));
+        assertThat(craftingJobDependencyGraph.getDependencies(j0), equalTo(Lists.newArrayList()));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j1)));
     }
 
     /* ------------ mergeMixedIngredients ------------ */

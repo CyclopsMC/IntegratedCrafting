@@ -592,10 +592,8 @@ public class CraftingHelpers {
             if (existingJob == null) {
                 dependencies.put(dependency.getRecipe(), dependency);
             } else {
-                existingJob.setAmount(existingJob.getAmount() + dependency.getAmount());
-                existingJob.setIngredientsStorage(mergeMixedIngredients(
-                        existingJob.getIngredientsStorage(), dependency.getIngredientsStorage()));
-                craftingJobsGraph.onCraftingJobFinished(dependency, false);
+                // Remove the standalone dependency job by merging it into the existing job
+                craftingJobsGraph.mergeCraftingJobs(existingJob, dependency, true);
             }
         }
 
@@ -1253,7 +1251,7 @@ public class CraftingHelpers {
      * @param b A second mixed ingredients object.
      * @return A merged mixed ingredients object.
      */
-    protected static IMixedIngredients mergeMixedIngredients(IMixedIngredients a, IMixedIngredients b) {
+    public static IMixedIngredients mergeMixedIngredients(IMixedIngredients a, IMixedIngredients b) {
         // Temporarily store instances in IngredientCollectionPrototypeMaps
         Map<IngredientComponent<?, ?>, IngredientCollectionQuantitativeGrouper<?, ?, IngredientArrayList<?, ?>>> groupings = Maps.newIdentityHashMap();
         for (IngredientComponent<?, ?> component : a.getComponents()) {

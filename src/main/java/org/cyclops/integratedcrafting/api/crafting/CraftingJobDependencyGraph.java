@@ -1,5 +1,6 @@
 package org.cyclops.integratedcrafting.api.crafting;
 
+import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -9,9 +10,12 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagIntArray;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
+import org.cyclops.integratedcrafting.core.CraftingHelpers;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -122,12 +126,15 @@ public class CraftingJobDependencyGraph {
         }
 
         // Remove invalid dependencies that are not present in craftingJobs
-        IntCollection removedDependencies = dependencies.remove(craftingJob.getId());
-        if (removedDependencies != null) {
-            IntIterator removedDependenciesIt = removedDependencies.iterator();
-            while (removedDependenciesIt.hasNext()) {
-                int dependency = removedDependenciesIt.nextInt();
-                dependents.remove(dependency);
+        if (!validateDependencies) {
+            IntCollection removedDependencies = dependencies.remove(craftingJob.getId());
+            if (removedDependencies != null) {
+                IntIterator removedDependenciesIt = removedDependencies.iterator();
+                while (removedDependenciesIt.hasNext()) {
+                    int dependency = removedDependenciesIt.nextInt();
+                    dependents.remove(dependency);
+                    onCraftingJobFinished(craftingJobs.get(dependency), false);
+                }
             }
         }
     }
@@ -190,6 +197,50 @@ public class CraftingJobDependencyGraph {
             for (CraftingJob dependency : craftingJobsGraph.getDependencies(craftingJob)) {
                 this.addDependency(craftingJob, dependency);
             }
+        }
+    }
+
+    /**
+     * Merge the two crafting jobs by adding the second job's amount into the first job's amount.
+     * Furthermore, all dependencies of the second job will be merged into the dependencies of the first job as well.
+     * @param target The job that should be merged into.
+     * @param mergee The job that should be removed and merged into the target job.
+     * @param markMergeeAsFinished If the mergee job should be marked as finished.
+     */
+    public void mergeCraftingJobs(CraftingJob target, CraftingJob mergee, boolean markMergeeAsFinished) {
+        target.setAmount(target.getAmount() + mergee.getAmount());
+        target.setIngredientsStorage(CraftingHelpers.mergeMixedIngredients(
+                target.getIngredientsStorage(), mergee.getIngredientsStorage()));
+
+        // If the existing job had dependencies, batch the dependencies as well
+        // First, collect all dependency crafting jobs for the target job
+        Map<IRecipeDefinition, CraftingJob> dependencyRecipeJobs = Maps.newHashMap();
+        for (Integer dependencyCraftingJobId : target.getDependencyCraftingJobs()) {
+            CraftingJob dependencyCraftingJob = this.getCraftingJob(dependencyCraftingJobId);
+            dependencyRecipeJobs.put(dependencyCraftingJob.getRecipe(), dependencyCraftingJob);
+        }
+        // Next, try merging the mergee's jobs into the target dependency jobs
+        // If no corresponding target dependency job exists, just add the dependency directly to target as dependency.
+        for (Integer dependencyCraftingJobId : mergee.getDependencyCraftingJobs()) {
+            CraftingJob dependencyCraftingJob = this.getCraftingJob(dependencyCraftingJobId);
+            CraftingJob existingDependencyJob = dependencyRecipeJobs.get(dependencyCraftingJob.getRecipe());
+            if (existingDependencyJob != null) {
+                mergeCraftingJobs(existingDependencyJob, dependencyCraftingJob, false);
+            } else {
+                // Update dependency links
+                mergee.removeDependency(dependencyCraftingJob);
+                target.addDependency(dependencyCraftingJob);
+                this.removeDependency(mergee.getId(), dependencyCraftingJobId);
+                this.addDependency(target, dependencyCraftingJob);
+
+                // Add to our available jobs
+                dependencyRecipeJobs.put(dependencyCraftingJob.getRecipe(), dependencyCraftingJob);
+            }
+        }
+
+        if (markMergeeAsFinished) {
+            // Remove the crafting job from the graph
+            this.onCraftingJobFinished(mergee, false);
         }
     }
 

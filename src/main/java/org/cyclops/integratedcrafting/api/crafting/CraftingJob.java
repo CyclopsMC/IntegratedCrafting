@@ -14,7 +14,7 @@ import org.cyclops.integratedcrafting.core.MissingIngredients;
 
 import javax.annotation.Nullable;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Objects;
 
 /**
  * @author rubensworks
@@ -218,7 +218,7 @@ public class CraftingJob {
         CraftingJob that = (CraftingJob) obj;
         return this.getId() == that.getId()
                 && this.getChannel() == that.getChannel()
-                && this.getRecipe().equals(that.getRecipe())
+                && Objects.equals(this.getRecipe(), that.getRecipe())
                 && this.getDependencyCraftingJobs().equals(that.getDependencyCraftingJobs())
                 && this.getDependentCraftingJobs().equals(that.getDependentCraftingJobs())
                 && this.getAmount() == that.getAmount()
