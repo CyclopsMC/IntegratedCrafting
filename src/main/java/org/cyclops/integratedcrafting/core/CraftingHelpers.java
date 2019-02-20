@@ -745,9 +745,11 @@ public class CraftingHelpers {
     public static <T, M> boolean hasStorageInstance(INetwork network, int channel,
                                                     IngredientComponent<T, M> ingredientComponent,
                                                     T instance, M matchCondition) {
-        return !ingredientComponent.getMatcher().isEmpty(
-                getNetworkStorage(network, channel, ingredientComponent, true)
-                        .extract(instance, matchCondition, true));
+        IIngredientComponentStorage<T, M> storage = getNetworkStorage(network, channel, ingredientComponent, true);
+        if (storage instanceof IngredientChannelAdapter) ((IngredientChannelAdapter) storage).disableLimits();
+        boolean contains = !ingredientComponent.getMatcher().isEmpty(storage.extract(instance, matchCondition, true));
+        if (storage instanceof IngredientChannelAdapter) ((IngredientChannelAdapter) storage).enableLimits();
+        return contains;
     }
 
     /**
@@ -926,7 +928,9 @@ public class CraftingHelpers {
                         T newInstance = matcher.withQuantity(inputPrototype.getPrototype(), newQuantity);
                         M matchCondition = matcher.withoutCondition(inputPrototype.getCondition(),
                                 ingredientComponent.getPrimaryQuantifier().getMatchCondition());
+                        if (storage instanceof IngredientChannelAdapter) ((IngredientChannelAdapter) storage).disableLimits();
                         T extracted = storage.extract(newInstance, matchCondition, true);
+                        if (storage instanceof IngredientChannelAdapter) ((IngredientChannelAdapter) storage).enableLimits();
                         long quantityExtracted = matcher.getQuantity(extracted);
                         if (quantityExtracted == newQuantity) {
                             // All remaining could be extracted from storage, all is fine now
