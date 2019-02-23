@@ -1,12 +1,11 @@
 package org.cyclops.integratedcrafting.core.network;
 
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Sets;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
@@ -26,7 +25,6 @@ import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetwork;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -36,19 +34,19 @@ import java.util.Set;
 public class CraftingNetwork implements ICraftingNetwork {
 
     private final Set<ICraftingInterface> allCraftingInterfaces = Sets.newHashSet();
-    private final TIntObjectMap<Set<ICraftingInterface>> craftingInterfaces = new TIntObjectHashMap<>();
+    private final Int2ObjectMap<Set<ICraftingInterface>> craftingInterfaces = new Int2ObjectOpenHashMap<>();
 
     private final Multimap<IRecipeDefinition, ICraftingInterface> allRecipeCraftingInterfaces = newRecipeCraftingInterfacesMap();
-    private final TIntObjectMap<Multimap<IRecipeDefinition, ICraftingInterface>> recipeCraftingInterfaces = new TIntObjectHashMap<>();
+    private final Int2ObjectMap<Multimap<IRecipeDefinition, ICraftingInterface>> recipeCraftingInterfaces = new Int2ObjectOpenHashMap<>();
 
     private final IRecipeIndexModifiable allRecipesIndex = new RecipeIndexDefault();
-    private final TIntObjectMap<IRecipeIndexModifiable> recipeIndexes = new TIntObjectHashMap<>();
+    private final Int2ObjectMap<IRecipeIndexModifiable> recipeIndexes = new Int2ObjectOpenHashMap<>();
 
     private final ICraftingJobIndexModifiable allIndexedCraftingJobs = new CraftingJobIndexDefault();
-    private final TIntObjectMap<ICraftingJobIndexModifiable> indexedCraftingJobs = new TIntObjectHashMap<>();
+    private final Int2ObjectMap<ICraftingJobIndexModifiable> indexedCraftingJobs = new Int2ObjectOpenHashMap<>();
 
-    private final TIntObjectMap<ICraftingInterface> allCraftingJobsToInterface = new TIntObjectHashMap<>();
-    private final TIntObjectMap<TIntObjectMap<ICraftingInterface>> channeledCraftingJobsToInterface = new TIntObjectHashMap<>();
+    private final Int2ObjectMap<ICraftingInterface> allCraftingJobsToInterface = new Int2ObjectOpenHashMap<>();
+    private final Int2ObjectMap<Int2ObjectMap<ICraftingInterface>> channeledCraftingJobsToInterface = new Int2ObjectOpenHashMap<>();
 
     private final CraftingJobDependencyGraph craftingJobDependencyGraph = new CraftingJobDependencyGraph();
 
@@ -58,7 +56,7 @@ public class CraftingNetwork implements ICraftingNetwork {
 
     @Override
     public int[] getChannels() {
-        return craftingInterfaces.keys();
+        return craftingInterfaces.keySet().toIntArray();
     }
 
     @Override
@@ -320,9 +318,9 @@ public class CraftingNetwork implements ICraftingNetwork {
         }
 
         // Prepare crafting job to interface mapping
-        TIntObjectMap<ICraftingInterface> craftingJobsToInterface = this.channeledCraftingJobsToInterface.get(channel);
+        Int2ObjectMap<ICraftingInterface> craftingJobsToInterface = this.channeledCraftingJobsToInterface.get(channel);
         if (craftingJobsToInterface == null) {
-            craftingJobsToInterface = new TIntObjectHashMap<>();
+            craftingJobsToInterface = new Int2ObjectOpenHashMap<>();
             this.channeledCraftingJobsToInterface.put(channel, craftingJobsToInterface);
         }
 
@@ -340,7 +338,7 @@ public class CraftingNetwork implements ICraftingNetwork {
         ICraftingJobIndexModifiable craftingJobIndex = indexedCraftingJobs.get(channel);
 
         // Prepare crafting job to interface mapping
-        TIntObjectMap<ICraftingInterface> craftingJobsToInterface = this.channeledCraftingJobsToInterface.get(channel);
+        Int2ObjectMap<ICraftingInterface> craftingJobsToInterface = this.channeledCraftingJobsToInterface.get(channel);
 
         // Remove from crafting job index
         allIndexedCraftingJobs.removeCraftingJob(craftingJob);
@@ -397,7 +395,7 @@ public class CraftingNetwork implements ICraftingNetwork {
         }
 
         // Check for the channel directly
-        TIntObjectMap<ICraftingInterface> craftingJobsToInterface = this.channeledCraftingJobsToInterface.get(channel);
+        Int2ObjectMap<ICraftingInterface> craftingJobsToInterface = this.channeledCraftingJobsToInterface.get(channel);
         if (craftingJobsToInterface != null) {
             ICraftingInterface craftingInterface = craftingJobsToInterface.get(craftingJobId);
             if (craftingInterface != null) {
@@ -406,7 +404,7 @@ public class CraftingNetwork implements ICraftingNetwork {
         }
 
         // In case the crafting job was explicitly started on the wildcard channel
-        TIntObjectMap<ICraftingInterface> craftingJobsToInterfaceWildcard = this.channeledCraftingJobsToInterface
+        Int2ObjectMap<ICraftingInterface> craftingJobsToInterfaceWildcard = this.channeledCraftingJobsToInterface
                 .get(IPositionedAddonsNetwork.WILDCARD_CHANNEL);
         if (craftingJobsToInterfaceWildcard != null) {
             return craftingJobsToInterfaceWildcard.get(craftingJobId);
