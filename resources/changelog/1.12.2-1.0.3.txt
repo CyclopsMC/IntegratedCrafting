@@ -1,0 +1,11 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.0.0 or higher.
+
+Changes:
+* Switch from trove to fastutil collections
+  This slightly improves performance.
+
+Fixes:
+* Fix sub-crafting jobs with more than 64 ingredients failing to calculate, Closes #18
+  Related to CyclopsMC/IntegratedTerminals#16
+* Fix dependency batching not multi-amount handling sub-dependencies, #18
