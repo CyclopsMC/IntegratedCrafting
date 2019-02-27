@@ -8,6 +8,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIngredientAlternatives;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
@@ -866,6 +867,7 @@ public class CraftingHelpers {
             if (collectMissingIngredients) {
                 MissingIngredients<T, M> missing = new MissingIngredients<>(recipe.getInputs(ingredientComponent)
                         .stream()
+                        .map(IPrototypedIngredientAlternatives::getAlternatives)
                         .map(l -> multiplyPrototypedIngredients(l, recipeOutputQuantity))
                         .map(ps -> new MissingIngredients.Element<>(ps
                                 .stream()
@@ -883,11 +885,11 @@ public class CraftingHelpers {
         }
 
         // Iterate over all input slots
-        List<List<IPrototypedIngredient<T, M>>> inputAlternativePrototypes = recipe.getInputs(ingredientComponent);
+        List<IPrototypedIngredientAlternatives<T, M>> inputAlternativePrototypes = recipe.getInputs(ingredientComponent);
         List<T> inputInstances = Lists.newArrayList();
         List<MissingIngredients.Element<T, M>> missingElements =
                 collectMissingIngredients ? Lists.newArrayList() : null;
-        for (List<IPrototypedIngredient<T, M>> inputPrototypes : inputAlternativePrototypes) {
+        for (IPrototypedIngredientAlternatives<T, M> inputPrototypes : inputAlternativePrototypes) {
             T firstInputInstance = null;
             boolean setFirstInputInstance = false;
             T inputInstance = null;
@@ -900,7 +902,7 @@ public class CraftingHelpers {
             if (simulate) {
                 simulatedExtractionMemoryAlternative.addAll(simulatedExtractionMemory);
             }
-            for (IPrototypedIngredient<T, M> inputPrototype : inputPrototypes) {
+            for (IPrototypedIngredient<T, M> inputPrototype : inputPrototypes.getAlternatives()) {
                 IngredientCollectionPrototypeMap<T, M> simulatedExtractionMemoryBuffer = simulate ? new IngredientCollectionPrototypeMap<>(ingredientComponent, true) : null;
                 boolean shouldBreak = false;
 
@@ -1223,7 +1225,7 @@ public class CraftingHelpers {
      * @param <M> The matching condition parameter.
      * @return A multiplied prototyped ingredient list.
      */
-    public static <T, M> List<IPrototypedIngredient<T, M>> multiplyPrototypedIngredients(List<IPrototypedIngredient<T, M>> prototypedIngredients,
+    public static <T, M> List<IPrototypedIngredient<T, M>> multiplyPrototypedIngredients(Collection<IPrototypedIngredient<T, M>> prototypedIngredients,
                                                                                          long amount) {
         return prototypedIngredients
                 .stream()

@@ -6,7 +6,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import org.apache.commons.lang3.tuple.Pair;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIngredientAlternatives;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIngredientAlternativesList;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
@@ -118,69 +120,69 @@ public class TestCraftingHelpers {
 
         recipeEmpty = new RecipeDefinition(Maps.newIdentityHashMap(), new MixedIngredients(Maps.newIdentityHashMap()));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapSimple1 = Maps.newIdentityHashMap();
-        mapSimple1.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapSimple1 = Maps.newIdentityHashMap();
+        mapSimple1.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapSimple1Output = Maps.newIdentityHashMap();
         mapSimple1Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeSimple1 = new RecipeDefinition(mapSimple1, new MixedIngredients(mapSimple1Output));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapSimple3 = Maps.newIdentityHashMap();
-        mapSimple3.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapSimple3 = Maps.newIdentityHashMap();
+        mapSimple3.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         recipeSimple3 = new RecipeDefinition(mapSimple3, new MixedIngredients(Maps.newIdentityHashMap()));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapSimple1Alt = Maps.newIdentityHashMap();
-        mapSimple1Alt.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapSimple1Alt = Maps.newIdentityHashMap();
+        mapSimple1Alt.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         recipeSimple1Alt = new RecipeDefinition(mapSimple1Alt, new MixedIngredients(Maps.newIdentityHashMap()));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapComplex = Maps.newIdentityHashMap();
-        mapComplex.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapComplex = Maps.newIdentityHashMap();
+        mapComplex.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, null, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT),
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA09_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         recipeComplex = new RecipeDefinition(mapComplex, new MixedIngredients(Maps.newIdentityHashMap()));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapEquals = Maps.newIdentityHashMap();
-        mapEquals.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapEquals = Maps.newIdentityHashMap();
+        mapEquals.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA02_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         recipeEquals = new RecipeDefinition(mapEquals, new MixedIngredients(Maps.newIdentityHashMap()));
     }
@@ -646,311 +648,311 @@ public class TestCraftingHelpers {
 
     @Before
     public void beforeEachCalculateCraftingJobs() {
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapB = Maps.newIdentityHashMap();
-        mapB.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapB = Maps.newIdentityHashMap();
+        mapB.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapBOutput = Maps.newIdentityHashMap();
         mapBOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeB = new RecipeDefinition(mapB, new MixedIngredients(mapBOutput));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapBAlt = Maps.newIdentityHashMap();
-        mapBAlt.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapBAlt = Maps.newIdentityHashMap();
+        mapBAlt.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01B, ComplexStack.Match.EXACT),
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapBAltOutput = Maps.newIdentityHashMap();
         mapBAltOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeBAlt = new RecipeDefinition(mapBAlt, new MixedIngredients(mapBAltOutput));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapBAlt2 = Maps.newIdentityHashMap();
-        mapBAlt2.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapBAlt2 = Maps.newIdentityHashMap();
+        mapBAlt2.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapBAlt2Output = Maps.newIdentityHashMap();
         mapBAlt2Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeBAlt2 = new RecipeDefinition(mapBAlt2, new MixedIngredients(mapBAlt2Output));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapB2 = Maps.newIdentityHashMap();
-        mapB2.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapB2 = Maps.newIdentityHashMap();
+        mapB2.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01B, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapB2Output = Maps.newIdentityHashMap();
         mapB2Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeB2 = new RecipeDefinition(mapB2, new MixedIngredients(mapB2Output));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapB2Alt = Maps.newIdentityHashMap();
-        mapB2Alt.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapB2Alt = Maps.newIdentityHashMap();
+        mapB2Alt.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CC01_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapB2AltOutput = Maps.newIdentityHashMap();
         mapB2AltOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeB2Alt = new RecipeDefinition(mapB2Alt, new MixedIngredients(mapB2AltOutput));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapB3 = Maps.newIdentityHashMap();
-        mapB3.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapB3 = Maps.newIdentityHashMap();
+        mapB3.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01B, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapB3Output = Maps.newIdentityHashMap();
         mapB3Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeB3 = new RecipeDefinition(mapB3, new MixedIngredients(mapB3Output));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapBRecursive = Maps.newIdentityHashMap();
-        mapBRecursive.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapBRecursive = Maps.newIdentityHashMap();
+        mapBRecursive.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapBRecursiveOutput = Maps.newIdentityHashMap();
         mapBRecursiveOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeBRecursive = new RecipeDefinition(mapBRecursive, new MixedIngredients(mapBRecursiveOutput));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapBBatch = Maps.newIdentityHashMap();
-        mapBBatch.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapBBatch = Maps.newIdentityHashMap();
+        mapBBatch.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA02_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapBBatchOutput = Maps.newIdentityHashMap();
         mapBBatchOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeBBatch = new RecipeDefinition(mapBBatch, new MixedIngredients(mapBBatchOutput));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapBBatch2 = Maps.newIdentityHashMap();
-        mapBBatch2.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapBBatch2 = Maps.newIdentityHashMap();
+        mapBBatch2.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA03_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA03_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA03_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA03_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapBBatch2Output = Maps.newIdentityHashMap();
         mapBBatch2Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeBBatch2 = new RecipeDefinition(mapBBatch2, new MixedIngredients(mapBBatch2Output));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapBBatch3 = Maps.newIdentityHashMap();
-        mapBBatch3.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapBBatch3 = Maps.newIdentityHashMap();
+        mapBBatch3.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, null, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapBBatch3Output = Maps.newIdentityHashMap();
         mapBBatch3Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeBBatch3 = new RecipeDefinition(mapBBatch3, new MixedIngredients(mapBBatch3Output));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapBBatch4 = Maps.newIdentityHashMap();
-        mapBBatch4.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapBBatch4 = Maps.newIdentityHashMap();
+        mapBBatch4.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, null, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapBBatch4Output = Maps.newIdentityHashMap();
         mapBBatch4Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeBBatch4 = new RecipeDefinition(mapBBatch4, new MixedIngredients(mapBBatch4Output));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapBBatch5 = Maps.newIdentityHashMap();
-        mapBBatch5.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapBBatch5 = Maps.newIdentityHashMap();
+        mapBBatch5.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CC01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                ),
-                Lists.newArrayList(
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapBBatch5Output = Maps.newIdentityHashMap();
         mapBBatch5Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB01_));
         recipeBBatch5 = new RecipeDefinition(mapBBatch5, new MixedIngredients(mapBBatch5Output));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapA = Maps.newIdentityHashMap();
-        mapA.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapA = Maps.newIdentityHashMap();
+        mapA.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapAOutput = Maps.newIdentityHashMap();
         mapAOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA01_));
         recipeA = new RecipeDefinition(mapA, new MixedIngredients(mapAOutput));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapAMultiple = Maps.newIdentityHashMap();
-        mapAMultiple.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapAMultiple = Maps.newIdentityHashMap();
+        mapAMultiple.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapAMultipleOutput = Maps.newIdentityHashMap();
         mapAMultipleOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA04_));
         recipeAMultiple = new RecipeDefinition(mapAMultiple, new MixedIngredients(mapAMultipleOutput));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapAMultiple2 = Maps.newIdentityHashMap();
-        mapAMultiple2.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapAMultiple2 = Maps.newIdentityHashMap();
+        mapAMultiple2.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapAMultiple2Output = Maps.newIdentityHashMap();
         mapAMultiple2Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA02_));
         recipeAMultiple2 = new RecipeDefinition(mapAMultiple2, new MixedIngredients(mapAMultiple2Output));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapAMultiple4 = Maps.newIdentityHashMap();
-        mapAMultiple4.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapAMultiple4 = Maps.newIdentityHashMap();
+        mapAMultiple4.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapAMultiple4Output = Maps.newIdentityHashMap();
         mapAMultiple4Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA04_));
         recipeAMultiple4 = new RecipeDefinition(mapAMultiple4, new MixedIngredients(mapAMultiple4Output));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapAMultipleAux = Maps.newIdentityHashMap();
-        mapAMultipleAux.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapAMultipleAux = Maps.newIdentityHashMap();
+        mapAMultipleAux.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapAMultipleAuxOutput = Maps.newIdentityHashMap();
         mapAMultipleAuxOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA04_, CC01_));
         mapAMultipleAuxOutput.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(10));
         recipeAMultipleAux = new RecipeDefinition(mapAMultipleAux, new MixedIngredients(mapAMultipleAuxOutput));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapA9 = Maps.newIdentityHashMap();
-        mapA9.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapA9 = Maps.newIdentityHashMap();
+        mapA9.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB01_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapA9Output = Maps.newIdentityHashMap();
         mapA9Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA91B));
         recipeA9 = new RecipeDefinition(mapA9, new MixedIngredients(mapA9Output));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapAB = Maps.newIdentityHashMap();
-        mapAB.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapAB = Maps.newIdentityHashMap();
+        mapAB.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapABOutput = Maps.newIdentityHashMap();
         mapABOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA01B));
         recipeAB = new RecipeDefinition(mapAB, new MixedIngredients(mapABOutput));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapDA = Maps.newIdentityHashMap();
-        mapDA.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapDA = Maps.newIdentityHashMap();
+        mapDA.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CD01_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapDAOutput = Maps.newIdentityHashMap();
         mapDAOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA01_));
         recipeDA = new RecipeDefinition(mapDA, new MixedIngredients(mapDAOutput));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapED = Maps.newIdentityHashMap();
-        mapED.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapED = Maps.newIdentityHashMap();
+        mapED.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CE01_, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapEDOutput = Maps.newIdentityHashMap();
         mapEDOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CD01_));
         recipeED = new RecipeDefinition(mapED, new MixedIngredients(mapEDOutput));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapC = Maps.newIdentityHashMap();
-        mapC.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapC = Maps.newIdentityHashMap();
+        mapC.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01B, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapCOutput = Maps.newIdentityHashMap();
         mapCOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CC01_));
         recipeC = new RecipeDefinition(mapC, new MixedIngredients(mapCOutput));
 
-        Map<IngredientComponent<?, ?>, List<List<IPrototypedIngredient<?, ?>>>> mapD = Maps.newIdentityHashMap();
-        mapD.put(IngredientComponentStubs.COMPLEX, Lists.<List<IPrototypedIngredient<?, ?>>>newArrayList(
-                Lists.newArrayList(
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapD = Maps.newIdentityHashMap();
+        mapD.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                         new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT)
-                )
+                ))
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapDOutput = Maps.newIdentityHashMap();
         mapDOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CD01_));
