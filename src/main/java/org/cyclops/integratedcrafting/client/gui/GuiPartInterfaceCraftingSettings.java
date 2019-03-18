@@ -93,7 +93,7 @@ public class GuiPartInterfaceCraftingSettings extends GuiPartSettings implements
                 guiLeft + 106, guiTop + 9, 68, 15, true, true, IngredientComponent.REGISTRY.getValues()) {
             @Override
             protected String activeElementToString(IngredientComponent<?, ?> element) {
-                return L10NHelpers.localize(element.getUnlocalizedName());
+                return L10NHelpers.localize(element.getTranslationKey());
             }
         };
         ingredientComponentSideSelector.setListener(this);
