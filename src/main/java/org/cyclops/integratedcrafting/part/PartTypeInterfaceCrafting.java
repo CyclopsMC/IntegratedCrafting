@@ -280,8 +280,6 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
     @Override
     public void addDrops(PartTarget target, State state, List<ItemStack> itemStacks, boolean dropMainElement, boolean saveState) {
-        super.addDrops(target, state, itemStacks, dropMainElement, saveState);
-
         // Drop any remaining output ingredients (only items)
         for (IngredientInstanceWrapper<?, ?> ingredientInstanceWrapper : state.getInventoryOutputBuffer()) {
             if (ingredientInstanceWrapper.getComponent() == IngredientComponent.ITEMSTACK) {
@@ -298,6 +296,8 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             }
         }
         state.getInventoryVariables().clear();
+
+        super.addDrops(target, state, itemStacks, dropMainElement, saveState);
     }
 
     public static class State extends PartStateBase<PartTypeInterfaceCrafting>
