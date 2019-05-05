@@ -1,7 +1,6 @@
 package org.cyclops.integratedcrafting.part;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
@@ -199,6 +198,13 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
     @Override
     public void update(INetwork network, IPartNetwork partNetwork, PartTarget target, State state) {
         super.update(network, partNetwork, target, state);
+
+        // Init network data in part state if it has not been done yet.
+        // This can occur when the part chunk is being reloaded.
+        if (state.getCraftingNetwork() == null) {
+            addTargetToNetwork(network, target, state);
+        }
+
         int channel = state.getChannelCrafting();
 
         // Update the network data in the part state
