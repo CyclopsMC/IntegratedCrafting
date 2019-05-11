@@ -60,6 +60,12 @@ public class GeneralConfig extends DummyConfig {
     public static int minCraftingInterfaceUpdateFreq = 5;
 
     /**
+     * If the crafting interface should validate recipes on insertion.
+     */
+    @ConfigurableProperty(category = ConfigurableTypeCategory.MACHINE, comment = "If the crafting interface should validate recipes on insertion.", isCommandable = true)
+    public static boolean validateRecipesCraftingInterface = true;
+
+    /**
      * The type of this config.
      */
     public static ConfigurableType TYPE = ConfigurableType.DUMMY;

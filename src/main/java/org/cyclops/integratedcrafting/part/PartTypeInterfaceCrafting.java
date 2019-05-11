@@ -495,7 +495,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                             Optional<IRecipeDefinition> recipeWrapper = ((ValueObjectTypeRecipe.ValueRecipe) value).getRawValue();
                             if (recipeWrapper.isPresent()) {
                                 IRecipeDefinition recipe = recipeWrapper.get();
-                                if (isValid(recipe)) {
+                                if (!GeneralConfig.validateRecipesCraftingInterface || isValid(recipe)) {
                                     this.currentRecipes.put(slot, recipe);
                                     this.recipeSlotValidated.put(slot, true);
                                     this.recipeSlotMessages.put(slot, new L10NHelpers.UnlocalizedString("gui.integratedcrafting.partinterface.slot.message.valid"));
