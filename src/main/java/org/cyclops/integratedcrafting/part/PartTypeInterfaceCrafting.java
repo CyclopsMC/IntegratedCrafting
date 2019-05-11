@@ -546,8 +546,8 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             }
             if (recipeHandler != null) {
                 IMixedIngredients simulatedOutput = recipeHandler.simulate(MixedIngredients.fromRecipeInput(recipe));
-                if (simulatedOutput != null) {
-                    return simulatedOutput.equals(recipe.getOutput());
+                if (simulatedOutput != null && !simulatedOutput.isEmpty()) {
+                    return recipe.getOutput().containsAll(simulatedOutput);
                 }
                 return false;
             }
