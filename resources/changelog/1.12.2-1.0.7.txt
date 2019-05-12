@@ -1,0 +1,10 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.1.0 or higher.
+
+Additions:
+* Add config option to disable recipe validation
+
+Fixes:
+* Fix recipe output validation being too strict, Closes #30
+* Fix wrenching of crafting interfaces duplicating variables, Closes #26
+* Fix crafting interfaces breaking or crashes when chunk is reloaded, Closes #25
