@@ -959,7 +959,7 @@ public class CraftingHelpers {
                         shouldBreak = true;
                     }
                 } else {
-                    M matchCondition = matcher.withoutCondition(inputPrototype.getCondition(),
+                     M matchCondition = matcher.withoutCondition(inputPrototype.getCondition(),
                             ingredientComponent.getPrimaryQuantifier().getMatchCondition());
                     if (storage instanceof IngredientChannelAdapter) ((IngredientChannelAdapter) storage).disableLimits();
                     T extracted = storage.extract(inputPrototype.getPrototype(), matchCondition, simulate);
@@ -979,7 +979,7 @@ public class CraftingHelpers {
                     }
                 }
 
-                if (!setFirstInputInstance) {
+                if (!setFirstInputInstance || shouldBreak) {
                     setFirstInputInstance = true;
                     firstInputInstance = inputInstance;
                     simulatedExtractionMemoryBufferFirst = simulatedExtractionMemoryBuffer;

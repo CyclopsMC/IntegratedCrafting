@@ -44,6 +44,7 @@ import static org.junit.Assert.assertThat;
 public class TestCraftingHelpers {
 
     private static final ComplexStack CA01_ = new ComplexStack(ComplexStack.Group.A, 0, 1, null);
+    private static final ComplexStack CA11_ = new ComplexStack(ComplexStack.Group.A, 1, 1, null);
     private static final ComplexStack CA02_ = new ComplexStack(ComplexStack.Group.A, 0, 2, null);
     private static final ComplexStack CA03_ = new ComplexStack(ComplexStack.Group.A, 0, 3, null);
     private static final ComplexStack CA04_ = new ComplexStack(ComplexStack.Group.A, 0, 4, null);
@@ -87,6 +88,9 @@ public class TestCraftingHelpers {
     private IRecipeDefinition recipeSimple1;
     private IRecipeDefinition recipeSimple3;
     private IRecipeDefinition recipeSimple1Alt;
+    private IRecipeDefinition recipeSimple2Alt;
+    private IRecipeDefinition recipeSimple2AltRev;
+    private IRecipeDefinition recipeSimple2AltMultiple;
     private IRecipeDefinition recipeComplex;
     private IRecipeDefinition recipeEquals;
 
@@ -152,6 +156,48 @@ public class TestCraftingHelpers {
                 ))
         ));
         recipeSimple1Alt = new RecipeDefinition(mapSimple1Alt, new MixedIngredients(Maps.newIdentityHashMap()));
+
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapSimple2Alt = Maps.newIdentityHashMap();
+        mapSimple2Alt.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT)
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT)
+                ))
+        ));
+        recipeSimple2Alt = new RecipeDefinition(mapSimple2Alt, new MixedIngredients(Maps.newIdentityHashMap()));
+
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapSimple2AltMultiple = Maps.newIdentityHashMap();
+        mapSimple2AltMultiple.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT),
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB01_, ComplexStack.Match.EXACT)
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT),
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
+                ))
+        ));
+        recipeSimple2AltMultiple = new RecipeDefinition(mapSimple2AltMultiple, new MixedIngredients(Maps.newIdentityHashMap()));
+
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapSimple2AltRev = Maps.newIdentityHashMap();
+        mapSimple2AltRev.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT),
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
+                )),
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT),
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT)
+                ))
+        ));
+        recipeSimple2AltRev = new RecipeDefinition(mapSimple2AltRev, new MixedIngredients(Maps.newIdentityHashMap()));
 
         Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapComplex = Maps.newIdentityHashMap();
         mapComplex.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
@@ -373,6 +419,85 @@ public class TestCraftingHelpers {
                         new MissingIngredients.PrototypedWithRequested<>(
                                 new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA93B, ComplexStack.Match.EXACT),
                                 2
+                        )
+                ))
+        ))));
+    }
+
+    @Test
+    public void testGetIngredientRecipeInputsValidStorageRecipeComplexCollectMissingOneOfTwoWithAlts() {
+        // The storage contains just one instance, while two are needed for the recipe.
+        // Additionally, the recipe has alternatives for the two slots
+        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple2Alt, true, simulatedExtractionMemory,
+                true, 1);
+        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
+                CA01_
+        )));
+        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                new MissingIngredients.Element<>(Lists.newArrayList(
+                        new MissingIngredients.PrototypedWithRequested<>(
+                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
+                                1
+                        ),
+                        new MissingIngredients.PrototypedWithRequested<>(
+                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT),
+                                1
+                        )
+                ))
+        ))));
+    }
+
+    @Test
+    public void testGetIngredientRecipeInputsValidStorageRecipeComplexCollectMissingOneOfTwoWithAltsRev() {
+        // The storage contains just one instance, while two are needed for the recipe.
+        // Additionally, the recipe has alternatives for the two slots
+        // Compared to the previous test, only the SECOND alternative is present, instead of the FIRST.
+        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple2AltRev, true, simulatedExtractionMemory,
+                true, 1);
+        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
+                CA01_
+        )));
+        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                new MissingIngredients.Element<>(Lists.newArrayList(
+                        new MissingIngredients.PrototypedWithRequested<>(
+                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT),
+                                1
+                        ),
+                        new MissingIngredients.PrototypedWithRequested<>(
+                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
+                                1
+                        )
+                ))
+        ))));
+    }
+
+    @Test
+    public void testGetIngredientRecipeInputsValidStorageRecipeComplexCollectMissingOneOfTwoWithAltsRevMultiple() {
+        // The storage contains just one instance, while two are needed for the recipe.
+        // Additionally, the recipe has alternatives for the two slots
+        // Like to the previous test, only the SECOND alternative is present, instead of the FIRST.
+        // Also, the two slots are separated by another slot with instance that IS present
+        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple2AltMultiple, true, simulatedExtractionMemory,
+                true, 1);
+        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
+                CA01_,
+                CB01_
+        )));
+        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                new MissingIngredients.Element<>(Lists.newArrayList(
+                        new MissingIngredients.PrototypedWithRequested<>(
+                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT),
+                                1
+                        ),
+                        new MissingIngredients.PrototypedWithRequested<>(
+                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
+                                1
                         )
                 ))
         ))));
