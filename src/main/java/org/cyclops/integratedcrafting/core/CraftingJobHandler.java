@@ -21,6 +21,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
+import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
@@ -183,6 +184,10 @@ public class CraftingJobHandler {
             IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(new ResourceLocation(componentName));
             this.ingredientComponentTargetOverrides.put(component, EnumFacing.VALUES[targetOverrides.getInteger(componentName)]);
         }
+    }
+
+    public boolean canScheduleCraftingJobs() {
+        return this.pendingCraftingJobs.size() < GeneralConfig.maxPendingCraftingJobs;
     }
 
     public void scheduleCraftingJob(CraftingJob craftingJob) {

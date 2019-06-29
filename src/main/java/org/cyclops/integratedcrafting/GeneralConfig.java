@@ -66,6 +66,12 @@ public class GeneralConfig extends DummyConfig {
     public static boolean validateRecipesCraftingInterface = true;
 
     /**
+     * The maximum amount of crafting jobs that could be scheduled within one crafting interface without being started.
+     */
+    @ConfigurableProperty(category = ConfigurableTypeCategory.MACHINE, comment = "The maximum amount of crafting jobs that could be scheduled within one crafting interface without being started", minimalValue = 1, isCommandable = true)
+    public static int maxPendingCraftingJobs = 256;
+
+    /**
      * The type of this config.
      */
     public static ConfigurableType TYPE = ConfigurableType.DUMMY;

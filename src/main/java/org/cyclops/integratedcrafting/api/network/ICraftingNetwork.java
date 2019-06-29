@@ -6,6 +6,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
+import org.cyclops.integratedcrafting.api.crafting.UnavailableCraftingInterfacesException;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 
 import javax.annotation.Nullable;
@@ -90,8 +91,9 @@ public interface ICraftingNetwork {
      * Add the given crafting job to the list of crafting jobs.
      * @param craftingJob The crafting job.
      * @param allowDistribution If the crafting job is allowed to be split over multiple crafting interfaces.
+     * @throws UnavailableCraftingInterfacesException If no crafting interfaces were available.
      */
-    public void scheduleCraftingJob(CraftingJob craftingJob, boolean allowDistribution);
+    public void scheduleCraftingJob(CraftingJob craftingJob, boolean allowDistribution) throws UnavailableCraftingInterfacesException;
 
     /**
      * Called by crafting interfaces when the crafting job is finished and should be removed from all lists.

@@ -28,6 +28,7 @@ import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
 import org.cyclops.integratedcrafting.api.crafting.FailedCraftingRecipeException;
 import org.cyclops.integratedcrafting.api.crafting.RecursiveCraftingRecipeException;
+import org.cyclops.integratedcrafting.api.crafting.UnavailableCraftingInterfacesException;
 import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeException;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
@@ -629,14 +630,27 @@ public class CraftingHelpers {
      * @param craftingJobDependencyGraph The crafting job dependency graph.
      * @param allowDistribution If the crafting jobs are allowed to be split over multiple crafting interfaces.
      * @param initiator Optional UUID of the initiator.
+     * @throws UnavailableCraftingInterfacesException If no crafting interfaces were available.
      */
     public static void scheduleCraftingJobs(ICraftingNetwork craftingNetwork,
                                             CraftingJobDependencyGraph craftingJobDependencyGraph,
                                             boolean allowDistribution,
-                                            @Nullable UUID initiator) {
+                                            @Nullable UUID initiator) throws UnavailableCraftingInterfacesException {
+        List<CraftingJob> startedJobs = Lists.newArrayList();
         craftingNetwork.getCraftingJobDependencyGraph().importDependencies(craftingJobDependencyGraph);
         for (CraftingJob craftingJob : craftingJobDependencyGraph.getCraftingJobs()) {
-            craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution);
+            try {
+                craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution);
+            } catch (UnavailableCraftingInterfacesException e) {
+                // First, cancel all jobs that were already started
+                for (CraftingJob startedJob : startedJobs) {
+                    craftingNetwork.cancelCraftingJob(startedJob.getChannel(), startedJob.getId());
+                }
+
+                // Then, throw an exception for all jobs in this dependency graph
+                throw new UnavailableCraftingInterfacesException(craftingJobDependencyGraph.getCraftingJobs());
+            }
+            startedJobs.add(craftingJob);
             if (initiator != null) {
                 craftingJob.setInitiatorUuid(initiator.toString());
             }
@@ -650,11 +664,12 @@ public class CraftingHelpers {
      * @param allowDistribution If the crafting job is allowed to be split over multiple crafting interfaces.
      * @param initiator Optional UUID of the initiator.
      * @return The scheduled crafting job.
+     * @throws UnavailableCraftingInterfacesException If no crafting interfaces were available.
      */
     public static CraftingJob scheduleCraftingJob(ICraftingNetwork craftingNetwork,
                                                   CraftingJob craftingJob,
                                                   boolean allowDistribution,
-                                                  @Nullable UUID initiator) {
+                                                  @Nullable UUID initiator) throws UnavailableCraftingInterfacesException {
         craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution);
         if (initiator != null) {
             craftingJob.setInitiatorUuid(initiator.toString());
@@ -694,7 +709,7 @@ public class CraftingHelpers {
             scheduleCraftingJobs(craftingNetwork, dependencyGraph, allowDistribution, initiator);
 
             return craftingJob;
-        } catch (UnknownCraftingRecipeException | RecursiveCraftingRecipeException e) {
+        } catch (UnknownCraftingRecipeException | RecursiveCraftingRecipeException | UnavailableCraftingInterfacesException e) {
             return null;
         }
     }
@@ -727,7 +742,7 @@ public class CraftingHelpers {
             scheduleCraftingJobs(craftingNetwork, dependencyGraph, allowDistribution, initiator);
 
             return craftingJob;
-        } catch (RecursiveCraftingRecipeException | FailedCraftingRecipeException e) {
+        } catch (RecursiveCraftingRecipeException | FailedCraftingRecipeException | UnavailableCraftingInterfacesException e) {
             return null;
         }
     }

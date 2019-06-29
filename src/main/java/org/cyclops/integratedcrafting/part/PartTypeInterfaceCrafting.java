@@ -613,6 +613,11 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Override
+        public boolean canScheduleCraftingJobs() {
+            return getCraftingJobHandler().canScheduleCraftingJobs();
+        }
+
+        @Override
         public void scheduleCraftingJob(CraftingJob craftingJob) {
             getCraftingJobHandler().scheduleCraftingJob(craftingJob);
         }

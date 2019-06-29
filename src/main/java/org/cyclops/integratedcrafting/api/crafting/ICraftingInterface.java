@@ -24,6 +24,11 @@ public interface ICraftingInterface {
     public Collection<IRecipeDefinition> getRecipes();
 
     /**
+     * @return If this crafting interface can currently accept crafting jobs.
+     */
+    public boolean canScheduleCraftingJobs();
+
+    /**
      * Add the given crafting job to the list of crafting jobs.
      * @param craftingJob The crafting job.
      */

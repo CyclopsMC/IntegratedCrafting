@@ -14,6 +14,7 @@ import org.cyclops.cyclopscore.datastructure.MultitransformIterator;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
+import org.cyclops.integratedcrafting.api.crafting.UnavailableCraftingInterfacesException;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.ICraftingJobIndexModifiable;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndexModifiable;
@@ -26,6 +27,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A crafting handler network with multiple channels.
@@ -202,9 +204,17 @@ public class CraftingNetwork implements ICraftingNetwork {
     }
 
     @Override
-    public void scheduleCraftingJob(CraftingJob craftingJob, boolean allowDistribution) {
+    public void scheduleCraftingJob(CraftingJob craftingJob, boolean allowDistribution)
+            throws UnavailableCraftingInterfacesException {
         Multimap<IRecipeDefinition, ICraftingInterface> recipeInterfaces = getRecipeCraftingInterfaces(craftingJob.getChannel());
-        Collection<ICraftingInterface> craftingInterfaces = recipeInterfaces.get(craftingJob.getRecipe());
+        Collection<ICraftingInterface> craftingInterfaces = recipeInterfaces.get(craftingJob.getRecipe())
+                .stream()
+                .filter(ICraftingInterface::canScheduleCraftingJobs)
+                .collect(Collectors.toList());
+
+        if (craftingInterfaces.size() == 0) {
+            throw new UnavailableCraftingInterfacesException(craftingJob);
+        }
 
         // If our crafting job amount is larger than 1,
         // and we have multiple crafting interfaces available,
