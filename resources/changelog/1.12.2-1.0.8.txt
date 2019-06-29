@@ -1,0 +1,13 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.4.0 or higher.
+
+Fixes:
+* Set (configurable) limit of 256 pending crafting jobs per interface
+  This fixes server memory and CPU issues when serializing/deserializing
+  lists of many pending jobs.
+  This could for example occur when an IT exporter had a crafting option
+  enabled that would continuously create new jobs.
+  Closes #32
+  Closes #34
+* Fix recipes with missing alternatives being counted incorrectly
+  This could occur with oredict-based recipes, Closes #33
