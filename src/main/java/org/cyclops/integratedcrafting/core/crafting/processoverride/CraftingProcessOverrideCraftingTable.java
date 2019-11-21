@@ -19,6 +19,7 @@ import net.minecraftforge.common.util.FakePlayer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.cyclopscore.helper.CraftingHelpers;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverride;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integrateddynamics.api.part.PartPos;
@@ -37,71 +38,8 @@ import java.util.function.Function;
  */
 public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOverride {
 
-    private static final LoadingCache<Pair<CraftingGrid, Integer>, IRecipe> CACHE_RECIPES = CacheBuilder.newBuilder()
-            .expireAfterWrite(1, TimeUnit.MINUTES).build(new CacheLoader<Pair<CraftingGrid, Integer>, IRecipe>() {
-                @Override
-                public IRecipe load(Pair<CraftingGrid, Integer> key) {
-                    IRecipe recipe = CraftingManager.findMatchingRecipe(key.getLeft(), DimensionManager.getWorld(key.getRight()));
-                    if (recipe == null) {
-                        recipe = NULL_RECIPE;
-                    }
-                    return recipe;
-                }
-            });
-    // A dummy recipe that represents null, because guava's cache doesn't allow null entries.
-    private static final IRecipe NULL_RECIPE = new IRecipe() {
-        @Override
-        public boolean matches(InventoryCrafting inv, World worldIn) {
-            return false;
-        }
-
-        @Override
-        public ItemStack getCraftingResult(InventoryCrafting inv) {
-            return null;
-        }
-
-        @Override
-        public boolean canFit(int width, int height) {
-            return false;
-        }
-
-        @Override
-        public ItemStack getRecipeOutput() {
-            return null;
-        }
-
-        @Override
-        public IRecipe setRegistryName(ResourceLocation name) {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public ResourceLocation getRegistryName() {
-            return null;
-        }
-
-        @Override
-        public Class<IRecipe> getRegistryType() {
-            return null;
-        }
-    };
-
     private static GameProfile PROFILE = new GameProfile(UUID.fromString("41C82C87-7AfB-4024-BB57-13D2C99CAE77"), "[IntegratedCrafting]");
     private static final Map<WorldServer, FakePlayer> FAKE_PLAYERS = new WeakHashMap<WorldServer, FakePlayer>();
-
-    @Nullable
-    public static IRecipe getRecipe(CraftingGrid grid, World world) {
-        try {
-            IRecipe recipe = CACHE_RECIPES.get(Pair.of(grid, world.provider.getDimension()));
-            if (recipe == NULL_RECIPE) {
-                recipe = null;
-            }
-            return recipe;
-        } catch (ExecutionException | UncheckedExecutionException e) {
-            return null;
-        }
-    }
 
     public static FakePlayer getFakePlayer(WorldServer world) {
         FakePlayer fakePlayer = FAKE_PLAYERS.get(world);
@@ -122,7 +60,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
                          IMixedIngredients ingredients, ICraftingResultsSink resultsSink, boolean simulate) {
         PartPos target = targetGetter.apply(IngredientComponent.ITEMSTACK);
         CraftingGrid grid = new CraftingGrid(ingredients, 3, 3);
-        IRecipe recipe = getRecipe(grid, target.getPos().getWorld());
+        IRecipe recipe = CraftingHelpers.findMatchingRecipeCached(grid, target.getPos().getWorld(), true);
         if (recipe != null) {
             ItemStack result = recipe.getCraftingResult(grid);
 
