@@ -145,12 +145,17 @@ public class CraftingNetwork implements ICraftingNetwork {
             IRecipeIndexModifiable recipeIndex = getRecipeIndex(channel);
             Multimap<IRecipeDefinition, ICraftingInterface> recipeCraftingInterfaces = getRecipeCraftingInterfaces(channel);
             for (IRecipeDefinition recipe : craftingInterface.getRecipes()) {
-                // Remove the recipes from the index
-                recipeIndex.removeRecipe(recipe);
-                allRecipesIndex.removeRecipe(recipe);
                 // Remove the mappings from each of the recipes to this crafting interface
                 recipeCraftingInterfaces.remove(recipe, craftingInterface);
                 allRecipeCraftingInterfaces.remove(recipe, craftingInterface);
+
+                // If the mapping from this recipe to crafting interfaces is empty, remove the recipe from the index
+                if (!recipeCraftingInterfaces.containsKey(recipe)) {
+                    recipeIndex.removeRecipe(recipe);
+                }
+                if (!allRecipeCraftingInterfaces.containsKey(recipe)) {
+                    allRecipesIndex.removeRecipe(recipe);
+                }
             }
 
             // Try cleaning up the channel
@@ -193,12 +198,17 @@ public class CraftingNetwork implements ICraftingNetwork {
         IRecipeIndexModifiable recipeIndex = getRecipeIndex(channel);
         Multimap<IRecipeDefinition, ICraftingInterface> recipeCraftingInterfaces = getRecipeCraftingInterfaces(channel);
 
-        // Remove the recipes from the index
-        recipeIndex.removeRecipe(recipe);
-        allRecipesIndex.removeRecipe(recipe);
         // Remove the mappings from each of the recipes to this crafting interface
         boolean changed = recipeCraftingInterfaces.remove(recipe, craftingInterface);
         allRecipeCraftingInterfaces.remove(recipe, craftingInterface);
+
+        // If the mapping from this recipe to crafting interfaces is empty, remove the recipe from the index
+        if (!recipeCraftingInterfaces.containsKey(recipe)) {
+            recipeIndex.removeRecipe(recipe);
+        }
+        if (!allRecipeCraftingInterfaces.containsKey(recipe)) {
+            allRecipesIndex.removeRecipe(recipe);
+        }
 
         return changed;
     }
