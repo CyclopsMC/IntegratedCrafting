@@ -108,7 +108,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
     @Override
     public int getConsumptionRate(State state) {
-        return state.getCraftingJobHandler().getProcessingCraftingJobs().size() * 5;
+        return state.getCraftingJobHandler().getProcessingCraftingJobs().size() * GeneralConfig.interfaceCraftingBaseConsumption;
     }
 
     public IGuiContainerProvider getSettingsGuiProvider() {

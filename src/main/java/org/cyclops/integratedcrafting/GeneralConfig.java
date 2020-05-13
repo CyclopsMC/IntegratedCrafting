@@ -72,6 +72,18 @@ public class GeneralConfig extends DummyConfig {
     public static int maxPendingCraftingJobs = 256;
 
     /**
+     * The base energy usage for the crafting writer.
+     */
+    @ConfigurableProperty(category = ConfigurableTypeCategory.GENERAL, comment = "The base energy usage for the crafting writer.", minimalValue = 0)
+    public static int craftingWriterBaseConsumption = 1;
+
+    /**
+     * The base energy usage for the crafting interface per crafting job being processed.
+     */
+    @ConfigurableProperty(category = ConfigurableTypeCategory.GENERAL, comment = "The base energy usage for the crafting interface per crafting job being processed.", minimalValue = 0)
+    public static int interfaceCraftingBaseConsumption = 5;
+
+    /**
      * The type of this config.
      */
     public static ConfigurableType TYPE = ConfigurableType.DUMMY;
