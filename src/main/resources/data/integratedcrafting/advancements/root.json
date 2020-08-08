@@ -1,7 +1,7 @@
 {
   "display": {
     "icon": {
-      "item": "integratedcrafting:part_interface_crafting_item"
+      "item": "integratedcrafting:part_interface_crafting"
     },
     "title": {
       "translate": "itemGroup.integratedcrafting"
@@ -15,8 +15,8 @@
   "parent": "integrateddynamics:recipe_handling/recipe_creation",
   "rewards": {
     "recipes": [
-      "integratedcrafting:part_interface_crafting_item",
-      "integratedcrafting:part_crafting_writer_item"
+      "integratedcrafting:part_interface_crafting",
+      "integratedcrafting:part_crafting_writer"
 
     ]
   },

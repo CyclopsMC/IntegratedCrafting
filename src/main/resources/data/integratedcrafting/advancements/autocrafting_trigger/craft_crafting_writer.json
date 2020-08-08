@@ -1,7 +1,7 @@
 {
   "display": {
     "icon": {
-      "item": "integratedcrafting:part_crafting_writer_item"
+      "item": "integratedcrafting:part_crafting_writer"
     },
     "title": {
       "translate": "advancement.integratedcrafting.craft_crafting_writer"
@@ -17,7 +17,7 @@
       "conditions": {
         "items": [
           {
-            "item": "integratedcrafting:part_crafting_writer_item"
+            "item": "integratedcrafting:part_crafting_writer"
           }
         ]
       }

@@ -9,14 +9,14 @@
         <paragraph>info_book.integratedcrafting.tutorials.autocrafting_setup.text2</paragraph>
         <paragraph>info_book.integratedcrafting.tutorials.autocrafting_setup.text3</paragraph>
         <paragraph>info_book.integratedcrafting.tutorials.autocrafting_setup.text4</paragraph>
-        <appendix type="crafting_recipe">integratedcrafting:part_interface_crafting_item</appendix>
+        <appendix type="minecraft:crafting">integratedcrafting:crafting/part_interface_crafting</appendix>
         <appendix type="advancement_rewards" id="integratedterminals:autocrafting_setup">
             <advancements>
                 <advancement id="integratedcrafting:autocrafting_setup/craft_crafting_interface" />
                 <advancement id="integratedcrafting:autocrafting_setup/insert_recipe_planks" />
             </advancements>
             <rewards>
-                <reward type="item" amount="5">integratedcrafting:part_interface_crafting_item</reward>
+                <reward type="item" amount="5">integratedcrafting:part_interface_crafting</reward>
             </rewards>
         </appendix>
     </section>
@@ -28,8 +28,8 @@
         <paragraph>info_book.integratedcrafting.tutorials.autocrafting_trigger.text4</paragraph>
         <paragraph>info_book.integratedcrafting.tutorials.autocrafting_trigger.text5</paragraph>
         <paragraph>info_book.integratedcrafting.tutorials.autocrafting_trigger.text6</paragraph>
-        <appendix type="crafting_recipe">integratedcrafting:part_crafting_writer_item</appendix>
-        <appendix type="integrateddynamics:aspect">aspect.aspects.integratedcrafting.write.itemstack.craft.name</appendix>
+        <appendix type="minecraft:crafting">integratedcrafting:crafting/part_crafting_writer</appendix>
+        <appendix type="integrateddynamics:aspect">integratedcrafting:write_itemstack_craft</appendix>
         <appendix type="image" width="120" height="51">integratedcrafting:textures/gui/infobook/tutorial_autocrafting_trigger.png</appendix>
         <appendix type="advancement_rewards" id="integratedterminals:autocrafting_trigger">
             <advancements>
@@ -37,7 +37,7 @@
                 <advancement id="integratedcrafting:autocrafting_trigger/craft_planks" />
             </advancements>
             <rewards>
-                <reward type="item" amount="5">integratedcrafting:part_crafting_writer_item</reward>
+                <reward type="item" amount="5">integratedcrafting:part_crafting_writer</reward>
             </rewards>
         </appendix>
     </section>

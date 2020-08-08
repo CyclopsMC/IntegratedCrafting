@@ -15,13 +15,13 @@ public class NetworkCraftingHandlerCraftingNetwork implements INetworkCraftingHa
     @Override
     public <T, M> boolean isCrafting(INetwork network, IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork, int channel,
                                      IngredientComponent<T, M> ingredientComponent, T instance, M matchCondition) {
-        return CraftingHelpers.getCraftingNetwork(network)
+        return CraftingHelpers.getCraftingNetworkChecked(network)
                 .getCraftingJobs(channel, ingredientComponent, instance, matchCondition).hasNext();
     }
 
     @Override
     public <T, M> boolean canCraft(INetwork network, IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork, int channel) {
-        return !CraftingHelpers.getCraftingNetwork(network).getRecipeIndex(channel).getRecipes().isEmpty();
+        return !CraftingHelpers.getCraftingNetworkChecked(network).getRecipeIndex(channel).getRecipes().isEmpty();
     }
 
     @Override

@@ -25,7 +25,7 @@ public class CraftingJobData<T, M> {
         this.instance = instance;
         this.center = center;
         this.network = CraftingHelpers.getNetworkChecked(center);
-        this.craftingNetwork = CraftingHelpers.getCraftingNetwork(network);
+        this.craftingNetwork = CraftingHelpers.getCraftingNetworkChecked(network);
     }
 
     public IAspectProperties getProperties() {

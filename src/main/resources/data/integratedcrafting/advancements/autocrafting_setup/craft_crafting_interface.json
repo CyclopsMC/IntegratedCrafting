@@ -1,7 +1,7 @@
 {
   "display": {
     "icon": {
-      "item": "integratedcrafting:part_interface_crafting_item"
+      "item": "integratedcrafting:part_interface_crafting"
     },
     "title": {
       "translate": "advancement.integratedcrafting.craft_crafting_interface"
@@ -17,7 +17,7 @@
       "conditions": {
         "items": [
           {
-            "item": "integratedcrafting:part_interface_crafting_item"
+            "item": "integratedcrafting:part_interface_crafting"
           }
         ]
       }

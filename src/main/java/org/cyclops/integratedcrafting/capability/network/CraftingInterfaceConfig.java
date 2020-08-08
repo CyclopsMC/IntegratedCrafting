@@ -15,32 +15,17 @@ import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
  */
 public class CraftingInterfaceConfig extends CapabilityConfig<ICraftingInterface> {
 
-    /**
-     * The unique instance.
-     */
-    public static CraftingInterfaceConfig _instance;
-
     @CapabilityInject(ICraftingInterface.class)
     public static Capability<ICraftingInterface> CAPABILITY = null;
 
-    /**
-     * Make a new instance.
-     */
     public CraftingInterfaceConfig() {
         super(
                 CommonCapabilities._instance,
-                true,
                 "craftingInterface",
-                "A capability for crafting interfaces.",
                 ICraftingInterface.class,
                 new DefaultCapabilityStorage<ICraftingInterface>(),
-                PartTypeInterfaceCrafting.State.class
+                PartTypeInterfaceCrafting.State::new
         );
-    }
-
-    @Override
-    public boolean isDisableable() {
-        return false;
     }
 
 }

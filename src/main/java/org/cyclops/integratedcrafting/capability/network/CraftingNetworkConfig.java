@@ -15,32 +15,16 @@ import org.cyclops.integratedcrafting.core.network.CraftingNetwork;
  */
 public class CraftingNetworkConfig extends CapabilityConfig<ICraftingNetwork> {
 
-    /**
-     * The unique instance.
-     */
-    public static CraftingNetworkConfig _instance;
-
     @CapabilityInject(ICraftingNetwork.class)
     public static Capability<ICraftingNetwork> CAPABILITY = null;
-
-    /**
-     * Make a new instance.
-     */
     public CraftingNetworkConfig() {
         super(
                 CommonCapabilities._instance,
-                true,
                 "craftingNetwork",
-                "A capability for crafting networks.",
                 ICraftingNetwork.class,
                 new DefaultCapabilityStorage<ICraftingNetwork>(),
-                CraftingNetwork.class
+                CraftingNetwork::new
         );
-    }
-
-    @Override
-    public boolean isDisableable() {
-        return false;
     }
 
 }

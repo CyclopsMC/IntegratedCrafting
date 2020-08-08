@@ -6,10 +6,10 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 import org.apache.commons.lang3.tuple.Pair;
@@ -20,7 +20,6 @@ import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
-import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
@@ -64,7 +63,7 @@ public class CraftingJobHandler {
     private final List<IngredientComponent<?, ?>> observersPendingCreation;
     private final List<IngredientComponent<?, ?>> observersPendingDeletion;
     private final Int2ObjectMap<CraftingJob> finishedCraftingJobs;
-    private final Map<IngredientComponent<?, ?>, EnumFacing> ingredientComponentTargetOverrides;
+    private final Map<IngredientComponent<?, ?>, Direction> ingredientComponentTargetOverrides;
 
     public CraftingJobHandler(int maxProcessingJobs, Collection<ICraftingProcessOverride> craftingProcessOverrides,
                               ICraftingResultsSink resultsSink) {
@@ -84,58 +83,58 @@ public class CraftingJobHandler {
         this.ingredientComponentTargetOverrides = Maps.newIdentityHashMap();
     }
 
-    public void writeToNBT(NBTTagCompound tag) {
-        NBTTagList processingCraftingJobs = new NBTTagList();
+    public void writeToNBT(CompoundNBT tag) {
+        ListNBT processingCraftingJobs = new ListNBT();
         for (CraftingJob processingCraftingJob : this.processingCraftingJobs.values()) {
-            NBTTagCompound entryTag = new NBTTagCompound();
-            entryTag.setTag("craftingJob", CraftingJob.serialize(processingCraftingJob));
+            CompoundNBT entryTag = new CompoundNBT();
+            entryTag.put("craftingJob", CraftingJob.serialize(processingCraftingJob));
 
             Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> ingredients = this.processingCraftingJobsPendingIngredients.get(processingCraftingJob.getId());
-            NBTTagList pendingIngredientInstances = new NBTTagList();
+            ListNBT pendingIngredientInstances = new ListNBT();
             for (Map.Entry<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> ingredientComponentListEntry : ingredients.entrySet()) {
-                NBTTagCompound ingredientInstance = new NBTTagCompound();
+                CompoundNBT ingredientInstance = new CompoundNBT();
 
                 IngredientComponent<?, ?> ingredientComponent = ingredientComponentListEntry.getKey();
-                ingredientInstance.setString("ingredientComponent", ingredientComponent.getRegistryName().toString());
+                ingredientInstance.putString("ingredientComponent", ingredientComponent.getRegistryName().toString());
 
-                NBTTagList instances = new NBTTagList();
+                ListNBT instances = new ListNBT();
                 IIngredientSerializer serializer = ingredientComponent.getSerializer();
                 for (IPrototypedIngredient<?, ?> prototypedIngredient : ingredientComponentListEntry.getValue()) {
-                    NBTTagCompound instance = new NBTTagCompound();
-                    instance.setTag("prototype", serializer.serializeInstance(prototypedIngredient.getPrototype()));
-                    instance.setTag("condition", serializer.serializeCondition(prototypedIngredient.getCondition()));
-                    instances.appendTag(instance);
+                    CompoundNBT instance = new CompoundNBT();
+                    instance.put("prototype", serializer.serializeInstance(prototypedIngredient.getPrototype()));
+                    instance.put("condition", serializer.serializeCondition(prototypedIngredient.getCondition()));
+                    instances.add(instance);
                 }
-                ingredientInstance.setTag("instances", instances);
+                ingredientInstance.put("instances", instances);
 
-                pendingIngredientInstances.appendTag(ingredientInstance);
+                pendingIngredientInstances.add(ingredientInstance);
             }
-            entryTag.setTag("pendingIngredientInstances", pendingIngredientInstances);
-            processingCraftingJobs.appendTag(entryTag);
+            entryTag.put("pendingIngredientInstances", pendingIngredientInstances);
+            processingCraftingJobs.add(entryTag);
         }
-        tag.setTag("processingCraftingJobs", processingCraftingJobs);
+        tag.put("processingCraftingJobs", processingCraftingJobs);
 
-        NBTTagList pendingCraftingJobs = new NBTTagList();
+        ListNBT pendingCraftingJobs = new ListNBT();
         for (CraftingJob craftingJob : this.pendingCraftingJobs.values()) {
-            pendingCraftingJobs.appendTag(CraftingJob.serialize(craftingJob));
+            pendingCraftingJobs.add(CraftingJob.serialize(craftingJob));
         }
-        tag.setTag("pendingCraftingJobs", pendingCraftingJobs);
+        tag.put("pendingCraftingJobs", pendingCraftingJobs);
 
-        NBTTagCompound targetOverrides = new NBTTagCompound();
-        for (Map.Entry<IngredientComponent<?, ?>, EnumFacing> entry : this.ingredientComponentTargetOverrides.entrySet()) {
-            targetOverrides.setInteger(entry.getKey().getName().toString(), entry.getValue().ordinal());
+        CompoundNBT targetOverrides = new CompoundNBT();
+        for (Map.Entry<IngredientComponent<?, ?>, Direction> entry : this.ingredientComponentTargetOverrides.entrySet()) {
+            targetOverrides.putInt(entry.getKey().getName().toString(), entry.getValue().ordinal());
         }
-        tag.setTag("targetOverrides", targetOverrides);
+        tag.put("targetOverrides", targetOverrides);
     }
 
-    public void readFromNBT(NBTTagCompound tag) {
-        NBTTagList processingCraftingJobs = tag.getTagList("processingCraftingJobs", Constants.NBT.TAG_COMPOUND);
-        for (NBTBase entry : processingCraftingJobs) {
-            NBTTagCompound entryTag = (NBTTagCompound) entry;
+    public void readFromNBT(CompoundNBT tag) {
+        ListNBT processingCraftingJobs = tag.getList("processingCraftingJobs", Constants.NBT.TAG_COMPOUND);
+        for (INBT entry : processingCraftingJobs) {
+            CompoundNBT entryTag = (CompoundNBT) entry;
             Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pendingIngredientInstances = Maps.newIdentityHashMap();
-            NBTTagList pendingIngredientsList = entryTag.getTagList("pendingIngredientInstances", Constants.NBT.TAG_COMPOUND);
-            for (NBTBase pendingIngredient : pendingIngredientsList) {
-                NBTTagCompound pendingIngredientTag = (NBTTagCompound) pendingIngredient;
+            ListNBT pendingIngredientsList = entryTag.getList("pendingIngredientInstances", Constants.NBT.TAG_COMPOUND);
+            for (INBT pendingIngredient : pendingIngredientsList) {
+                CompoundNBT pendingIngredientTag = (CompoundNBT) pendingIngredient;
                 String componentName = pendingIngredientTag.getString("ingredientComponent");
                 IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.getValue(new ResourceLocation(componentName));
                 if (ingredientComponent == null) {
@@ -144,17 +143,17 @@ public class CraftingJobHandler {
                 IIngredientSerializer serializer = ingredientComponent.getSerializer();
 
                 List<IPrototypedIngredient<?, ?>> pendingIngredients = Lists.newArrayList();
-                for (NBTBase instanceTagUnsafe : pendingIngredientTag.getTagList("instances", Constants.NBT.TAG_COMPOUND)) {
-                    NBTTagCompound instanceTag = (NBTTagCompound) instanceTagUnsafe;
-                    Object instance = serializer.deserializeInstance(instanceTag.getTag("prototype"));
-                    Object condition = serializer.deserializeCondition(instanceTag.getTag("condition"));
+                for (INBT instanceTagUnsafe : pendingIngredientTag.getList("instances", Constants.NBT.TAG_COMPOUND)) {
+                    CompoundNBT instanceTag = (CompoundNBT) instanceTagUnsafe;
+                    Object instance = serializer.deserializeInstance(instanceTag.get("prototype"));
+                    Object condition = serializer.deserializeCondition(instanceTag.get("condition"));
                     pendingIngredients.add(new PrototypedIngredient(ingredientComponent, instance, condition));
                 }
 
                 pendingIngredientInstances.put(ingredientComponent, pendingIngredients);
             }
 
-            CraftingJob craftingJob = CraftingJob.deserialize(entryTag.getCompoundTag("craftingJob"));
+            CraftingJob craftingJob = CraftingJob.deserialize(entryTag.getCompound("craftingJob"));
 
             this.processingCraftingJobs.put(craftingJob.getId(), craftingJob);
             this.allCraftingJobs.put(craftingJob.getId(), craftingJob);
@@ -164,9 +163,9 @@ public class CraftingJobHandler {
 
         }
 
-        NBTTagList pendingCraftingJobs = tag.getTagList("pendingCraftingJobs", Constants.NBT.TAG_COMPOUND);
-        for (NBTBase craftingJob : pendingCraftingJobs) {
-            CraftingJob craftingJobInstance = CraftingJob.deserialize((NBTTagCompound) craftingJob);
+        ListNBT pendingCraftingJobs = tag.getList("pendingCraftingJobs", Constants.NBT.TAG_COMPOUND);
+        for (INBT craftingJob : pendingCraftingJobs) {
+            CraftingJob craftingJobInstance = CraftingJob.deserialize((CompoundNBT) craftingJob);
             this.pendingCraftingJobs.put(craftingJobInstance.getId(), craftingJobInstance);
             this.allCraftingJobs.put(craftingJobInstance.getId(), craftingJobInstance);
         }
@@ -179,10 +178,10 @@ public class CraftingJobHandler {
         }
 
         this.ingredientComponentTargetOverrides.clear();
-        NBTTagCompound targetOverrides = tag.getCompoundTag("targetOverrides");
-        for (String componentName : targetOverrides.getKeySet()) {
+        CompoundNBT targetOverrides = tag.getCompound("targetOverrides");
+        for (String componentName : targetOverrides.keySet()) {
             IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(new ResourceLocation(componentName));
-            this.ingredientComponentTargetOverrides.put(component, EnumFacing.VALUES[targetOverrides.getInteger(componentName)]);
+            this.ingredientComponentTargetOverrides.put(component, Direction.values()[targetOverrides.getInt(componentName)]);
         }
     }
 
@@ -239,7 +238,7 @@ public class CraftingJobHandler {
         int count = ingredientObserverCounters.getInt(ingredientComponent);
         if (count == 0) {
             IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers
-                    .getIngredientsNetwork(network, ingredientComponent);
+                    .getIngredientsNetworkChecked(network, ingredientComponent);
             PendingCraftingJobResultIndexObserver<T, M> observer = new PendingCraftingJobResultIndexObserver<>(ingredientComponent, this);
             ingredientsNetwork.addObserver(observer);
             ingredientsNetwork.scheduleObservation();
@@ -254,7 +253,7 @@ public class CraftingJobHandler {
         ingredientObserverCounters.put(ingredientComponent, count);
         if (count == 0) {
             IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers
-                    .getIngredientsNetwork(network, ingredientComponent);
+                    .getIngredientsNetworkChecked(network, ingredientComponent);
             IIngredientComponentStorageObservable.IIndexChangeObserver<T, M> observer =
                     (IIngredientComponentStorageObservable.IIndexChangeObserver<T, M>) ingredientObservers
                             .remove(ingredientComponent);
@@ -284,7 +283,7 @@ public class CraftingJobHandler {
     public void reRegisterObservers(INetwork network) {
         for (Map.Entry<IngredientComponent<?, ?>, IIngredientComponentStorageObservable.IIndexChangeObserver<?, ?>> entry : ingredientObservers.entrySet()) {
             IPositionedAddonsNetworkIngredients ingredientsNetwork = CraftingHelpers
-                    .getIngredientsNetwork(network, entry.getKey());
+                    .getIngredientsNetworkChecked(network, entry.getKey());
             ingredientsNetwork.addObserver(entry.getValue());
         }
     }
@@ -311,7 +310,7 @@ public class CraftingJobHandler {
             for (CraftingJob finishedCraftingJob : finishedCraftingJobs.values()) {
                 if (finishedCraftingJob.getAmount() == 1) {
                     // If only a single amount for the job was remaining, remove it from the network
-                    ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetwork(network);
+                    ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetworkChecked(network);
                     craftingNetwork.onCraftingJobFinished(finishedCraftingJob);
                     allCraftingJobs.remove(finishedCraftingJob.getId());
                 } else {
@@ -329,7 +328,7 @@ public class CraftingJobHandler {
         // Enable the observers for the next tick
         if (processingJobs > 0) {
             for (IngredientComponent<?, ?> ingredientComponent : ingredientObservers.keySet()) {
-                IPositionedAddonsNetworkIngredients<?, ?> ingredientsNetwork = CraftingHelpers.getIngredientsNetwork(network, ingredientComponent);
+                IPositionedAddonsNetworkIngredients<?, ?> ingredientsNetwork = CraftingHelpers.getIngredientsNetworkChecked(network, ingredientComponent);
                 ingredientsNetwork.scheduleObservation();
             }
         }
@@ -337,7 +336,7 @@ public class CraftingJobHandler {
         if (processingJobs < this.maxProcessingJobs) {
             // Handle crafting jobs
             CraftingJob startingCraftingJob = null;
-            ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetwork(network);
+            ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetworkChecked(network);
             CraftingJobDependencyGraph dependencyGraph = craftingNetwork.getCraftingJobDependencyGraph();
             for (CraftingJob pendingCraftingJob : getPendingCraftingJobs()) {
                 // Make sure that this crafting job has no incomplete dependency jobs
@@ -452,7 +451,7 @@ public class CraftingJobHandler {
         return allCraftingJobs;
     }
 
-    public void setIngredientComponentTarget(IngredientComponent<?, ?> ingredientComponent, @Nullable EnumFacing side) {
+    public void setIngredientComponentTarget(IngredientComponent<?, ?> ingredientComponent, @Nullable Direction side) {
         if (side == null) {
             this.ingredientComponentTargetOverrides.remove(ingredientComponent);
         } else {
@@ -461,13 +460,13 @@ public class CraftingJobHandler {
     }
 
     @Nullable
-    public EnumFacing getIngredientComponentTarget(IngredientComponent<?, ?> ingredientComponent) {
+    public Direction getIngredientComponentTarget(IngredientComponent<?, ?> ingredientComponent) {
         return this.ingredientComponentTargetOverrides.get(ingredientComponent);
     }
 
     public Function<IngredientComponent<?, ?>, PartPos> getTargetGetter(PartPos defaultPosition) {
         return ingredientComponent -> {
-            EnumFacing sideOverride = this.ingredientComponentTargetOverrides.get(ingredientComponent);
+            Direction sideOverride = this.ingredientComponentTargetOverrides.get(ingredientComponent);
             if (sideOverride == null) {
                 return defaultPosition;
             } else {

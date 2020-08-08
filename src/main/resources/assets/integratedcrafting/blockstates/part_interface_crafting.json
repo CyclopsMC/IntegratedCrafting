@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=north": { "model": "integratedcrafting:block/part_interface_crafting", "y": 180 },
+    "facing=east":  { "model": "integratedcrafting:block/part_interface_crafting", "y": 270 },
+    "facing=south": { "model": "integratedcrafting:block/part_interface_crafting"           },
+    "facing=west":  { "model": "integratedcrafting:block/part_interface_crafting", "y": 90  },
+    "facing=up":    { "model": "integratedcrafting:block/part_interface_crafting", "x": 90  },
+    "facing=down":  { "model": "integratedcrafting:block/part_interface_crafting", "x": 270 }
+  }
+}

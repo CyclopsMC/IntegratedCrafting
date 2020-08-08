@@ -1,6 +1,6 @@
 {
   "parent": "builtin/generated",
   "textures": {
-    "layer0": "integratedcrafting:aspects/read/list/network/craftingjobs"
+    "layer0": "integratedcrafting:aspect/read/list/network/craftingjobs"
   }
 }

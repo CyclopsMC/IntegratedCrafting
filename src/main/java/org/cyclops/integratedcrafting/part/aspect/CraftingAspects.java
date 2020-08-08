@@ -73,7 +73,7 @@ public class CraftingAspects {
                                 List<ValueObjectTypeRecipe.ValueRecipe> recipes = Lists.newArrayList();
                                 if (data.getRight() != null) {
                                     int channel = data.getLeft().getValue(AspectReadBuilders.Network.PROPERTY_CHANNEL).getRawValue();
-                                    Iterator<CraftingJob> it = data.getRight().getCraftingJobs(channel);
+                                    Iterator<CraftingJob> it = data.getRight().orElse(null).getCraftingJobs(channel);
                                     while (it.hasNext()) {
                                         recipes.add(ValueObjectTypeRecipe.ValueRecipe.of(it.next().getRecipe()));
                                     }
@@ -89,7 +89,7 @@ public class CraftingAspects {
                                 List<ValueObjectTypeIngredients.ValueIngredients> ingredients = Lists.newArrayList();
                                 if (data.getRight() != null) {
                                     int channel = data.getLeft().getValue(AspectReadBuilders.Network.PROPERTY_CHANNEL).getRawValue();
-                                    ICraftingNetwork craftingNetwork = data.getRight();
+                                    ICraftingNetwork craftingNetwork = data.getRight().orElse(null);
                                     Iterator<CraftingJob> it = craftingNetwork.getCraftingJobs(channel);
                                     while (it.hasNext()) {
                                         CraftingJob crafingJob = it.next();
@@ -128,7 +128,7 @@ public class CraftingAspects {
                                 List<ValueObjectTypeRecipe.ValueRecipe> ingredients = Lists.newArrayList();
                                 if (data.getRight() != null) {
                                     int channel = data.getLeft().getValue(AspectReadBuilders.Network.PROPERTY_CHANNEL).getRawValue();
-                                    ICraftingNetwork craftingNetwork = data.getRight();
+                                    ICraftingNetwork craftingNetwork = data.getRight().orElse(null);
                                     IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
                                     for (IRecipeDefinition recipe : recipeIndex.getRecipes()) {
                                         ingredients.add(ValueObjectTypeRecipe.ValueRecipe.of(recipe));

@@ -1,7 +1,7 @@
 package org.cyclops.integratedcrafting.capability.network;
 
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.cyclops.cyclopscore.modcompat.capabilities.DefaultCapabilityProvider;
 import org.cyclops.integratedcrafting.core.network.CraftingNetwork;
 import org.cyclops.integrateddynamics.Reference;
@@ -15,7 +15,7 @@ public class CraftingNetworkCapabilityConstructors {
 
     @SubscribeEvent
     public void onNetworkLoad(AttachCapabilitiesEventNetwork event) {
-        event.addCapability(new ResourceLocation(Reference.MOD_ID, "craftingNetwork"),
+        event.addCapability(new ResourceLocation(Reference.MOD_ID, "crafting_network"),
                 new DefaultCapabilityProvider<>(() -> CraftingNetworkConfig.CAPABILITY, new CraftingNetwork()));
     }
 

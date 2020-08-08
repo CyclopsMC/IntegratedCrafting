@@ -16,10 +16,10 @@
     "criteria_0": {
       "trigger": "integrateddynamics:part_variable_driven",
       "conditions": {
-        "parttype": "interface_crafting",
+        "parttype": "integratedcrafting:interface_crafting",
         "variable": {
-          "type": "valuetype",
-          "valuetype": "valuetype.valuetypes.integrateddynamics.recipe.name",
+          "type": "integrateddynamics:valuetype",
+          "valuetype": "integrateddynamics:recipe",
           "value": "{output:{\"minecraft:itemstack\":[{id:\"minecraft:planks\",Count:4b,Damage:0s}]},input:{\"minecraft:itemstack\":[[{condition:3,prototype:{id:\"minecraft:log\",Count:1b,Damage:0s}}]]}}"
         }
       }

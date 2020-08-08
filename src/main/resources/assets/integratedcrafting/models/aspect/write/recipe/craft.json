@@ -1,6 +1,6 @@
 {
   "parent": "builtin/generated",
   "textures": {
-    "layer0": "integratedcrafting:aspects/write/recipe/craft"
+    "layer0": "integratedcrafting:aspect/write/recipe/craft"
   }
 }

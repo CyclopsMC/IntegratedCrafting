@@ -33,15 +33,15 @@ import org.cyclops.integrateddynamics.part.aspect.write.AspectWriteBuilders;
 public class CraftingAspectWriteBuilders {
 
     public static final IAspectPropertyTypeInstance<ValueTypeInteger, ValueTypeInteger.ValueInteger> PROP_CHANNEL =
-            new AspectPropertyTypeInstance<>(ValueTypes.INTEGER, "aspect.aspecttypes.integrateddynamics.integer.channel.name");
+            new AspectPropertyTypeInstance<>(ValueTypes.INTEGER, "aspect.aspecttypes.integrateddynamics.integer.channel");
     public static final IAspectPropertyTypeInstance<ValueTypeBoolean, ValueTypeBoolean.ValueBoolean> PROP_IGNORE_STORAGE =
-            new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.boolean.ignorestorage.name");
+            new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.boolean.ignorestorage");
     public static final IAspectPropertyTypeInstance<ValueTypeBoolean, ValueTypeBoolean.ValueBoolean> PROP_IGNORE_CRAFTING =
-            new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.boolean.ignorecrafting.name");
+            new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.boolean.ignorecrafting");
     public static final IAspectPropertyTypeInstance<ValueTypeBoolean, ValueTypeBoolean.ValueBoolean> PROP_CRAFT_MISSING =
-            new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.boolean.craftmissing.name");
+            new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.boolean.craftmissing");
     public static final IAspectPropertyTypeInstance<ValueTypeInteger, ValueTypeInteger.ValueInteger> PROP_CRAFT_AMOUNT =
-            new AspectPropertyTypeInstance<>(ValueTypes.INTEGER, "aspect.aspecttypes.integratedcrafting.integer.craftamount.name");
+            new AspectPropertyTypeInstance<>(ValueTypes.INTEGER, "aspect.aspecttypes.integratedcrafting.integer.craftamount");
     public static final IAspectProperties PROPERTIES_CRAFTING_RECIPE = new AspectProperties(ImmutableList.<IAspectPropertyTypeInstance>of(
             PROP_CHANNEL,
             PROP_IGNORE_CRAFTING,
@@ -112,7 +112,7 @@ public class CraftingAspectWriteBuilders {
         IRecipeDefinition recipe = input.getRight();
         if (recipe != null) {
             INetwork network = CraftingHelpers.getNetworkChecked(center);
-            ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetwork(network);
+            ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetworkChecked(network);
             if (craftingNetwork != null) {
                 int channel = properties.getValue(PROP_CHANNEL).getRawValue();
                 int amount = properties.getValue(PROP_CRAFT_AMOUNT).getRawValue();

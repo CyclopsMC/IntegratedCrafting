@@ -1,7 +1,7 @@
 {
   "display": {
     "icon": {
-      "item": "minecraft:planks"
+      "item": "minecraft:oak_planks"
     },
     "title": {
       "translate": "advancement.integratedcrafting.craft_planks"
@@ -15,13 +15,13 @@
     "criteria_0": {
       "trigger": "integrateddynamics:part_writer_aspect",
       "conditions": {
-        "parttype": "crafting_writer",
-        "aspect": "aspect.aspects.integratedcrafting.write.itemstack.craft.name",
+        "parttype": "integratedcrafting:crafting_writer",
+        "aspect": "integratedcrafting:write_itemstack_craft",
         "variable": {
-          "type": "valuetype",
-          "valuetype": "valuetype.valuetypes.integrateddynamics.itemstack.name",
+          "type": "integrateddynamics:valuetype",
+          "valuetype": "integrateddynamics:itemstack",
           "value": {
-            "item": "minecraft:planks"
+            "item": "minecraft:oak_planks"
           }
         }
       }

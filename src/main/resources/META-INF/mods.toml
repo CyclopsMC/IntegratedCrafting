@@ -1,0 +1,43 @@
+modLoader="javafml"
+loaderVersion="[31.2,)"
+issueTrackerURL="https://github.com/CyclopsMC/IntegratedCrafting/issues"
+[[mods]]
+modId="integratedcrafting"
+version="${file.jarVersion}"
+displayName="IntegratedCrafting"
+displayURL="https://www.curseforge.com/minecraft/mc-mods/integrated-crafting"
+logoFile="logo.png"
+authors="rubensworks (aka kroeser)"
+description='''
+Craft stuff in Integrated Dynamics networks.
+'''
+[[dependencies.integratedcrafting]]
+    modId="cyclopscore"
+    mandatory=true
+    versionRange="[1.8.1,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.integratedcrafting]]
+    modId="integrateddynamics"
+    mandatory=true
+    versionRange="[1.1.14,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.integratedcrafting]]
+    modId="commoncapabilities"
+    mandatory=true
+    versionRange="[2.5.0,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.integratedcrafting]]
+    modId="forge"
+    mandatory=true
+    versionRange="[31.2,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.integratedcrafting]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.15.2]"
+    ordering="NONE"
+    side="BOTH"

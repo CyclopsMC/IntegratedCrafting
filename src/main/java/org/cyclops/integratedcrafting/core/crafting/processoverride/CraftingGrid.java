@@ -1,9 +1,9 @@
 package org.cyclops.integratedcrafting.core.crafting.processoverride;
 
 import com.google.common.collect.Sets;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.Container;
-import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.inventory.container.Container;
 import net.minecraft.item.ItemStack;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
@@ -15,12 +15,12 @@ import java.util.List;
  * A crafting grid itemstack holder.
  * @author rubensworks
  */
-public class CraftingGrid extends InventoryCrafting {
+public class CraftingGrid extends CraftingInventory {
 
     public CraftingGrid(IMixedIngredients ingredients, int rows, int columns) {
-        super(new Container() {
+        super(new Container(null, 0) {
             @Override
-            public boolean canInteractWith(EntityPlayer playerIn) {
+            public boolean canInteractWith(PlayerEntity playerIn) {
                 return false;
             }
         }, rows, columns);

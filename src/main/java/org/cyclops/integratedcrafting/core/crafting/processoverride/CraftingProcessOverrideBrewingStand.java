@@ -1,8 +1,8 @@
 package org.cyclops.integratedcrafting.core.crafting.processoverride;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntityBrewingStand;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.tileentity.BrewingStandTileEntity;
+import net.minecraft.util.Direction;
 import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
@@ -15,6 +15,7 @@ import org.cyclops.integrateddynamics.api.part.PartPos;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -25,17 +26,17 @@ import java.util.function.Function;
  */
 public class CraftingProcessOverrideBrewingStand implements ICraftingProcessOverride {
 
-    private static final EnumFacing SIDE_INGREDIENT = EnumFacing.UP;
-    private static final EnumFacing SIDE_BOTTLE = EnumFacing.NORTH;
+    private static final Direction SIDE_INGREDIENT = Direction.UP;
+    private static final Direction SIDE_BOTTLE = Direction.NORTH;
 
     @Override
     public boolean isApplicable(PartPos target) {
-        return getTile(target) != null;
+        return getTile(target).isPresent();
     }
 
     @Nullable
-    private TileEntityBrewingStand getTile(PartPos target) {
-        return TileHelpers.getSafeTile(target.getPos(), TileEntityBrewingStand.class);
+    private Optional<BrewingStandTileEntity> getTile(PartPos target) {
+        return TileHelpers.getSafeTile(target.getPos(), BrewingStandTileEntity.class);
     }
 
     @Override
@@ -48,31 +49,31 @@ public class CraftingProcessOverrideBrewingStand implements ICraftingProcessOver
         }
 
         // Insert the ingredients into the target
-        TileEntityBrewingStand tile = getTile(targetGetter.apply(IngredientComponent.ITEMSTACK));
-        if (tile != null) {
-            IItemHandler ingredientHandler = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, SIDE_INGREDIENT);
-            IItemHandler bottleHandler = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, SIDE_BOTTLE);
-            if (ingredientHandler != null && bottleHandler != null) {
-                int ingredientSlotIndex = 0;
-                int bottleSlotIndex = 0;
-                for (ItemStack instance : instances) {
-                    if (BrewingRecipeRegistry.isValidIngredient(instance)) {
-                        // The instance is for the ingredient slot
-                        if (!ingredientHandler.insertItem(ingredientSlotIndex++, instance, simulate).isEmpty()) {
-                            return false;
+        return getTile(targetGetter.apply(IngredientComponent.ITEMSTACK))
+                .map(tile -> {
+                    IItemHandler ingredientHandler = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, SIDE_INGREDIENT).orElse(null);
+                    IItemHandler bottleHandler = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, SIDE_BOTTLE).orElse(null);
+                    if (ingredientHandler != null && bottleHandler != null) {
+                        int ingredientSlotIndex = 0;
+                        int bottleSlotIndex = 0;
+                        for (ItemStack instance : instances) {
+                            if (BrewingRecipeRegistry.isValidIngredient(instance)) {
+                                // The instance is for the ingredient slot
+                                if (!ingredientHandler.insertItem(ingredientSlotIndex++, instance, simulate).isEmpty()) {
+                                    return false;
+                                }
+                            } else {
+                                // The instance is for one of the bottle slots
+                                if (!bottleHandler.insertItem(bottleSlotIndex++, instance, simulate).isEmpty()) {
+                                    return false;
+                                }
+                            }
                         }
-                    } else {
-                        // The instance is for one of the bottle slots
-                        if (!bottleHandler.insertItem(bottleSlotIndex++, instance, simulate).isEmpty()) {
-                            return false;
-                        }
+                        return true;
                     }
-                }
-                return true;
-            }
-        }
-
-        return false;
+                    return false;
+                })
+                .orElse(false);
     }
 
 }

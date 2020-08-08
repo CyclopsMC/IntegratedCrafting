@@ -694,7 +694,7 @@ public class TestCraftingHelpers {
         expectedMap.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(
                 new PrototypedIngredient<>(IngredientComponentStubs.SIMPLE, 6, false)
         ));
-        assertThat(CraftingHelpers.getRecipeOutputs(new RecipeDefinition(null, new MixedIngredients(map))),
+        assertThat(CraftingHelpers.getRecipeOutputs(new RecipeDefinition(Maps.newIdentityHashMap(), new MixedIngredients(map))),
                 equalTo(expectedMap));
     }
 

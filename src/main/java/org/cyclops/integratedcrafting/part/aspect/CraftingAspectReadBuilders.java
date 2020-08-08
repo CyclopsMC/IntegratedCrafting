@@ -1,5 +1,6 @@
 package org.cyclops.integratedcrafting.part.aspect;
 
+import net.minecraftforge.common.util.LazyOptional;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cyclops.cyclopscore.datastructure.DimPos;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
@@ -21,13 +22,13 @@ public class CraftingAspectReadBuilders {
 
     public static final class CraftingNetwork {
 
-        public static final IAspectValuePropagator<Pair<PartTarget, IAspectProperties>, Pair<IAspectProperties, ICraftingNetwork>> PROP_GET_CRAFTING_NETWORK = input -> {
+        public static final IAspectValuePropagator<Pair<PartTarget, IAspectProperties>, Pair<IAspectProperties, LazyOptional<ICraftingNetwork>>> PROP_GET_CRAFTING_NETWORK = input -> {
             DimPos dimPos = input.getLeft().getTarget().getPos();
-            INetwork network = NetworkHelpers.getNetwork(dimPos.getWorld(), dimPos.getBlockPos(), input.getLeft().getTarget().getSide());
-            return Pair.of(input.getRight(), network != null ? network.getCapability(CraftingNetworkConfig.CAPABILITY) : null);
+            INetwork network = NetworkHelpers.getNetwork(dimPos.getWorld(true), dimPos.getBlockPos(), input.getLeft().getTarget().getSide()).orElse(null);
+            return Pair.of(input.getRight(), network != null ? network.getCapability(CraftingNetworkConfig.CAPABILITY) : LazyOptional.empty());
         };
 
-        public static final AspectBuilder<ValueTypeList.ValueList, ValueTypeList, Pair<IAspectProperties, ICraftingNetwork>>
+        public static final AspectBuilder<ValueTypeList.ValueList, ValueTypeList, Pair<IAspectProperties, LazyOptional<ICraftingNetwork>>>
                 BUILDER_LIST = AspectReadBuilders.BUILDER_LIST
                 .byMod(IntegratedCrafting._instance)
                 .withProperties(AspectReadBuilders.Network.PROPERTIES)

@@ -3,8 +3,8 @@ package org.cyclops.integratedcrafting.api.crafting;
 import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagIntArray;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.IntArrayNBT;
 import net.minecraftforge.common.util.Constants;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
@@ -132,60 +132,60 @@ public class CraftingJob {
         this.initiatorUuid = initiatorUuid;
     }
 
-    public static NBTTagCompound serialize(CraftingJob craftingJob) {
-        NBTTagCompound tag = new NBTTagCompound();
-        tag.setInteger("id", craftingJob.id);
-        tag.setInteger("channel", craftingJob.channel);
-        tag.setTag("recipe", IRecipeDefinition.serialize(craftingJob.recipe));
-        tag.setTag("dependencies", new NBTTagIntArray(craftingJob.getDependencyCraftingJobs()));
-        tag.setTag("dependents", new NBTTagIntArray(craftingJob.getDependentCraftingJobs()));
-        tag.setInteger("amount", craftingJob.amount);
-        tag.setTag("ingredientsStorage", IMixedIngredients.serialize(craftingJob.ingredientsStorage));
-        tag.setTag("lastMissingIngredients", MissingIngredients.serialize(craftingJob.lastMissingIngredients));
-        tag.setLong("startTick", craftingJob.startTick);
-        tag.setBoolean("invalidInputs", craftingJob.invalidInputs);
+    public static CompoundNBT serialize(CraftingJob craftingJob) {
+        CompoundNBT tag = new CompoundNBT();
+        tag.putInt("id", craftingJob.id);
+        tag.putInt("channel", craftingJob.channel);
+        tag.put("recipe", IRecipeDefinition.serialize(craftingJob.recipe));
+        tag.put("dependencies", new IntArrayNBT(craftingJob.getDependencyCraftingJobs()));
+        tag.put("dependents", new IntArrayNBT(craftingJob.getDependentCraftingJobs()));
+        tag.putInt("amount", craftingJob.amount);
+        tag.put("ingredientsStorage", IMixedIngredients.serialize(craftingJob.ingredientsStorage));
+        tag.put("lastMissingIngredients", MissingIngredients.serialize(craftingJob.lastMissingIngredients));
+        tag.putLong("startTick", craftingJob.startTick);
+        tag.putBoolean("invalidInputs", craftingJob.invalidInputs);
         if (craftingJob.initiatorUuid != null) {
-            tag.setString("initiatorUuid", craftingJob.initiatorUuid);
+            tag.putString("initiatorUuid", craftingJob.initiatorUuid);
         }
         return tag;
     }
 
-    public static CraftingJob deserialize(NBTTagCompound tag) {
-        if (!tag.hasKey("id", Constants.NBT.TAG_INT)) {
+    public static CraftingJob deserialize(CompoundNBT tag) {
+        if (!tag.contains("id", Constants.NBT.TAG_INT)) {
             throw new IllegalArgumentException("Could not find an id entry in the given tag");
         }
-        if (!tag.hasKey("channel", Constants.NBT.TAG_INT)) {
+        if (!tag.contains("channel", Constants.NBT.TAG_INT)) {
             throw new IllegalArgumentException("Could not find a channel entry in the given tag");
         }
-        if (!tag.hasKey("recipe", Constants.NBT.TAG_COMPOUND)) {
+        if (!tag.contains("recipe", Constants.NBT.TAG_COMPOUND)) {
             throw new IllegalArgumentException("Could not find a recipe entry in the given tag");
         }
-        if (!tag.hasKey("dependencies", Constants.NBT.TAG_INT_ARRAY)) {
+        if (!tag.contains("dependencies", Constants.NBT.TAG_INT_ARRAY)) {
             throw new IllegalArgumentException("Could not find a dependencies entry in the given tag");
         }
-        if (!tag.hasKey("dependents", Constants.NBT.TAG_INT_ARRAY)) {
+        if (!tag.contains("dependents", Constants.NBT.TAG_INT_ARRAY)) {
             throw new IllegalArgumentException("Could not find a dependents entry in the given tag");
         }
-        if (!tag.hasKey("amount", Constants.NBT.TAG_INT)) {
+        if (!tag.contains("amount", Constants.NBT.TAG_INT)) {
             throw new IllegalArgumentException("Could not find a amount entry in the given tag");
         }
-        if (!tag.hasKey("ingredientsStorage", Constants.NBT.TAG_COMPOUND)) {
+        if (!tag.contains("ingredientsStorage", Constants.NBT.TAG_COMPOUND)) {
             throw new IllegalArgumentException("Could not find a ingredientsStorage entry in the given tag");
         }
-        if (!tag.hasKey("lastMissingIngredients", Constants.NBT.TAG_COMPOUND)) {
+        if (!tag.contains("lastMissingIngredients", Constants.NBT.TAG_COMPOUND)) {
             throw new IllegalArgumentException("Could not find a lastMissingIngredients entry in the given tag");
         }
-        if (!tag.hasKey("startTick", Constants.NBT.TAG_LONG)) {
+        if (!tag.contains("startTick", Constants.NBT.TAG_LONG)) {
             throw new IllegalArgumentException("Could not find a startTick entry in the given tag");
         }
-        if (!tag.hasKey("invalidInputs", Constants.NBT.TAG_BYTE)) {
+        if (!tag.contains("invalidInputs", Constants.NBT.TAG_BYTE)) {
             throw new IllegalArgumentException("Could not find an invalidInputs entry in the given tag");
         }
-        int id = tag.getInteger("id");
-        int channel = tag.getInteger("channel");
-        IRecipeDefinition recipe = IRecipeDefinition.deserialize(tag.getCompoundTag("recipe"));
-        int amount = tag.getInteger("amount");
-        IMixedIngredients ingredientsStorage = IMixedIngredients.deserialize(tag.getCompoundTag("ingredientsStorage"));
+        int id = tag.getInt("id");
+        int channel = tag.getInt("channel");
+        IRecipeDefinition recipe = IRecipeDefinition.deserialize(tag.getCompound("recipe"));
+        int amount = tag.getInt("amount");
+        IMixedIngredients ingredientsStorage = IMixedIngredients.deserialize(tag.getCompound("ingredientsStorage"));
         CraftingJob craftingJob = new CraftingJob(id, channel, recipe, amount, ingredientsStorage);
         for (int dependency : tag.getIntArray("dependencies")) {
             craftingJob.dependencyCraftingJobs.add(dependency);
@@ -194,11 +194,11 @@ public class CraftingJob {
             craftingJob.dependentCraftingJobs.add(dependent);
         }
         Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients = MissingIngredients
-                .deserialize(tag.getCompoundTag("lastMissingIngredients"));
+                .deserialize(tag.getCompound("lastMissingIngredients"));
         craftingJob.setLastMissingIngredients(lastMissingIngredients);
         craftingJob.setStartTick(tag.getLong("startTick"));
         craftingJob.setInvalidInputs(tag.getBoolean("invalidInputs"));
-        if (tag.hasKey("initiatorUuid", Constants.NBT.TAG_STRING)) {
+        if (tag.contains("initiatorUuid", Constants.NBT.TAG_STRING)) {
             craftingJob.setInitiatorUuid(tag.getString("initiatorUuid"));
         }
         return craftingJob;

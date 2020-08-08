@@ -4,8 +4,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.common.util.LazyOptional;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIngredientAlternatives;
@@ -35,6 +36,7 @@ import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
 import org.cyclops.integrateddynamics.IntegratedDynamics;
 import org.cyclops.integrateddynamics.api.PartStateException;
+import org.cyclops.integrateddynamics.api.ingredient.capability.IPositionedAddonsNetworkIngredientsHandler;
 import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.api.part.PartPos;
@@ -67,7 +69,7 @@ public class CraftingHelpers {
      * @throws PartStateException If the network could not be found.
      */
     public static INetwork getNetworkChecked(PartPos pos) throws PartStateException {
-        INetwork network = NetworkHelpers.getNetwork(pos.getPos().getWorld(), pos.getPos().getBlockPos(), pos.getSide());
+        INetwork network = NetworkHelpers.getNetwork(pos.getPos().getWorld(true), pos.getPos().getBlockPos(), pos.getSide()).orElse(null);
         if (network == null) {
             IntegratedDynamics.clog(Level.ERROR, "Could not get the network for transfer as no network was found.");
             throw new PartStateException(pos.getPos(), pos.getSide());
@@ -78,14 +80,23 @@ public class CraftingHelpers {
     /**
      * Get the crafting network in the given network.
      * @param network A network.
-     * @return The crafting network or null.
+     * @return The crafting network.
      */
-    @Nullable
-    public static ICraftingNetwork getCraftingNetwork(@Nullable INetwork network) {
+    public static LazyOptional<ICraftingNetwork> getCraftingNetwork(@Nullable INetwork network) {
         if (network != null) {
             return network.getCapability(CraftingNetworkConfig.CAPABILITY);
         }
         return null;
+    }
+
+    /**
+     * Get the crafting network in the given network.
+     * @param network A network.
+     * @return The crafting network.
+     */
+    public static ICraftingNetwork getCraftingNetworkChecked(@Nullable INetwork network) {
+        return getCraftingNetwork(network)
+                .orElseThrow(() -> new IllegalStateException("Could not find a crafting network"));
     }
 
     /**
@@ -94,14 +105,29 @@ public class CraftingHelpers {
      * @param ingredientComponent The ingredient component type of the network.
      * @param <T> The instance type.
      * @param <M> The matching condition parameter.
-     * @return The storage network or null.
+     * @return The storage network.
      */
-    @Nullable
-    public static <T, M> IPositionedAddonsNetworkIngredients<T, M> getIngredientsNetwork(INetwork network,
-                                                                                         IngredientComponent<T, M> ingredientComponent) {
-        return ingredientComponent
-                .getCapability(Capabilities.POSITIONED_ADDONS_NETWORK_INGREDIENTS_HANDLER)
-                .getStorage(network);
+    public static <T, M> LazyOptional<IPositionedAddonsNetworkIngredients<T, M>> getIngredientsNetwork(INetwork network,
+                                                                                                       IngredientComponent<T, M> ingredientComponent) {
+        IPositionedAddonsNetworkIngredientsHandler<T, M> ingredientsHandler = ingredientComponent.getCapability(Capabilities.POSITIONED_ADDONS_NETWORK_INGREDIENTS_HANDLER).orElse(null);
+        if (ingredientsHandler != null) {
+            return ingredientsHandler.getStorage(network);
+        }
+        return LazyOptional.empty();
+    }
+
+    /**
+     * Get the storage network of the given type in the given network.
+     * @param network A network.
+     * @param ingredientComponent The ingredient component type of the network.
+     * @param <T> The instance type.
+     * @param <M> The matching condition parameter.
+     * @return The storage network.
+     */
+    public static <T, M> IPositionedAddonsNetworkIngredients<T, M> getIngredientsNetworkChecked(INetwork network,
+                                                                                                IngredientComponent<T, M> ingredientComponent) {
+        return getIngredientsNetwork(network, ingredientComponent)
+                .orElseThrow(() -> new IllegalStateException("Could not find an ingredients network"));
     }
 
     /**
@@ -117,7 +143,7 @@ public class CraftingHelpers {
     public static <T, M> IIngredientComponentStorage<T, M> getNetworkStorage(INetwork network, int channel,
                                                                              IngredientComponent<T, M> ingredientComponent,
                                                                              boolean scheduleObservation) {
-        IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = getIngredientsNetwork(network, ingredientComponent);
+        IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = getIngredientsNetwork(network, ingredientComponent).orElse(null);
         if (ingredientsNetwork != null) {
             if (scheduleObservation) {
                 ingredientsNetwork.scheduleObservation();
@@ -153,7 +179,7 @@ public class CraftingHelpers {
                                                            CraftingJobDependencyGraph craftingJobsGraph,
                                                            boolean collectMissingRecipes)
             throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
-        ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
+        ICraftingNetwork craftingNetwork = getCraftingNetworkChecked(network);
         IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
         Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel, true);
         CraftingJob craftingJob = calculateCraftingJobs(recipeIndex, channel, storageGetter, ingredientComponent, instance, matchCondition,
@@ -185,7 +211,7 @@ public class CraftingHelpers {
                                                     CraftingJobDependencyGraph craftingJobsGraph,
                                                     boolean collectMissingRecipes)
             throws FailedCraftingRecipeException, RecursiveCraftingRecipeException {
-        ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
+        ICraftingNetwork craftingNetwork = getCraftingNetworkChecked(network);
         IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
         Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel, true);
         PartialCraftingJobCalculation result = calculateCraftingJobs(recipeIndex, channel, storageGetter, recipe, amount,
@@ -704,7 +730,7 @@ public class CraftingHelpers {
             CraftingJob craftingJob = calculateCraftingJobs(network, channel, ingredientComponent, instance,
                     matchCondition, craftMissing, identifierGenerator, dependencyGraph, false);
 
-            ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
+            ICraftingNetwork craftingNetwork = getCraftingNetworkChecked(network);
 
             scheduleCraftingJobs(craftingNetwork, dependencyGraph, allowDistribution, initiator);
 
@@ -737,7 +763,7 @@ public class CraftingHelpers {
             CraftingJob craftingJob = calculateCraftingJobs(network, channel, recipe, amount, craftMissing,
                     identifierGenerator, dependencyGraph, false);
 
-            ICraftingNetwork craftingNetwork = getCraftingNetwork(network);
+            ICraftingNetwork craftingNetwork = getCraftingNetworkChecked(network);
 
             scheduleCraftingJobs(craftingNetwork, dependencyGraph, allowDistribution, initiator);
 
@@ -1344,7 +1370,7 @@ public class CraftingHelpers {
      */
     public static <T, M> boolean insertIngredientCrafting(IngredientComponent<T, M> ingredientComponent,
                                                           ICapabilityProvider capabilityProvider,
-                                                          @Nullable EnumFacing side,
+                                                          @Nullable Direction side,
                                                           IMixedIngredients ingredients,
                                                           IIngredientComponentStorage<T, M> storageFallback,
                                                           boolean simulate) {
@@ -1397,7 +1423,7 @@ public class CraftingHelpers {
 
         // First, check if we can find valid tiles for all ingredient components
         for (IngredientComponent<?, ?> ingredientComponent : ingredients.getComponents()) {
-            TileEntity tile = TileHelpers.getSafeTile(targetGetter.apply(ingredientComponent).getPos(), TileEntity.class);
+            TileEntity tile = TileHelpers.getSafeTile(targetGetter.apply(ingredientComponent).getPos(), TileEntity.class).orElse(null);
             if (tile != null) {
                 tileMap.put(ingredientComponent, tile);
             } else {
