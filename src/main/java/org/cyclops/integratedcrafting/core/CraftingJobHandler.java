@@ -380,7 +380,7 @@ public class CraftingJobHandler {
                 }
 
                 // Remove ingredients from network
-                IMixedIngredients ingredients = CraftingHelpers.getRecipeIwnputs(network, startingCraftingJob.getChannel(),
+                IMixedIngredients ingredients = CraftingHelpers.getRecipeInputs(network, startingCraftingJob.getChannel(),
                         startingCraftingJob.getRecipe(), false, 1);
 
                 // This may not be null, error if it is null!
