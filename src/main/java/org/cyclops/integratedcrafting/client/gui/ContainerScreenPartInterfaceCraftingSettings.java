@@ -2,12 +2,14 @@ package org.cyclops.integratedcrafting.client.gui;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.client.gui.component.input.IInputListener;
 import org.cyclops.cyclopscore.client.gui.component.input.WidgetArrowedListField;
@@ -90,7 +92,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
 
         ingredientComponentSideSelector = new WidgetArrowedListField<IngredientComponent<?, ?>>(font,
                 guiLeft + 106, guiTop + 9, 68, 15, true,
-                L10NHelpers.localize("gui.integratedcrafting.partsettings.ingredient"),
+                new TranslationTextComponent("gui.integratedcrafting.partsettings.ingredient"),
                 true, Lists.newArrayList(IngredientComponent.REGISTRY.getValues())) {
             @Override
             protected String activeElementToString(IngredientComponent<?, ?> element) {
@@ -102,7 +104,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
 
         dropdownEntries = Arrays.stream(Direction.values()).map(SideDropdownEntry::new).collect(Collectors.toList());
         dropdownFieldSide = new WidgetTextFieldDropdown(font, guiLeft + 106, guiTop + 34,
-                68, 14, L10NHelpers.localize("gui.integrateddynamics.partsettings.side"),
+                68, 14, new TranslationTextComponent("gui.integrateddynamics.partsettings.side"),
                 true, Sets.newHashSet(dropdownEntries));
         setSideInDropdownField(selectedIngredientComponent, ((ContainerPartInterfaceCraftingSettings) container).getTargetSideOverrideValue(selectedIngredientComponent));
         dropdownFieldSide.setMaxStringLength(15);
@@ -111,7 +113,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         dropdownFieldSide.setCanLoseFocus(true);
 
         numberFieldChannelInterfaceCrafting = new WidgetNumberField(font, guiLeft + 106, guiTop + 134, 70, 14,
-                true, L10NHelpers.localize("gui.integratedcrafting.partsettings.channel.interface"), true);
+                true, new TranslationTextComponent("gui.integratedcrafting.partsettings.channel.interface"), true);
         numberFieldChannelInterfaceCrafting.setPositiveOnly(false);
         numberFieldChannelInterfaceCrafting.setMaxStringLength(15);
         numberFieldChannelInterfaceCrafting.setVisible(true);
@@ -158,17 +160,17 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
-        super.drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
+    protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int mouseX, int mouseY) {
+        super.drawGuiContainerBackgroundLayer(matrixStack, partialTicks, mouseX, mouseY);
 
-        font.drawString(L10NHelpers.localize("gui.integrateddynamics.partsettings.side"), guiLeft + 8, guiTop + 12, Helpers.RGBToInt(0, 0, 0));
+        font.drawString(matrixStack, L10NHelpers.localize("gui.integrateddynamics.partsettings.side"), guiLeft + 8, guiTop + 12, Helpers.RGBToInt(0, 0, 0));
         GlStateManager.color4f(1, 1, 1, 1);
-        ingredientComponentSideSelector.render(mouseX, mouseY, partialTicks);
-        dropdownFieldSide.render(mouseX, mouseY, partialTicks);
+        ingredientComponentSideSelector.render(matrixStack, mouseX, mouseY, partialTicks);
+        dropdownFieldSide.render(matrixStack, mouseX, mouseY, partialTicks);
 
-        font.drawString(L10NHelpers.localize("gui.integratedcrafting.partsettings.channel.interface"),
+        font.drawString(matrixStack, L10NHelpers.localize("gui.integratedcrafting.partsettings.channel.interface"),
                 guiLeft + 8, guiTop + 137, 0);
-        numberFieldChannelInterfaceCrafting.render(mouseX, mouseY, partialTicks);
+        numberFieldChannelInterfaceCrafting.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
     @Override

@@ -23,7 +23,7 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
@@ -107,7 +107,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         return Optional.of(new INamedContainerProvider() {
 
             @Override
-            public ITextComponent getDisplayName() {
+            public IFormattableTextComponent getDisplayName() {
                 return new TranslationTextComponent(getTranslationKey());
             }
 
@@ -136,7 +136,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         return Optional.of(new INamedContainerProvider() {
 
             @Override
-            public ITextComponent getDisplayName() {
+            public IFormattableTextComponent getDisplayName() {
                 return new TranslationTextComponent(getTranslationKey());
             }
 
@@ -328,7 +328,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private final SimpleInventory inventoryVariables;
         private final List<InventoryVariableEvaluator<ValueObjectTypeRecipe.ValueRecipe>> variableEvaluators;
         private final List<IngredientInstanceWrapper<?, ?>> inventoryOutputBuffer;
-        private final Int2ObjectMap<ITextComponent> recipeSlotMessages;
+        private final Int2ObjectMap<IFormattableTextComponent> recipeSlotMessages;
         private final Int2BooleanMap recipeSlotValidated;
         private final IntSet delayedRecipeReloads;
         private final Map<IVariable, Boolean> variableListeners;
@@ -387,8 +387,8 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             tag.putInt("channelCrafting", channelCrafting);
 
             CompoundNBT recipeSlotErrorsTag = new CompoundNBT();
-            for (Int2ObjectMap.Entry<ITextComponent> entry : this.recipeSlotMessages.int2ObjectEntrySet()) {
-                NBTClassType.writeNbt(ITextComponent.class, String.valueOf(entry.getIntKey()), entry.getValue(), recipeSlotErrorsTag);
+            for (Int2ObjectMap.Entry<IFormattableTextComponent> entry : this.recipeSlotMessages.int2ObjectEntrySet()) {
+                NBTClassType.writeNbt(IFormattableTextComponent.class, String.valueOf(entry.getIntKey()), entry.getValue(), recipeSlotErrorsTag);
             }
             tag.put("recipeSlotMessages", recipeSlotErrorsTag);
 
@@ -419,7 +419,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             this.recipeSlotMessages.clear();
             CompoundNBT recipeSlotErrorsTag = tag.getCompound("recipeSlotMessages");
             for (String slot : recipeSlotErrorsTag.keySet()) {
-                ITextComponent unlocalizedString = NBTClassType.readNbt(ITextComponent.class, slot, recipeSlotErrorsTag);
+                IFormattableTextComponent unlocalizedString = NBTClassType.readNbt(IFormattableTextComponent.class, slot, recipeSlotErrorsTag);
                 this.recipeSlotMessages.put(Integer.parseInt(slot), unlocalizedString);
             }
 
@@ -476,7 +476,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             }
         }
 
-        private void setLocalErrors(int slot, List<ITextComponent> errors) {
+        private void setLocalErrors(int slot, List<IFormattableTextComponent> errors) {
             if (errors.isEmpty()) {
                 if (this.recipeSlotMessages.size() > slot) {
                     this.recipeSlotMessages.remove(slot);
@@ -750,7 +750,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Nullable
-        public ITextComponent getRecipeSlotUnlocalizedMessage(int slot) {
+        public IFormattableTextComponent getRecipeSlotUnlocalizedMessage(int slot) {
             return this.recipeSlotMessages.get(slot);
         }
 
