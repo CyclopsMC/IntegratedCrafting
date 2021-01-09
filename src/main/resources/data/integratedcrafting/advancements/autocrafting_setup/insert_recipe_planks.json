@@ -20,7 +20,7 @@
         "variable": {
           "type": "integrateddynamics:valuetype",
           "valuetype": "integrateddynamics:recipe",
-          "value": "{output:{\"minecraft:itemstack\":[{id:\"minecraft:planks\",Count:4b,Damage:0s}]},input:{\"minecraft:itemstack\":[[{condition:3,prototype:{id:\"minecraft:log\",Count:1b,Damage:0s}}]]}}"
+          "value": "{output:{\"minecraft:itemstack\":[{id:\"minecraft:oak_planks\",Count:4b}]},input:{\"minecraft:itemstack\":[{val:[{condition:1,prototype:{id:\"minecraft:oak_log\",Count:1b}}],type:0b}]}}"
         }
       }
     }
