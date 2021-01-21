@@ -1,6 +1,6 @@
 ## Integrated Crafting
 
-[![Build Status](https://travis-ci.org/CyclopsMC/IntegratedCrafting.svg)](https://travis-ci.org/CyclopsMC/IntegratedCrafting)
+[![Build Status](https://github.com/CyclopsMC/IntegratedCrafting/workflows/CI/badge.svg)](https://github.com/CyclopsMC/IntegratedCrafting/actions?query=workflow%3ACI)
 [![Coverage Status](https://coveralls.io/repos/github/CyclopsMC/IntegratedCrafting/badge.svg)](https://coveralls.io/github/CyclopsMC/IntegratedCrafting)
 [![Download](https://img.shields.io/maven-metadata/v/https/oss.jfrog.org/artifactory/simple/libs-release/org/cyclops/integratedcrafting/IntegratedCrafting/maven-metadata.xml.svg) ](https://oss.jfrog.org/artifactory/simple/libs-release/org/cyclops/integratedcrafting/IntegratedCrafting/)
 [![CurseForge](http://cf.way2muchnoise.eu/full_287357_downloads.svg)](http://minecraft.curseforge.com/projects/287357)
