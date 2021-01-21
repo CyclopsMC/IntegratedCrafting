@@ -1,0 +1,14 @@
+org.cyclops.integratedcrafting
+org.cyclops.integratedcrafting.api.crafting
+org.cyclops.integratedcrafting.api.network
+org.cyclops.integratedcrafting.api.recipe
+org.cyclops.integratedcrafting.capability.network
+org.cyclops.integratedcrafting.client.gui
+org.cyclops.integratedcrafting.core
+org.cyclops.integratedcrafting.core.crafting.processoverride
+org.cyclops.integratedcrafting.core.network
+org.cyclops.integratedcrafting.core.part
+org.cyclops.integratedcrafting.inventory.container
+org.cyclops.integratedcrafting.part
+org.cyclops.integratedcrafting.part.aspect
+org.cyclops.integratedcrafting.proxy
