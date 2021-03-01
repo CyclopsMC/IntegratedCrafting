@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "integratedcrafting:part_interface_crafting",
+    "integratedcrafting:part_crafting_writer"
+  ]
+}
