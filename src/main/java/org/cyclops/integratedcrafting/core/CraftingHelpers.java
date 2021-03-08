@@ -144,7 +144,9 @@ public class CraftingHelpers {
                                                                              IngredientComponent<T, M> ingredientComponent,
                                                                              boolean scheduleObservation) {
         IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = getIngredientsNetwork(network, ingredientComponent).orElse(null);
-        if (ingredientsNetwork != null) {
+        // Checking isObservationForcedPending ensures that we don't allow crafting jobs
+        // if the network is guaranteed to have uncommitted changes, such as the one in #48
+        if (ingredientsNetwork != null && !ingredientsNetwork.isObservationForcedPending(channel)) {
             if (scheduleObservation) {
                 ingredientsNetwork.scheduleObservation();
             }
