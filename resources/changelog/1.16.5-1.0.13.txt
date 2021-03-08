@@ -1,0 +1,11 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.11.1 or higher.
+
+Fixes:
+* Fix rare cases where overlapping jobs would cause halting
+  If a job would cause items to be added to the network,
+  and another job would consume those items in parallel,
+  the outputs of the first job could be consumed by the second job,
+  so that the first job sometimes would not be marked as completed.
+  Closes #48
+
