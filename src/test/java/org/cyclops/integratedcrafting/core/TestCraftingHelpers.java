@@ -682,7 +682,7 @@ public class TestCraftingHelpers {
                 CA01B
         ));
         map.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(
-                1, 2, 3
+                1L, 2L, 3L
         ));
         Integer condition = IngredientComponentStubs.COMPLEX.getMatcher().getExactMatchNoQuantityCondition();
         Map<IngredientComponent<?, ?>, List<?>> expectedMap = Maps.newIdentityHashMap();
@@ -692,7 +692,7 @@ public class TestCraftingHelpers {
                 new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01B, condition)
         ));
         expectedMap.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(
-                new PrototypedIngredient<>(IngredientComponentStubs.SIMPLE, 6, false)
+                new PrototypedIngredient<>(IngredientComponentStubs.SIMPLE, 6L, false)
         ));
         assertThat(CraftingHelpers.getRecipeOutputs(new RecipeDefinition(Maps.newIdentityHashMap(), new MixedIngredients(map))),
                 equalTo(expectedMap));
@@ -708,7 +708,7 @@ public class TestCraftingHelpers {
                 new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB01_, 0)
         ));
         input.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(
-                new PrototypedIngredient<>(IngredientComponentStubs.SIMPLE, 2, false)
+                new PrototypedIngredient<>(IngredientComponentStubs.SIMPLE, 2L, false)
         ));
 
         assertThat(CraftingHelpers.multiplyRecipeOutputs(input, 1),
@@ -723,7 +723,7 @@ public class TestCraftingHelpers {
                 new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB01_, 0)
         ));
         input.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(
-                new PrototypedIngredient<>(IngredientComponentStubs.SIMPLE, 2, false)
+                new PrototypedIngredient<>(IngredientComponentStubs.SIMPLE, 2L, false)
         ));
         Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> output = Maps.newIdentityHashMap();
         output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
@@ -731,7 +731,7 @@ public class TestCraftingHelpers {
                 new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, 0)
         ));
         output.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(
-                new PrototypedIngredient<>(IngredientComponentStubs.SIMPLE, 4, false)
+                new PrototypedIngredient<>(IngredientComponentStubs.SIMPLE, 4L, false)
         ));
 
         // Wrap in a HashMap because our IdentityMap does not like equals...
@@ -1020,7 +1020,7 @@ public class TestCraftingHelpers {
         ));
         Map<IngredientComponent<?, ?>, List<?>> mapAMultipleAuxOutput = Maps.newIdentityHashMap();
         mapAMultipleAuxOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA04_, CC01_));
-        mapAMultipleAuxOutput.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(10));
+        mapAMultipleAuxOutput.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(10L));
         recipeAMultipleAux = new RecipeDefinition(mapAMultipleAux, new MixedIngredients(mapAMultipleAuxOutput));
 
         Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapA9 = Maps.newIdentityHashMap();
@@ -2530,10 +2530,10 @@ public class TestCraftingHelpers {
         map1.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB01_, CA91B));
         Map<IngredientComponent<?, ?>, List<?>> map2 = Maps.newIdentityHashMap();
         map2.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB01_, CA01_));
-        map2.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(100));
+        map2.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(100L));
         Map<IngredientComponent<?, ?>, List<?>> map3 = Maps.newIdentityHashMap();
         map3.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA91B, CB02_, CA01_));
-        map3.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(100));
+        map3.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(100L));
         IMixedIngredients a = new MixedIngredients(map1);
         IMixedIngredients b = new MixedIngredients(map2);
         IMixedIngredients c = new MixedIngredients(map3);

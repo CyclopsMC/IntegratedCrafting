@@ -1,8 +1,9 @@
 package org.cyclops.integratedcrafting.ingredient;
 
+import net.minecraft.util.text.IFormattableTextComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 
-public class IngredientMatcherSimple implements IIngredientMatcher<Integer, Boolean> {
+public class IngredientMatcherSimple implements IIngredientMatcher<Long, Boolean> {
     @Override
     public boolean isInstance(Object object) {
         return object instanceof Integer;
@@ -39,38 +40,38 @@ public class IngredientMatcherSimple implements IIngredientMatcher<Integer, Bool
     }
 
     @Override
-    public boolean matches(Integer a, Integer b, Boolean matchCondition) {
-        return !matchCondition || a.intValue() == b.intValue();
+    public boolean matches(Long a, Long b, Boolean matchCondition) {
+        return !matchCondition || a.longValue() == b.longValue();
     }
 
     @Override
-    public Integer getEmptyInstance() {
-        return 0;
+    public Long getEmptyInstance() {
+        return 0L;
     }
 
     @Override
-    public boolean isEmpty(Integer instance) {
-        return instance == 0;
+    public boolean isEmpty(Long instance) {
+        return instance == 0L;
     }
 
     @Override
-    public int hash(Integer instance) {
+    public int hash(Long instance) {
+        return (int) (long) instance;
+    }
+
+    @Override
+    public Long copy(Long instance) {
         return instance;
     }
 
     @Override
-    public Integer copy(Integer instance) {
+    public long getQuantity(Long instance) {
         return instance;
     }
 
     @Override
-    public long getQuantity(Integer instance) {
-        return instance;
-    }
-
-    @Override
-    public Integer withQuantity(Integer instance, long quantity) throws ArithmeticException {
-        return Math.toIntExact(quantity);
+    public Long withQuantity(Long instance, long quantity) throws ArithmeticException {
+        return quantity;
     }
 
     @Override
@@ -84,12 +85,17 @@ public class IngredientMatcherSimple implements IIngredientMatcher<Integer, Bool
     }
 
     @Override
-    public String localize(Integer instance) {
+    public String localize(Long instance) {
         return String.valueOf(instance);
     }
 
     @Override
-    public int compare(Integer o1, Integer o2) {
-        return o1 - o2;
+    public IFormattableTextComponent getDisplayName(Long aLong) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int compare(Long o1, Long o2) {
+        return (int) (o1 - o2);
     }
 }

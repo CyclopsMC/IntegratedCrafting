@@ -1,5 +1,6 @@
 package org.cyclops.integratedcrafting.ingredient;
 
+import net.minecraft.util.text.IFormattableTextComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 
 public class IngredientMatcherComplex implements IIngredientMatcher<ComplexStack, Integer> {
@@ -103,6 +104,11 @@ public class IngredientMatcherComplex implements IIngredientMatcher<ComplexStack
     @Override
     public String localize(ComplexStack instance) {
         return instance.toString();
+    }
+
+    @Override
+    public IFormattableTextComponent getDisplayName(ComplexStack complexStack) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

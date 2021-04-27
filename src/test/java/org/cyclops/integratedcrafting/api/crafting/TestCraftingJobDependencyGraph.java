@@ -338,7 +338,7 @@ public class TestCraftingJobDependencyGraph {
     public void testMergeCraftingJobsDependenciesNonMatching() {
         IRecipeDefinition R0 = new RecipeDefinition(Maps.newIdentityHashMap(), new MixedIngredients(Maps.newIdentityHashMap()));
         Map<IngredientComponent<?, ?>, List<?>> o1 = Maps.newIdentityHashMap();
-        o1.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(0));
+        o1.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(0L));
         IRecipeDefinition R1 = new RecipeDefinition(Maps.newIdentityHashMap(), new MixedIngredients(o1));
 
         CraftingJob J0D = new CraftingJob(1000, 0, R0, 1, new MixedIngredients(Maps.newIdentityHashMap()));
@@ -374,10 +374,10 @@ public class TestCraftingJobDependencyGraph {
     public void testMergeCraftingJobsDependenciesMatchingAndNonMatching() {
         IRecipeDefinition R0 = new RecipeDefinition(Maps.newIdentityHashMap(), new MixedIngredients(Maps.newIdentityHashMap()));
         Map<IngredientComponent<?, ?>, List<?>> o1 = Maps.newIdentityHashMap();
-        o1.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(0));
+        o1.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(0L));
         IRecipeDefinition R1 = new RecipeDefinition(Maps.newIdentityHashMap(), new MixedIngredients(o1));
         Map<IngredientComponent<?, ?>, List<?>> o2 = Maps.newIdentityHashMap();
-        o2.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(1));
+        o2.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(1L));
         IRecipeDefinition R2 = new RecipeDefinition(Maps.newIdentityHashMap(), new MixedIngredients(o2));
 
         CraftingJob J00D = new CraftingJob(1000, 0, R0, 1, new MixedIngredients(Maps.newIdentityHashMap()));

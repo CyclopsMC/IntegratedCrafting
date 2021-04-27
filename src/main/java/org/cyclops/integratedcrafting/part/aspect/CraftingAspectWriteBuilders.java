@@ -97,13 +97,14 @@ public class CraftingAspectWriteBuilders {
         return new CraftingJobData<>(properties, ingredientComponent, instance, partTarget.getCenter());
     };
 
-    public static final IAspectValuePropagator<Triple<PartTarget, IAspectProperties, Integer>, CraftingJobData<Integer, Boolean>>
+    public static final IAspectValuePropagator<Triple<PartTarget, IAspectProperties, Integer>, CraftingJobData<Long, Boolean>>
             PROP_ENERGY_CRAFTINGDATA = input -> {
         PartTarget partTarget = input.getLeft();
         IAspectProperties properties = input.getMiddle();
         Integer instance = input.getRight();
-        IngredientComponent<Integer, Boolean> ingredientComponent = IngredientComponent.ENERGY;
-        return new CraftingJobData<>(properties, ingredientComponent, instance, partTarget.getCenter());
+        IngredientComponent<Long, Boolean> ingredientComponent = IngredientComponent.ENERGY;
+        // TODO: in next breaking change, migrate all of this to long-based values
+        return new CraftingJobData<>(properties, ingredientComponent, (long) instance, partTarget.getCenter());
     };
 
     public static final IAspectValuePropagator<Triple<PartTarget, IAspectProperties, IRecipeDefinition>, Void> PROP_CRAFT_RECIPE = input -> {

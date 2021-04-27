@@ -7,11 +7,11 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientComponentCategory
 
 public class IngredientComponentStubs {
 
-    public static IngredientComponent<Integer, Boolean> SIMPLE =
+    public static IngredientComponent<Long, Boolean> SIMPLE =
             new IngredientComponent<>("cyclopscore:simple", new IngredientMatcherSimple(),
-                    new IngredientSerializerInt(), Lists.newArrayList(
+                    new IngredientSerializerLong(), Lists.newArrayList(
                     new IngredientComponentCategoryType<>(new ResourceLocation("cyclopscore:simple/amount"),
-                            Integer.class, false, amount -> amount, true, true)
+                            Long.class, false, amount -> amount, true, true)
             )).setTranslationKey("recipecomponent.cyclopscore.simple");
 
     public static IngredientComponent<ComplexStack, Integer> COMPLEX =

@@ -3,21 +3,22 @@ package org.cyclops.integratedcrafting.ingredient;
 import net.minecraft.nbt.ByteNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.IntNBT;
+import net.minecraft.nbt.LongNBT;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientSerializer;
 
-public class IngredientSerializerInt implements IIngredientSerializer<Integer, Boolean> {
+public class IngredientSerializerLong implements IIngredientSerializer<Long, Boolean> {
 
     @Override
-    public INBT serializeInstance(Integer instance) {
-        return IntNBT.valueOf(instance);
+    public INBT serializeInstance(Long instance) {
+        return LongNBT.valueOf(instance);
     }
 
     @Override
-    public Integer deserializeInstance(INBT tag) throws IllegalArgumentException {
-        if (!(tag instanceof IntNBT)) {
+    public Long deserializeInstance(INBT tag) throws IllegalArgumentException {
+        if (!(tag instanceof LongNBT)) {
             throw new IllegalArgumentException("This deserializer only accepts NBTTagInt");
         }
-        return ((IntNBT) tag).getInt();
+        return ((LongNBT) tag).getLong();
     }
 
     @Override
