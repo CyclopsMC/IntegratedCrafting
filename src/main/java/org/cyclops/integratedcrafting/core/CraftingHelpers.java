@@ -144,9 +144,7 @@ public class CraftingHelpers {
                                                                              IngredientComponent<T, M> ingredientComponent,
                                                                              boolean scheduleObservation) {
         IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = getIngredientsNetwork(network, ingredientComponent).orElse(null);
-        // Checking isObservationForcedPending ensures that we don't allow crafting jobs
-        // if the network is guaranteed to have uncommitted changes, such as the one in #48
-        if (ingredientsNetwork != null && !ingredientsNetwork.isObservationForcedPending(channel)) {
+        if (ingredientsNetwork != null) {
             if (scheduleObservation) {
                 ingredientsNetwork.scheduleObservation();
             }
@@ -216,6 +214,16 @@ public class CraftingHelpers {
         ICraftingNetwork craftingNetwork = getCraftingNetworkChecked(network);
         IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
         Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel, true);
+
+        // If the network is guaranteed to have uncommitted changes (such as the one in #48),
+        // forcefully run observers synchronously, so that we can calculate the job in a consistent network state.
+        for (IngredientComponent<?, ?> ingredientComponent : IngredientComponent.REGISTRY.getValues()) {
+            IPositionedAddonsNetworkIngredients<?, ?> ingredientsNetwork = getIngredientsNetwork(network, ingredientComponent).orElse(null);
+            if (ingredientsNetwork != null && (ingredientsNetwork.isObservationForcedPending(channel) || Math.random() > 0.5)) {
+                ingredientsNetwork.runObserverSync();
+            }
+        }
+
         PartialCraftingJobCalculation result = calculateCraftingJobs(recipeIndex, channel, storageGetter, recipe, amount,
                 craftMissing, Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),
                 collectMissingRecipes);
