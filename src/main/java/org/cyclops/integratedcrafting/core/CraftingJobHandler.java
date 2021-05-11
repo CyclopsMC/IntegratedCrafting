@@ -216,6 +216,13 @@ public class CraftingJobHandler {
         }
     }
 
+    public void unmarkCraftingJobProcessing(CraftingJob craftingJob) {
+        if (this.processingCraftingJobs.remove(craftingJob.getId()) != null) {
+            this.processingCraftingJobsPendingIngredients.remove(craftingJob.getId());
+            this.pendingCraftingJobs.put(craftingJob.getId(), craftingJob);
+        }
+    }
+
     public void setCraftingJobProcessingPendingIngredients(CraftingJob craftingJob,
                                                            Map<IngredientComponent<?, ?>,
                                                                    List<IPrototypedIngredient<?, ?>>> pendingIngredients) {
@@ -399,8 +406,9 @@ public class CraftingJobHandler {
                         // If we reach this point, the target does not accept the recipe inputs,
                         // even though they were acceptable in simulation mode.
                         // The failed ingredients were already re-inserted into the network at this point,
-                        // so we just silently remove the job.
-                        onCraftingJobFinished(startingCraftingJob);
+                        // so we mark the job as failed, and add it again to the queue.
+                        startingCraftingJob.setInvalidInputs(true);
+                        unmarkCraftingJobProcessing(startingCraftingJob);
                     }
                 } else {
                     IntegratedCrafting.clog(Level.WARN, "Failed to extract ingredients for crafting job " + startingCraftingJob.getId());
