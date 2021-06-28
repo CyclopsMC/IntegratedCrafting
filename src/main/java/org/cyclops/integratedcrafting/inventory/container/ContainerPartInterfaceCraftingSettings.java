@@ -29,6 +29,7 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
 
     private final int lastChannelInterfaceCraftingValueId;
     private final Map<IngredientComponent<?, ?>, Integer> targetSideOverrideValueIds;
+    private final int lastDisableCraftingCheckValueId;
 
     public ContainerPartInterfaceCraftingSettings(int id, PlayerInventory playerInventory, PacketBuffer packetBuffer) {
         this(id, playerInventory, new Inventory(0), PartHelpers.readPartTarget(packetBuffer), Optional.empty(), PartHelpers.readPart(packetBuffer));
@@ -43,11 +44,12 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
             IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.getValue(key);
             targetSideOverrideValueIds.put(ingredientComponent, getNextValueId());
         }
+        lastDisableCraftingCheckValueId = getNextValueId();
     }
 
     @Override
     protected int getPlayerInventoryOffsetY() {
-        return 154;
+        return 174;
     }
 
     @Override
@@ -58,6 +60,7 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
             ValueNotifierHelpers.setValue(this, getTargetSideOverrideValueId(ingredientComponent),
                     ((PartTypeInterfaceCrafting.State) getPartState()).getIngredientComponentTargetSideOverride(ingredientComponent).ordinal());
         }
+        ValueNotifierHelpers.setValue(this, lastDisableCraftingCheckValueId, ((PartTypeInterfaceCrafting.State) getPartState()).isDisableCraftingCheck());
     }
 
     public int getLastChannelInterfaceCraftingValueId() {
@@ -81,6 +84,18 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
         return Direction.values()[i];
     }
 
+    public int getLastDisableCraftingCheckValueId() {
+        return lastDisableCraftingCheckValueId;
+    }
+
+    public boolean getLastDisableCraftingCheckValue() {
+        return ValueNotifierHelpers.getValueBoolean(this, lastDisableCraftingCheckValueId);
+    }
+
+    public void setLastDisableCraftingCheckValue(boolean value) {
+        ValueNotifierHelpers.setValue(this, lastDisableCraftingCheckValueId, value);
+    }
+
     @Override
     protected void updatePartSettings() {
         super.updatePartSettings();
@@ -89,5 +104,6 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
             ((PartTypeInterfaceCrafting.State) getPartState()).setIngredientComponentTargetSideOverride(ingredientComponent,
                     getTargetSideOverrideValue(ingredientComponent));
         }
+        ((PartTypeInterfaceCrafting.State) getPartState()).setDisableCraftingCheck(getLastDisableCraftingCheckValue());
     }
 }

@@ -11,6 +11,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.cyclopscore.client.gui.component.button.ButtonCheckbox;
 import org.cyclops.cyclopscore.client.gui.component.input.IInputListener;
 import org.cyclops.cyclopscore.client.gui.component.input.WidgetArrowedListField;
 import org.cyclops.cyclopscore.client.gui.component.input.WidgetNumberField;
@@ -21,6 +22,7 @@ import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettings;
 import org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown;
 import org.cyclops.integrateddynamics.core.client.gui.container.ContainerScreenPartSettings;
+import org.cyclops.integrateddynamics.core.helper.L10NValues;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Arrays;
@@ -37,6 +39,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     private List<SideDropdownEntry> dropdownEntries;
     private IngredientComponent<?, ?> selectedIngredientComponent = null;
     private WidgetNumberField numberFieldChannelInterfaceCrafting = null;
+    private ButtonCheckbox checkboxFieldDisabledCraftingCheck = null;
 
     public ContainerScreenPartInterfaceCraftingSettings(ContainerPartInterfaceCraftingSettings container, PlayerInventory inventory, ITextComponent title) {
         super(container, inventory, title);
@@ -82,6 +85,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
 
             int channelInterface = numberFieldChannelInterfaceCrafting.getInt();
             ValueNotifierHelpers.setValue(getContainer(), getContainer().getLastChannelInterfaceCraftingValueId(), channelInterface);
+            getContainer().setLastDisableCraftingCheckValue(checkboxFieldDisabledCraftingCheck.isChecked());
         } catch (NumberFormatException e) {
         }
     }
@@ -120,6 +124,9 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         numberFieldChannelInterfaceCrafting.setTextColor(16777215);
         numberFieldChannelInterfaceCrafting.setCanLoseFocus(true);
 
+        checkboxFieldDisabledCraftingCheck = new ButtonCheckbox(guiLeft + 110, guiTop + 159, 110, 10,
+                new TranslationTextComponent("gui.integratedcrafting.partsettings.craftingcheckdisabled"), (entry) ->  {});
+
         this.refreshValues();
     }
 
@@ -156,6 +163,9 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         if (this.numberFieldChannelInterfaceCrafting.mouseClicked(mouseX, mouseY, mouseButton)) {
             return true;
         }
+        if (this.checkboxFieldDisabledCraftingCheck.mouseClicked(mouseX, mouseY, mouseButton)) {
+            return true;
+        }
         return super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
@@ -171,11 +181,15 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         font.drawString(matrixStack, L10NHelpers.localize("gui.integratedcrafting.partsettings.channel.interface"),
                 guiLeft + 8, guiTop + 137, 0);
         numberFieldChannelInterfaceCrafting.render(matrixStack, mouseX, mouseY, partialTicks);
+
+        font.drawString(matrixStack, L10NHelpers.localize("gui.integratedcrafting.partsettings.craftingcheckdisabled"),
+                guiLeft + 8, guiTop + 162, 0);
+        checkboxFieldDisabledCraftingCheck.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
     @Override
     protected int getBaseYSize() {
-        return 236;
+        return 256;
     }
 
     protected void setSideInDropdownField(IngredientComponent<?, ?> ingredientComponent, Direction side) {
@@ -195,6 +209,9 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         }
         if (valueId == getContainer().getLastChannelInterfaceCraftingValueId()) {
             numberFieldChannelInterfaceCrafting.setText(Integer.toString(getContainer().getLastChannelInterfaceValue()));
+        }
+        if (valueId == getContainer().getLastDisableCraftingCheckValueId()) {
+            checkboxFieldDisabledCraftingCheck.setChecked(getContainer().getLastDisableCraftingCheckValue());
         }
     }
 

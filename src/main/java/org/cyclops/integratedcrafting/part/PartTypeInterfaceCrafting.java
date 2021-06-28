@@ -333,6 +333,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private final IntSet delayedRecipeReloads;
         private final Map<IVariable, Boolean> variableListeners;
         private int channelCrafting = 0;
+        private boolean disableCraftingCheck = false;
 
         private final Int2ObjectMap<IRecipeDefinition> currentRecipes;
         private PartTarget target = null;
@@ -397,6 +398,8 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 recipeSlotValidatedTag.putBoolean(String.valueOf(entry.getIntKey()), entry.getBooleanValue());
             }
             tag.put("recipeSlotValidated", recipeSlotValidatedTag);
+
+            tag.putBoolean("disableCraftingCheck", disableCraftingCheck);
         }
 
         @Override
@@ -428,6 +431,8 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             for (String slot : recipeSlotValidatedTag.keySet()) {
                 this.recipeSlotValidated.put(Integer.parseInt(slot), recipeSlotValidatedTag.getBoolean(slot));
             }
+
+            this.disableCraftingCheck = tag.getBoolean("disableCraftingCheck");
         }
 
         public void setChannelCrafting(int channelCrafting) {
@@ -515,7 +520,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                             Optional<IRecipeDefinition> recipeWrapper = ((ValueObjectTypeRecipe.ValueRecipe) value).getRawValue();
                             if (recipeWrapper.isPresent()) {
                                 IRecipeDefinition recipe = recipeWrapper.get();
-                                if (!GeneralConfig.validateRecipesCraftingInterface || isValid(recipe)) {
+                                if (!GeneralConfig.validateRecipesCraftingInterface || this.disableCraftingCheck || isValid(recipe)) {
                                     this.currentRecipes.put(slot, recipe);
                                     this.recipeSlotValidated.put(slot, true);
                                     this.recipeSlotMessages.put(slot, new TranslationTextComponent("gui.integratedcrafting.partinterface.slot.message.valid"));
@@ -756,6 +761,18 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
         public IntSet getDelayedRecipeReloads() {
             return delayedRecipeReloads;
+        }
+
+        public void setDisableCraftingCheck(boolean disableCraftingCheck) {
+            if (disableCraftingCheck != this.disableCraftingCheck) {
+                this.disableCraftingCheck = disableCraftingCheck;
+
+                this.sendUpdate();
+            }
+        }
+
+        public boolean isDisableCraftingCheck() {
+            return disableCraftingCheck;
         }
     }
 }
