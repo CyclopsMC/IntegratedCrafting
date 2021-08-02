@@ -57,6 +57,7 @@ import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.core.CraftingJobHandler;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
 import org.cyclops.integratedcrafting.core.part.PartTypeCraftingBase;
+import org.cyclops.integratedcrafting.ingredient.storage.IngredientComponentStorageSlottedInsertProxy;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCrafting;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettings;
 import org.cyclops.integrateddynamics.api.evaluate.EvaluationException;
@@ -723,7 +724,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                     ingredientComponent, false);
 
             // Don't allow extraction, only insertion
-            storage = IngredientStorageHelpers.wrapStorage(storage, true, true, false);
+            storage = new IngredientComponentStorageSlottedInsertProxy<>(storage);
 
             return ingredientComponent.getStorageWrapperHandler(capability).wrapStorage(storage);
         }
