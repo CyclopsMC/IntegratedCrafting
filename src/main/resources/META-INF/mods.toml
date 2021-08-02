@@ -22,7 +22,7 @@ Craft stuff in Integrated Dynamics networks.
 [[dependencies.integratedcrafting]]
     modId="integrateddynamics"
     mandatory=true
-    versionRange="[1.8.1,)"
+    versionRange="[1.9.2,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.integratedcrafting]]
