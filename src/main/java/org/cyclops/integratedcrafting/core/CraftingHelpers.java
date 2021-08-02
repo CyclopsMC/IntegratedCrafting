@@ -42,6 +42,7 @@ import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngred
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.core.helper.NetworkHelpers;
 import org.cyclops.integrateddynamics.core.network.IngredientChannelAdapter;
+import org.cyclops.integrateddynamics.core.network.IngredientChannelIndexed;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -808,7 +809,12 @@ public class CraftingHelpers {
                                                     T instance, M matchCondition) {
         IIngredientComponentStorage<T, M> storage = getNetworkStorage(network, channel, ingredientComponent, true);
         if (storage instanceof IngredientChannelAdapter) ((IngredientChannelAdapter) storage).disableLimits();
-        boolean contains = !ingredientComponent.getMatcher().isEmpty(storage.extract(instance, matchCondition, true));
+        boolean contains;
+        if (storage instanceof IngredientChannelIndexed) {
+            contains = ((IngredientChannelIndexed<T, M>) storage).getIndex().contains(instance, matchCondition);
+        } else {
+            contains = !ingredientComponent.getMatcher().isEmpty(storage.extract(instance, matchCondition, true));
+        }
         if (storage instanceof IngredientChannelAdapter) ((IngredientChannelAdapter) storage).enableLimits();
         return contains;
     }
