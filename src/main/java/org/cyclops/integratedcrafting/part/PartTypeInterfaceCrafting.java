@@ -30,6 +30,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 import org.apache.commons.lang3.tuple.Triple;
+import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.capability.block.BlockCapabilities;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeHandler;
@@ -45,6 +46,7 @@ import org.cyclops.cyclopscore.ingredient.storage.IngredientStorageHelpers;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
 import org.cyclops.cyclopscore.persist.nbt.NBTClassType;
 import org.cyclops.integratedcrafting.Capabilities;
+import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobStatus;
@@ -574,7 +576,17 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             if (recipeHandler != null) {
                 IMixedIngredients simulatedOutput = recipeHandler.simulate(MixedIngredients.fromRecipeInput(recipe));
                 if (simulatedOutput != null && !simulatedOutput.isEmpty()) {
-                    return recipe.getOutput().containsAll(simulatedOutput);
+                    if (recipe.getOutput().containsAll(simulatedOutput)) {
+                        return true;
+                    } else {
+                        if (GeneralConfig.logRecipeValidationFailures) {
+                            IntegratedCrafting.clog(Level.INFO, "Recipe validation failure: incompatible recipe output and simulated output:\nRecipe output: " + recipe.getOutput() + "\nSimulated output: " + simulatedOutput);
+                        }
+                        return false;
+                    }
+                }
+                if (GeneralConfig.logRecipeValidationFailures) {
+                    IntegratedCrafting.clog(Level.INFO, "Recipe validation failure: No output was obtained when simulating a recipe\n" + recipe);
                 }
                 return false;
             }

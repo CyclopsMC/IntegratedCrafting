@@ -33,6 +33,9 @@ public class GeneralConfig extends DummyConfig {
     @ConfigurableProperty(category = "general", comment = "The base energy usage for the crafting interface per crafting job being processed.", minimalValue = 0, configLocation = ModConfig.Type.SERVER)
     public static int interfaceCraftingBaseConsumption = 5;
 
+    @ConfigurableProperty(category = "machine", comment = "Enabling this option will log all recipe validation failures in crafting interfaces into the server logs", isCommandable = true, configLocation = ModConfig.Type.SERVER)
+    public static boolean logRecipeValidationFailures = true;
+
     public GeneralConfig() {
         super(IntegratedCrafting._instance, "general");
     }

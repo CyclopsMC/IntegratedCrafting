@@ -95,6 +95,11 @@ public class IngredientMatcherSimple implements IIngredientMatcher<Long, Boolean
     }
 
     @Override
+    public String toString(Long aLong) {
+        return aLong.toString();
+    }
+
+    @Override
     public int compare(Long o1, Long o2) {
         return (int) (o1 - o2);
     }

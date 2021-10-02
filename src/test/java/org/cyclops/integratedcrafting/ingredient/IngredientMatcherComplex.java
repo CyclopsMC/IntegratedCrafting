@@ -112,6 +112,11 @@ public class IngredientMatcherComplex implements IIngredientMatcher<ComplexStack
     }
 
     @Override
+    public String toString(ComplexStack complexStack) {
+        return complexStack.toString();
+    }
+
+    @Override
     public int compare(ComplexStack o1, ComplexStack o2) {
         if (o1 == null) {
             if (o2 == null) {
