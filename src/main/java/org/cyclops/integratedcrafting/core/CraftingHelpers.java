@@ -811,7 +811,9 @@ public class CraftingHelpers {
         if (storage instanceof IngredientChannelAdapter) ((IngredientChannelAdapter) storage).disableLimits();
         boolean contains;
         if (storage instanceof IngredientChannelIndexed) {
-            contains = ((IngredientChannelIndexed<T, M>) storage).getIndex().contains(instance, matchCondition);
+            IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
+            long quantityPresent = ((IngredientChannelIndexed<T, M>) storage).getIndex().getQuantity(instance);
+            contains = matcher.hasCondition(matchCondition, ingredientComponent.getPrimaryQuantifier().getMatchCondition()) ? quantityPresent >= matcher.getQuantity(instance) : quantityPresent > 0;
         } else {
             contains = !ingredientComponent.getMatcher().isEmpty(storage.extract(instance, matchCondition, true));
         }
