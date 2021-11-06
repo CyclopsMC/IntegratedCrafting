@@ -28,7 +28,7 @@ public class PartTypeCraftingWriter extends PartTypeWriteBase<PartTypeCraftingWr
 
     @Override
     public PartStateWriterBase<PartTypeCraftingWriter> constructDefaultState() {
-        return new PartStateWriterBase<>(Aspects.REGISTRY.getAspects(this).size());
+        return new State(Aspects.REGISTRY.getAspects(this).size());
     }
     
     @Override
@@ -39,6 +39,22 @@ public class PartTypeCraftingWriter extends PartTypeWriteBase<PartTypeCraftingWr
     @Override
     public ModBase getMod() {
         return IntegratedCrafting._instance;
+    }
+
+    public static class State extends PartStateWriterBase<PartTypeCraftingWriter> {
+        protected long initialTickCraftingTrigger = -1;
+
+        public State(int inventorySize) {
+            super(inventorySize);
+        }
+
+        public long getInitialTickCraftingTrigger() {
+            return initialTickCraftingTrigger;
+        }
+
+        public void setInitialTickCraftingTrigger(long initialTickCraftingTrigger) {
+            this.initialTickCraftingTrigger = initialTickCraftingTrigger;
+        }
     }
 
 }

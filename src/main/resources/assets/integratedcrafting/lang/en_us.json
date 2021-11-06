@@ -34,6 +34,8 @@
   "aspect.aspecttypes.integratedcrafting.boolean.ignorecrafting": "Ignore crafting jobs",
   "aspect.aspecttypes.integratedcrafting.boolean.craftmissing": "Craft missing ingredients",
   "aspect.aspecttypes.integratedcrafting.integer.craftamount": "Craft amount",
+  "aspect.aspecttypes.integratedcrafting.integer.craftdelay": "Storage contents craft delay",
+  "aspect.aspecttypes.integratedcrafting.integer.craftdelay.info": "Only craft if ingredient is missing from storage for this duration",
 
   "_comment": "Aspects",
 

@@ -9,6 +9,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.core.CraftingHelpers;
+import org.cyclops.integratedcrafting.part.PartTypeCraftingWriter;
 import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.api.part.PartPos;
@@ -21,6 +22,7 @@ import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeReci
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeBoolean;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeInteger;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
+import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 import org.cyclops.integrateddynamics.core.part.aspect.build.AspectBuilder;
 import org.cyclops.integrateddynamics.core.part.aspect.build.IAspectValuePropagator;
 import org.cyclops.integrateddynamics.core.part.aspect.property.AspectProperties;
@@ -42,6 +44,8 @@ public class CraftingAspectWriteBuilders {
             new AspectPropertyTypeInstance<>(ValueTypes.BOOLEAN, "aspect.aspecttypes.integratedcrafting.boolean.craftmissing");
     public static final IAspectPropertyTypeInstance<ValueTypeInteger, ValueTypeInteger.ValueInteger> PROP_CRAFT_AMOUNT =
             new AspectPropertyTypeInstance<>(ValueTypes.INTEGER, "aspect.aspecttypes.integratedcrafting.integer.craftamount");
+    public static final IAspectPropertyTypeInstance<ValueTypeInteger, ValueTypeInteger.ValueInteger> PROP_CRAFT_DELAY =
+            new AspectPropertyTypeInstance<>(ValueTypes.INTEGER, "aspect.aspecttypes.integratedcrafting.integer.craftdelay");
     public static final IAspectProperties PROPERTIES_CRAFTING_RECIPE = new AspectProperties(ImmutableList.<IAspectPropertyTypeInstance>of(
             PROP_CHANNEL,
             PROP_IGNORE_CRAFTING,
@@ -52,7 +56,8 @@ public class CraftingAspectWriteBuilders {
             PROP_CHANNEL,
             PROP_IGNORE_STORAGE,
             PROP_IGNORE_CRAFTING,
-            PROP_CRAFT_MISSING
+            PROP_CRAFT_MISSING,
+            PROP_CRAFT_DELAY
     ));
     static {
         PROPERTIES_CRAFTING_RECIPE.setValue(PROP_CHANNEL, ValueTypeInteger.ValueInteger.of(IPositionedAddonsNetworkIngredients.DEFAULT_CHANNEL));
@@ -64,6 +69,7 @@ public class CraftingAspectWriteBuilders {
         PROPERTIES_CRAFTING.setValue(PROP_IGNORE_STORAGE, ValueTypeBoolean.ValueBoolean.of(false));
         PROPERTIES_CRAFTING.setValue(PROP_IGNORE_CRAFTING, ValueTypeBoolean.ValueBoolean.of(false));
         PROPERTIES_CRAFTING.setValue(PROP_CRAFT_MISSING, ValueTypeBoolean.ValueBoolean.of(true));
+        PROPERTIES_CRAFTING.setValue(PROP_CRAFT_DELAY, ValueTypeInteger.ValueInteger.of(0));
     }
 
     public static final AspectBuilder<ValueObjectTypeRecipe.ValueRecipe, ValueObjectTypeRecipe, Triple<PartTarget, IAspectProperties, IRecipeDefinition>>
@@ -145,14 +151,45 @@ public class CraftingAspectWriteBuilders {
                     boolean ignoreStorage = properties.getValue(PROP_IGNORE_STORAGE).getRawValue();
                     boolean ignoreCrafting = properties.getValue(PROP_IGNORE_CRAFTING).getRawValue();
                     boolean craftMissing = properties.getValue(PROP_CRAFT_MISSING).getRawValue();
+                    int craftDelay = properties.getValue(PROP_CRAFT_DELAY).getRawValue();
 
-                    if ((ignoreStorage || !CraftingHelpers.hasStorageInstance(network, channel,
-                            ingredientComponent, instance, ingredientComponent.getMatcher().getExactMatchCondition()))
+                    if (ignoreStorage || !CraftingHelpers.hasStorageInstance(network, channel,
+                            ingredientComponent, instance, ingredientComponent.getMatcher().getExactMatchCondition())
                             && (ignoreCrafting || !CraftingHelpers.isCrafting(craftingNetwork, channel, ingredientComponent,
                             instance, matchCondition))) {
-                        CraftingHelpers.calculateAndScheduleCraftingJob(network, channel,
-                                ingredientComponent, instance, matchCondition, craftMissing, true,
-                                CraftingHelpers.getGlobalCraftingJobIdentifier(), null);
+                        // Handle craft delay (only if we are checking storage)
+                        boolean allowCraft;
+                        if (craftDelay > 0 && !ignoreStorage) {
+                            PartTypeCraftingWriter.State partState = (PartTypeCraftingWriter.State) PartHelpers.getPart(input.getCenter()).getState();
+                            long initialTick = partState.getInitialTickCraftingTrigger();
+                            long currentTick = input.getCenter().getPos().getWorld(true).getGameTime();
+                            if (initialTick >= 0) {
+                                if (currentTick - initialTick >= craftDelay) {
+                                    partState.setInitialTickCraftingTrigger(-1);
+                                    allowCraft = true;
+                                } else {
+                                    allowCraft = false;
+                                }
+                            } else {
+                                partState.setInitialTickCraftingTrigger(currentTick);
+                                allowCraft = false;
+                            }
+                        } else {
+                            allowCraft = true;
+                        }
+
+                        // If delay check passed, trigger a new crafting job
+                        if (allowCraft) {
+                            CraftingHelpers.calculateAndScheduleCraftingJob(network, channel,
+                                    ingredientComponent, instance, matchCondition, craftMissing, true,
+                                    CraftingHelpers.getGlobalCraftingJobIdentifier(), null);
+                        }
+                    } else {
+                        // Reset initial tick crafting trigger
+                        if (craftDelay > 0) {
+                            ((PartTypeCraftingWriter.State) PartHelpers.getPart(input.getCenter()).getState())
+                                    .setInitialTickCraftingTrigger(-1);
+                        }
                     }
                 }
             }
