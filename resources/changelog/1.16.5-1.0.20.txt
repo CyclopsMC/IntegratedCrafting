@@ -1,0 +1,9 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.11.6 or higher.
+
+Additions:
+* Add option to delay crafting
+  It will only craft if ingredient is missing from storage for this duration.
+  This can be used in cases where ingredients may be missing briefly from storage,
+  and the crafting job should not be triggered in those cases.
+  Closes #74
