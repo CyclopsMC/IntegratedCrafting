@@ -6,7 +6,6 @@ import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIn
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIngredientAlternativesList;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
-import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;

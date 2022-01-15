@@ -30,7 +30,7 @@ public class PartTypeCraftingWriter extends PartTypeWriteBase<PartTypeCraftingWr
     public PartStateWriterBase<PartTypeCraftingWriter> constructDefaultState() {
         return new State(Aspects.REGISTRY.getAspects(this).size());
     }
-    
+
     @Override
     public int getConsumptionRate(PartStateWriterBase<PartTypeCraftingWriter> state) {
         return GeneralConfig.craftingWriterBaseConsumption;

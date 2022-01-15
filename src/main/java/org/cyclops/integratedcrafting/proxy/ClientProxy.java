@@ -6,19 +6,19 @@ import org.cyclops.integratedcrafting.IntegratedCrafting;
 
 /**
  * Proxy for the client side.
- * 
+ *
  * @author rubensworks
- * 
+ *
  */
 public class ClientProxy extends ClientProxyComponent {
 
-	public ClientProxy() {
-		super(new CommonProxy());
-	}
+    public ClientProxy() {
+        super(new CommonProxy());
+    }
 
-	@Override
-	public ModBase getMod() {
-		return IntegratedCrafting._instance;
-	}
-    
+    @Override
+    public ModBase getMod() {
+        return IntegratedCrafting._instance;
+    }
+
 }

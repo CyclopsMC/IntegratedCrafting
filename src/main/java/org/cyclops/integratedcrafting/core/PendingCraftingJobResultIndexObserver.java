@@ -14,7 +14,6 @@ import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integrateddynamics.api.ingredient.IIngredientComponentStorageObservable;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetwork;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;

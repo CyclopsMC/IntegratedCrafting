@@ -118,7 +118,7 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
     public static void clog(String message) {
         clog(Level.INFO, message);
     }
-    
+
     /**
      * Log a new message of the given level for this mod.
      * @param level The level in which the message must be shown.
@@ -127,5 +127,5 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
     public static void clog(Level level, String message) {
         IntegratedCrafting._instance.getLoggerHelper().log(level, message);
     }
-    
+
 }

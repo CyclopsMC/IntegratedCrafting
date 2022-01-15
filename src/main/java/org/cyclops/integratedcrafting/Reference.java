@@ -10,7 +10,7 @@ import org.cyclops.cyclopscore.helper.MinecraftHelpers;
  */
 @SuppressWarnings("javadoc")
 public class Reference {
-	
+
     // Mod info
     public static final String MOD_ID = "integratedcrafting";
     public static final String GA_TRACKING_ID = "UA-65307010-15";

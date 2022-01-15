@@ -5,7 +5,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
-import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.integratedcrafting.ingredient.IngredientComponentStubs;

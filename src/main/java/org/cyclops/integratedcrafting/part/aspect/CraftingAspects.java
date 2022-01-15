@@ -10,7 +10,6 @@ import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
-import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integrateddynamics.api.part.aspect.IAspectRead;
 import org.cyclops.integrateddynamics.api.part.aspect.IAspectWrite;
