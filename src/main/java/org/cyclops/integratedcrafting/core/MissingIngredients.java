@@ -2,10 +2,10 @@ package org.cyclops.integratedcrafting.core;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 
@@ -45,14 +45,14 @@ public class MissingIngredients<T, M> {
      * @param ingredients Ingredients.
      * @return An NBT representation of the given ingredients.
      */
-    public static CompoundNBT serialize(Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> ingredients) {
-        CompoundNBT tag = new CompoundNBT();
+    public static CompoundTag serialize(Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> ingredients) {
+        CompoundTag tag = new CompoundTag();
         for (Map.Entry<IngredientComponent<?, ?>, MissingIngredients<?, ?>> entry : ingredients.entrySet()) {
-            ListNBT missingIngredientsTag = new ListNBT();
+            ListTag missingIngredientsTag = new ListTag();
             for (Element<?, ?> element : entry.getValue().getElements()) {
-                ListNBT elementsTag = new ListNBT();
+                ListTag elementsTag = new ListTag();
                 for (PrototypedWithRequested<?, ?> alternative : element.getAlternatives()) {
-                    CompoundNBT alternativeTag = new CompoundNBT();
+                    CompoundTag alternativeTag = new CompoundTag();
                     alternativeTag.put("requestedPrototype", IPrototypedIngredient.serialize(alternative.getRequestedPrototype()));
                     alternativeTag.putLong("quantityMissing", alternative.getQuantityMissing());
                     elementsTag.add(alternativeTag);
@@ -70,7 +70,7 @@ public class MissingIngredients<T, M> {
      * @return A new mixed ingredients instance.
      * @throws IllegalArgumentException If the given tag is invalid or does not contain data on the given ingredients.
      */
-    public static Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> deserialize(CompoundNBT tag)
+    public static Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> deserialize(CompoundTag tag)
             throws IllegalArgumentException {
         Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> map = Maps.newIdentityHashMap();
         for (String componentName : tag.getAllKeys()) {
@@ -81,12 +81,12 @@ public class MissingIngredients<T, M> {
 
             List<MissingIngredients.Element<?, ?>> elements = Lists.newArrayList();
 
-            ListNBT missingIngredientsTag = tag.getList(componentName, Constants.NBT.TAG_LIST);
+            ListTag missingIngredientsTag = tag.getList(componentName, Tag.TAG_LIST);
             for (int i = 0; i < missingIngredientsTag.size(); i++) {
-                ListNBT elementsTag = (ListNBT) missingIngredientsTag.get(i);
+                ListTag elementsTag = (ListTag) missingIngredientsTag.get(i);
                 List<MissingIngredients.PrototypedWithRequested<?, ?>> alternatives = Lists.newArrayList();
                 for (int j = 0; j < elementsTag.size(); j++) {
-                    CompoundNBT alternativeTag = elementsTag.getCompound(j);
+                    CompoundTag alternativeTag = elementsTag.getCompound(j);
                     IPrototypedIngredient<?, ?> requestedPrototype = IPrototypedIngredient.deserialize(alternativeTag.getCompound("requestedPrototype"));
                     long quantityMissing = alternativeTag.getLong("quantityMissing");
                     alternatives.add(new PrototypedWithRequested<>(requestedPrototype, quantityMissing));

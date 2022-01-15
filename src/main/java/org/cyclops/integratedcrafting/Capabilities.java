@@ -1,7 +1,8 @@
 package org.cyclops.integratedcrafting;
 
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.capabilities.CapabilityToken;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeHandler;
 import org.cyclops.integrateddynamics.api.ingredient.capability.IPositionedAddonsNetworkIngredientsHandler;
 
@@ -10,9 +11,6 @@ import org.cyclops.integrateddynamics.api.ingredient.capability.IPositionedAddon
  * @author rubensworks
  */
 public class Capabilities {
-    @CapabilityInject(IRecipeHandler.class)
-    public static Capability<IRecipeHandler> RECIPE_HANDLER = null;
-
-    @CapabilityInject(IPositionedAddonsNetworkIngredientsHandler.class)
-    public static Capability<IPositionedAddonsNetworkIngredientsHandler> POSITIONED_ADDONS_NETWORK_INGREDIENTS_HANDLER = null;
+    public static Capability<IRecipeHandler> RECIPE_HANDLER = CapabilityManager.get(new CapabilityToken<>(){});
+    public static Capability<IPositionedAddonsNetworkIngredientsHandler> POSITIONED_ADDONS_NETWORK_INGREDIENTS_HANDLER = CapabilityManager.get(new CapabilityToken<>(){});
 }

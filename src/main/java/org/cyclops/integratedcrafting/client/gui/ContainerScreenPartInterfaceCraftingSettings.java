@@ -2,14 +2,14 @@ package org.cyclops.integratedcrafting.client.gui;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.client.gui.component.button.ButtonCheckbox;
 import org.cyclops.cyclopscore.client.gui.component.input.IInputListener;
@@ -22,14 +22,11 @@ import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettings;
 import org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown;
 import org.cyclops.integrateddynamics.core.client.gui.container.ContainerScreenPartSettings;
-import org.cyclops.integrateddynamics.core.helper.L10NValues;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.cyclops.integrateddynamics.core.client.gui.container.ContainerScreenPartSettings.SideDropdownEntry;
 
 /**
  * @author rubensworks
@@ -43,7 +40,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     private WidgetNumberField numberFieldChannelInterfaceCrafting = null;
     private ButtonCheckbox checkboxFieldDisabledCraftingCheck = null;
 
-    public ContainerScreenPartInterfaceCraftingSettings(ContainerPartInterfaceCraftingSettings container, PlayerInventory inventory, ITextComponent title) {
+    public ContainerScreenPartInterfaceCraftingSettings(ContainerPartInterfaceCraftingSettings container, Inventory inventory, Component title) {
         super(container, inventory, title);
     }
 
@@ -98,7 +95,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
 
         ingredientComponentSideSelector = new WidgetArrowedListField<IngredientComponent<?, ?>>(font,
                 leftPos + 106, topPos + 9, 68, 15, true,
-                new TranslationTextComponent("gui.integratedcrafting.partsettings.ingredient"),
+                new TranslatableComponent("gui.integratedcrafting.partsettings.ingredient"),
                 true, Lists.newArrayList(IngredientComponent.REGISTRY.getValues())) {
             @Override
             protected String activeElementToString(IngredientComponent<?, ?> element) {
@@ -110,7 +107,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
 
         dropdownEntries = Arrays.stream(Direction.values()).map(SideDropdownEntry::new).collect(Collectors.toList());
         dropdownFieldSide = new WidgetTextFieldDropdown(font, leftPos + 106, topPos + 34,
-                68, 14, new TranslationTextComponent("gui.integrateddynamics.partsettings.side"),
+                68, 14, new TranslatableComponent("gui.integrateddynamics.partsettings.side"),
                 true, Sets.newHashSet(dropdownEntries));
         setSideInDropdownField(selectedIngredientComponent, ((ContainerPartInterfaceCraftingSettings) container).getTargetSideOverrideValue(selectedIngredientComponent));
         dropdownFieldSide.setMaxLength(15);
@@ -119,7 +116,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         dropdownFieldSide.setCanLoseFocus(true);
 
         numberFieldChannelInterfaceCrafting = new WidgetNumberField(font, leftPos + 106, topPos + 134, 70, 14,
-                true, new TranslationTextComponent("gui.integratedcrafting.partsettings.channel.interface"), true);
+                true, new TranslatableComponent("gui.integratedcrafting.partsettings.channel.interface"), true);
         numberFieldChannelInterfaceCrafting.setPositiveOnly(false);
         numberFieldChannelInterfaceCrafting.setMaxLength(15);
         numberFieldChannelInterfaceCrafting.setVisible(true);
@@ -127,7 +124,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         numberFieldChannelInterfaceCrafting.setCanLoseFocus(true);
 
         checkboxFieldDisabledCraftingCheck = new ButtonCheckbox(leftPos + 110, topPos + 159, 110, 10,
-                new TranslationTextComponent("gui.integratedcrafting.partsettings.craftingcheckdisabled"), (entry) ->  {});
+                new TranslatableComponent("gui.integratedcrafting.partsettings.craftingcheckdisabled"), (entry) ->  {});
 
         this.refreshValues();
     }
@@ -172,11 +169,11 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     }
 
     @Override
-    protected void renderBg(MatrixStack matrixStack, float partialTicks, int mouseX, int mouseY) {
-        // super.renderBg(matrixStack, partialTicks, mouseX, mouseY); // TODO: restore
+    protected void renderBg(PoseStack matrixStack, float partialTicks, int mouseX, int mouseY) {
+        super.renderBg(matrixStack, partialTicks, mouseX, mouseY);
 
         font.draw(matrixStack, L10NHelpers.localize("gui.integrateddynamics.partsettings.side"), leftPos + 8, topPos + 12, Helpers.RGBToInt(0, 0, 0));
-        GlStateManager._color4f(1, 1, 1, 1);
+        RenderSystem.setShaderColor(1, 1, 1, 1);
         ingredientComponentSideSelector.render(matrixStack, mouseX, mouseY, partialTicks);
         dropdownFieldSide.render(matrixStack, mouseX, mouseY, partialTicks);
 
@@ -201,7 +198,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     }
 
     @Override
-    public void onUpdate(int valueId, CompoundNBT value) {
+    public void onUpdate(int valueId, CompoundTag value) {
         super.onUpdate(valueId, value);
         for (IngredientComponent<?, ?> ingredientComponent : IngredientComponent.REGISTRY.getValues()) {
             if (valueId == getMenu().getTargetSideOverrideValueId(ingredientComponent)) {

@@ -7,8 +7,8 @@ import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.datastructure.MultitransformIterator;
@@ -264,7 +264,7 @@ public class CraftingNetwork implements ICraftingNetwork {
     }
 
     protected long getCurrentTick() {
-        return ServerLifecycleHooks.getCurrentServer().getLevel(World.OVERWORLD).getGameTime();
+        return ServerLifecycleHooks.getCurrentServer().getLevel(Level.OVERWORLD).getGameTime();
     }
 
     @Override

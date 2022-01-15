@@ -1,6 +1,6 @@
 package org.cyclops.integratedcrafting;
 
-import net.minecraft.item.ItemGroup;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
@@ -73,11 +73,11 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
 
         // Initialize info book
         IntegratedDynamics._instance.getRegistryManager().getRegistry(IInfoBookRegistry.class)
-                .registerSection(
+                .registerSection(this,
                         OnTheDynamicsOfIntegrationBook.getInstance(), "info_book.integrateddynamics.manual",
                         "/data/" + Reference.MOD_ID + "/info/crafting_info.xml");
         IntegratedDynamics._instance.getRegistryManager().getRegistry(IInfoBookRegistry.class)
-                .registerSection(
+                .registerSection(this,
                         OnTheDynamicsOfIntegrationBook.getInstance(), "info_book.integrateddynamics.tutorials",
                         "/data/" + Reference.MOD_ID + "/info/crafting_tutorials.xml");
     }
@@ -94,7 +94,7 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
     }
 
     @Override
-    public ItemGroup constructDefaultItemGroup() {
+    public CreativeModeTab constructDefaultCreativeModeTab() {
         return new ItemGroupMod(this, () -> RegistryEntries.ITEM_PART_INTERFACE_CRAFTING);
     }
 

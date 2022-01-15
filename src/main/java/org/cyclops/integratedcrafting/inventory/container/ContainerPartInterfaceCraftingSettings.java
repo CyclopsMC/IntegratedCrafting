@@ -2,12 +2,12 @@ package org.cyclops.integratedcrafting.inventory.container;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.helper.ValueNotifierHelpers;
 import org.cyclops.integratedcrafting.RegistryEntries;
@@ -31,11 +31,11 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
     private final Map<IngredientComponent<?, ?>, Integer> targetSideOverrideValueIds;
     private final int lastDisableCraftingCheckValueId;
 
-    public ContainerPartInterfaceCraftingSettings(int id, PlayerInventory playerInventory, PacketBuffer packetBuffer) {
-        this(id, playerInventory, new Inventory(0), PartHelpers.readPartTarget(packetBuffer), Optional.empty(), PartHelpers.readPart(packetBuffer));
+    public ContainerPartInterfaceCraftingSettings(int id, Inventory playerInventory, FriendlyByteBuf packetBuffer) {
+        this(id, playerInventory, new SimpleContainer(0), PartHelpers.readPartTarget(packetBuffer), Optional.empty(), PartHelpers.readPart(packetBuffer));
     }
 
-    public ContainerPartInterfaceCraftingSettings(int id, PlayerInventory playerInventory, IInventory inventory,
+    public ContainerPartInterfaceCraftingSettings(int id, Inventory playerInventory, Container inventory,
                                                   PartTarget target, Optional<IPartContainer> partContainer, IPartType partType) {
         super(RegistryEntries.CONTAINER_INTERFACE_CRAFTING_SETTINGS, id, playerInventory, inventory, target, partContainer, partType);
         lastChannelInterfaceCraftingValueId = getNextValueId();

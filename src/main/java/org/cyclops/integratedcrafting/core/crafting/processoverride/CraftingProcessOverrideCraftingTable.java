@@ -1,13 +1,13 @@
 package org.cyclops.integratedcrafting.core.crafting.processoverride;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.block.CraftingTableBlock;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.block.CraftingTableBlock;
 import net.minecraftforge.common.util.FakePlayer;
-import net.minecraftforge.fml.hooks.BasicEventHooks;
+import net.minecraftforge.event.ForgeEventFactory;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.helper.CraftingHelpers;
@@ -27,9 +27,9 @@ import java.util.function.Function;
 public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOverride {
 
     private static GameProfile PROFILE = new GameProfile(UUID.fromString("41C82C87-7AfB-4024-BB57-13D2C99CAE77"), "[IntegratedCrafting]");
-    private static final Map<ServerWorld, FakePlayer> FAKE_PLAYERS = new WeakHashMap<ServerWorld, FakePlayer>();
+    private static final Map<ServerLevel, FakePlayer> FAKE_PLAYERS = new WeakHashMap<ServerLevel, FakePlayer>();
 
-    public static FakePlayer getFakePlayer(ServerWorld world) {
+    public static FakePlayer getFakePlayer(ServerLevel world) {
         FakePlayer fakePlayer = FAKE_PLAYERS.get(world);
         if (fakePlayer == null) {
             fakePlayer = new FakePlayer(world, PROFILE);
@@ -40,7 +40,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
 
     @Override
     public boolean isApplicable(PartPos target) {
-        return target.getPos().getWorld(true).getBlockState(target.getPos().getBlockPos()).getBlock() instanceof CraftingTableBlock;
+        return target.getPos().getLevel(true).getBlockState(target.getPos().getBlockPos()).getBlock() instanceof CraftingTableBlock;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
         PartPos target = targetGetter.apply(IngredientComponent.ITEMSTACK);
         CraftingGrid grid = new CraftingGrid(ingredients, 3, 3);
 
-        return CraftingHelpers.findServerRecipe(IRecipeType.CRAFTING, grid, target.getPos().getWorld(true))
+        return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, grid, target.getPos().getLevel(true))
                 .map(recipe -> {
                     ItemStack result = recipe.assemble(grid);
 
@@ -58,11 +58,11 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
                     }
 
                     if (!simulate) {
-                        PlayerEntity player = getFakePlayer((ServerWorld) target.getPos().getWorld(true));
+                        Player player = getFakePlayer((ServerLevel) target.getPos().getLevel(true));
 
                         // Fire all required events
-                        result.onCraftedBy(target.getPos().getWorld(true), player, 1);
-                        BasicEventHooks.firePlayerCraftingEvent(player, result, grid);
+                        result.onCraftedBy(target.getPos().getLevel(true), player, 1);
+                        ForgeEventFactory.firePlayerCraftingEvent(player, result, grid);
 
                         // Insert the result into the sink
                         resultsSink.addResult(IngredientComponent.ITEMSTACK, result);

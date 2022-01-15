@@ -1,17 +1,16 @@
 package org.cyclops.integratedcrafting.client.gui;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
 import org.cyclops.cyclopscore.client.gui.component.button.ButtonImage;
 import org.cyclops.cyclopscore.client.gui.container.ContainerScreenExtended;
 import org.cyclops.cyclopscore.client.gui.image.IImage;
 import org.cyclops.cyclopscore.client.gui.image.Images;
 import org.cyclops.cyclopscore.helper.GuiHelpers;
-import org.cyclops.cyclopscore.helper.L10NHelpers;
 import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCrafting;
 import org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects;
@@ -25,15 +24,15 @@ import java.util.Optional;
  */
 public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtended<ContainerPartInterfaceCrafting> {
 
-    public ContainerScreenPartInterfaceCrafting(ContainerPartInterfaceCrafting container, PlayerInventory inventory, ITextComponent title) {
+    public ContainerScreenPartInterfaceCrafting(ContainerPartInterfaceCrafting container, Inventory inventory, Component title) {
         super(container, inventory, title);
     }
 
     @Override
     public void init() {
         super.init();
-        addButton(new ButtonImage(this.leftPos + 155, this.topPos + 4, 15, 15,
-                new TranslationTextComponent("gui.integrateddynamics.part_settings"),
+        addRenderableWidget(new ButtonImage(this.leftPos + 155, this.topPos + 4, 15, 15,
+                new TranslatableComponent("gui.integrateddynamics.part_settings"),
                 createServerPressable(ContainerMultipartAspects.BUTTON_SETTINGS, b -> {}), true,
                 Images.CONFIG_BOARD, -2, -3));
     }
@@ -54,10 +53,10 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
     }
 
     @Override
-    protected void renderBg(MatrixStack matrixStack, float partialTicks, int mouseX, int mouseY) {
-        // super.renderBg(matrixStack, partialTicks, mouseX, mouseY); // TODO: restore
+    protected void renderBg(PoseStack matrixStack, float partialTicks, int mouseX, int mouseY) {
+        super.renderBg(matrixStack, partialTicks, mouseX, mouseY);
 
-        GlStateManager._color4f(1, 1, 1, 1);
+        RenderSystem.setShaderColor(1, 1, 1, 1);
         int y = topPos + 42;
         for (int i = 0; i < getMenu().getContainerInventory().getContainerSize(); i++) {
             int x = leftPos + 10 + i * GuiHelpers.SLOT_SIZE;
@@ -69,7 +68,7 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
     }
 
     @Override
-    protected void renderLabels(MatrixStack matrixStack, int mouseX, int mouseY) {
+    protected void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
         // super.drawGuiContainerForegroundLayer(matrixStack, mouseX, mouseY);
         this.font.draw(matrixStack, this.title, (float)this.titleLabelX, (float)this.titleLabelY, 4210752);
 
@@ -77,10 +76,10 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
         for (int i = 0; i < getMenu().getContainerInventory().getContainerSize(); i++) {
             int x = 10 + i * GuiHelpers.SLOT_SIZE;
             int slot = i;
-            GuiHelpers.renderTooltipOptional(this, x, y, 14, 13, mouseX, mouseY,
+            GuiHelpers.renderTooltipOptional(this, matrixStack, x, y, 14, 13, mouseX, mouseY,
                     () -> {
                         if (!getMenu().getItems().get(slot).isEmpty()) {
-                            ITextComponent unlocalizedMessage = container.getRecipeSlotUnlocalizedMessage(slot);
+                            Component unlocalizedMessage = container.getRecipeSlotUnlocalizedMessage(slot);
                             if (unlocalizedMessage != null) {
                                 return Optional.of(Collections.singletonList(unlocalizedMessage));
                             }

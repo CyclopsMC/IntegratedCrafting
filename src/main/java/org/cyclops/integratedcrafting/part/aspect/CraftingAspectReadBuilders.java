@@ -24,7 +24,7 @@ public class CraftingAspectReadBuilders {
 
         public static final IAspectValuePropagator<Pair<PartTarget, IAspectProperties>, Pair<IAspectProperties, LazyOptional<ICraftingNetwork>>> PROP_GET_CRAFTING_NETWORK = input -> {
             DimPos dimPos = input.getLeft().getTarget().getPos();
-            INetwork network = NetworkHelpers.getNetwork(dimPos.getWorld(true), dimPos.getBlockPos(), input.getLeft().getTarget().getSide()).orElse(null);
+            INetwork network = NetworkHelpers.getNetwork(dimPos.getLevel(true), dimPos.getBlockPos(), input.getLeft().getTarget().getSide()).orElse(null);
             return Pair.of(input.getRight(), network != null ? network.getCapability(CraftingNetworkConfig.CAPABILITY) : LazyOptional.empty());
         };
 

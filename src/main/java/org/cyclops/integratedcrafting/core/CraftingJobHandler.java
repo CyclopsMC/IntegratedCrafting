@@ -6,12 +6,11 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientSerializer;
@@ -83,24 +82,24 @@ public class CraftingJobHandler {
         this.ingredientComponentTargetOverrides = Maps.newIdentityHashMap();
     }
 
-    public void writeToNBT(CompoundNBT tag) {
-        ListNBT processingCraftingJobs = new ListNBT();
+    public void writeToNBT(CompoundTag tag) {
+        ListTag processingCraftingJobs = new ListTag();
         for (CraftingJob processingCraftingJob : this.processingCraftingJobs.values()) {
-            CompoundNBT entryTag = new CompoundNBT();
+            CompoundTag entryTag = new CompoundTag();
             entryTag.put("craftingJob", CraftingJob.serialize(processingCraftingJob));
 
             Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> ingredients = this.processingCraftingJobsPendingIngredients.get(processingCraftingJob.getId());
-            ListNBT pendingIngredientInstances = new ListNBT();
+            ListTag pendingIngredientInstances = new ListTag();
             for (Map.Entry<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> ingredientComponentListEntry : ingredients.entrySet()) {
-                CompoundNBT ingredientInstance = new CompoundNBT();
+                CompoundTag ingredientInstance = new CompoundTag();
 
                 IngredientComponent<?, ?> ingredientComponent = ingredientComponentListEntry.getKey();
                 ingredientInstance.putString("ingredientComponent", ingredientComponent.getRegistryName().toString());
 
-                ListNBT instances = new ListNBT();
+                ListTag instances = new ListTag();
                 IIngredientSerializer serializer = ingredientComponent.getSerializer();
                 for (IPrototypedIngredient<?, ?> prototypedIngredient : ingredientComponentListEntry.getValue()) {
-                    CompoundNBT instance = new CompoundNBT();
+                    CompoundTag instance = new CompoundTag();
                     instance.put("prototype", serializer.serializeInstance(prototypedIngredient.getPrototype()));
                     instance.put("condition", serializer.serializeCondition(prototypedIngredient.getCondition()));
                     instances.add(instance);
@@ -114,27 +113,27 @@ public class CraftingJobHandler {
         }
         tag.put("processingCraftingJobs", processingCraftingJobs);
 
-        ListNBT pendingCraftingJobs = new ListNBT();
+        ListTag pendingCraftingJobs = new ListTag();
         for (CraftingJob craftingJob : this.pendingCraftingJobs.values()) {
             pendingCraftingJobs.add(CraftingJob.serialize(craftingJob));
         }
         tag.put("pendingCraftingJobs", pendingCraftingJobs);
 
-        CompoundNBT targetOverrides = new CompoundNBT();
+        CompoundTag targetOverrides = new CompoundTag();
         for (Map.Entry<IngredientComponent<?, ?>, Direction> entry : this.ingredientComponentTargetOverrides.entrySet()) {
             targetOverrides.putInt(entry.getKey().getName().toString(), entry.getValue().ordinal());
         }
         tag.put("targetOverrides", targetOverrides);
     }
 
-    public void readFromNBT(CompoundNBT tag) {
-        ListNBT processingCraftingJobs = tag.getList("processingCraftingJobs", Constants.NBT.TAG_COMPOUND);
-        for (INBT entry : processingCraftingJobs) {
-            CompoundNBT entryTag = (CompoundNBT) entry;
+    public void readFromNBT(CompoundTag tag) {
+        ListTag processingCraftingJobs = tag.getList("processingCraftingJobs", Tag.TAG_COMPOUND);
+        for (Tag entry : processingCraftingJobs) {
+            CompoundTag entryTag = (CompoundTag) entry;
             Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pendingIngredientInstances = Maps.newIdentityHashMap();
-            ListNBT pendingIngredientsList = entryTag.getList("pendingIngredientInstances", Constants.NBT.TAG_COMPOUND);
-            for (INBT pendingIngredient : pendingIngredientsList) {
-                CompoundNBT pendingIngredientTag = (CompoundNBT) pendingIngredient;
+            ListTag pendingIngredientsList = entryTag.getList("pendingIngredientInstances", Tag.TAG_COMPOUND);
+            for (Tag pendingIngredient : pendingIngredientsList) {
+                CompoundTag pendingIngredientTag = (CompoundTag) pendingIngredient;
                 String componentName = pendingIngredientTag.getString("ingredientComponent");
                 IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.getValue(new ResourceLocation(componentName));
                 if (ingredientComponent == null) {
@@ -143,8 +142,8 @@ public class CraftingJobHandler {
                 IIngredientSerializer serializer = ingredientComponent.getSerializer();
 
                 List<IPrototypedIngredient<?, ?>> pendingIngredients = Lists.newArrayList();
-                for (INBT instanceTagUnsafe : pendingIngredientTag.getList("instances", Constants.NBT.TAG_COMPOUND)) {
-                    CompoundNBT instanceTag = (CompoundNBT) instanceTagUnsafe;
+                for (Tag instanceTagUnsafe : pendingIngredientTag.getList("instances", Tag.TAG_COMPOUND)) {
+                    CompoundTag instanceTag = (CompoundTag) instanceTagUnsafe;
                     Object instance = serializer.deserializeInstance(instanceTag.get("prototype"));
                     Object condition = serializer.deserializeCondition(instanceTag.get("condition"));
                     pendingIngredients.add(new PrototypedIngredient(ingredientComponent, instance, condition));
@@ -163,9 +162,9 @@ public class CraftingJobHandler {
 
         }
 
-        ListNBT pendingCraftingJobs = tag.getList("pendingCraftingJobs", Constants.NBT.TAG_COMPOUND);
-        for (INBT craftingJob : pendingCraftingJobs) {
-            CraftingJob craftingJobInstance = CraftingJob.deserialize((CompoundNBT) craftingJob);
+        ListTag pendingCraftingJobs = tag.getList("pendingCraftingJobs", Tag.TAG_COMPOUND);
+        for (Tag craftingJob : pendingCraftingJobs) {
+            CraftingJob craftingJobInstance = CraftingJob.deserialize((CompoundTag) craftingJob);
             this.pendingCraftingJobs.put(craftingJobInstance.getId(), craftingJobInstance);
             this.allCraftingJobs.put(craftingJobInstance.getId(), craftingJobInstance);
         }
@@ -178,7 +177,7 @@ public class CraftingJobHandler {
         }
 
         this.ingredientComponentTargetOverrides.clear();
-        CompoundNBT targetOverrides = tag.getCompound("targetOverrides");
+        CompoundTag targetOverrides = tag.getCompound("targetOverrides");
         for (String componentName : targetOverrides.getAllKeys()) {
             IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(new ResourceLocation(componentName));
             this.ingredientComponentTargetOverrides.put(component, Direction.values()[targetOverrides.getInt(componentName)]);

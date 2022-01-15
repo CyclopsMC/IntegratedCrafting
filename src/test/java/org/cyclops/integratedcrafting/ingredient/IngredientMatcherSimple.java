@@ -1,6 +1,6 @@
 package org.cyclops.integratedcrafting.ingredient;
 
-import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.network.chat.MutableComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 
 public class IngredientMatcherSimple implements IIngredientMatcher<Long, Boolean> {
@@ -90,7 +90,7 @@ public class IngredientMatcherSimple implements IIngredientMatcher<Long, Boolean
     }
 
     @Override
-    public IFormattableTextComponent getDisplayName(Long aLong) {
+    public MutableComponent getDisplayName(Long aLong) {
         throw new UnsupportedOperationException();
     }
 

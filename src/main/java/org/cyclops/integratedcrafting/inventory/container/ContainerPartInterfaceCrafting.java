@@ -1,14 +1,13 @@
 package org.cyclops.integratedcrafting.inventory.container;
 
 import com.google.common.collect.Lists;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import org.cyclops.cyclopscore.helper.ValueNotifierHelpers;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
 import org.cyclops.integratedcrafting.RegistryEntries;
@@ -36,17 +35,17 @@ public class ContainerPartInterfaceCrafting extends ContainerMultipart<PartTypeI
     private final List<Integer> readSlotValidIds;
     private final List<Integer> readSlotErrorIds;
 
-    public ContainerPartInterfaceCrafting(int id, PlayerInventory playerInventory, PacketBuffer packetBuffer) {
+    public ContainerPartInterfaceCrafting(int id, Inventory playerInventory, FriendlyByteBuf packetBuffer) {
         this(id, playerInventory, new SimpleInventory(packetBuffer.readInt(), 1),
                 Optional.empty(), Optional.empty(), PartHelpers.readPart(packetBuffer));
     }
 
-    public ContainerPartInterfaceCrafting(int id, PlayerInventory playerInventory, IInventory inventory,
+    public ContainerPartInterfaceCrafting(int id, Inventory playerInventory, Container inventory,
                                           Optional<PartTarget> target, Optional<IPartContainer> partContainer, PartTypeInterfaceCrafting partType) {
         super(RegistryEntries.CONTAINER_INTERFACE_CRAFTING, id, playerInventory, inventory, target, partContainer, partType);
 
         addInventory(inventory, 0, 8, 22, 1, inventory.getContainerSize());
-        addPlayerInventory(player.inventory, 8, 59);
+        addPlayerInventory(player.getInventory(), 8, 59);
 
         getPartState().ifPresent(p -> p.setLastPlayer(player));
 
@@ -59,7 +58,7 @@ public class ContainerPartInterfaceCrafting extends ContainerMultipart<PartTypeI
 
         if (!player.getCommandSenderWorld().isClientSide()) {
             putButtonAction(ContainerMultipartAspects.BUTTON_SETTINGS, (s, containerExtended) -> {
-                PartHelpers.openContainerPartSettings((ServerPlayerEntity) player, target.get().getCenter(), partType);
+                PartHelpers.openContainerPartSettings((ServerPlayer) player, target.get().getCenter(), partType);
             });
         }
     }
@@ -76,22 +75,17 @@ public class ContainerPartInterfaceCrafting extends ContainerMultipart<PartTypeI
         });
     }
 
-    @Override
-    public boolean stillValid(PlayerEntity p_75145_1_) {
-        return false; // TODO: rm
-    }
-
     public boolean isRecipeSlotValid(int slot) {
         return ValueNotifierHelpers.getValueBoolean(this, this.readSlotValidIds.get(slot));
     }
 
     @Nullable
-    public ITextComponent getRecipeSlotUnlocalizedMessage(int slot) {
+    public Component getRecipeSlotUnlocalizedMessage(int slot) {
         return ValueNotifierHelpers.getValueTextComponent(this, this.readSlotErrorIds.get(slot));
     }
 
     @Override
-    protected Slot createNewSlot(IInventory inventory, int index, int x, int y) {
+    protected Slot createNewSlot(Container inventory, int index, int x, int y) {
         if (inventory instanceof SimpleInventory) {
             return new SlotVariable(inventory, index, x, y) {
                 @Override

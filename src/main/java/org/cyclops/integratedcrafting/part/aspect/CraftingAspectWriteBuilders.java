@@ -1,7 +1,7 @@
 package org.cyclops.integratedcrafting.part.aspect;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
@@ -162,7 +162,7 @@ public class CraftingAspectWriteBuilders {
                         if (craftDelay > 0 && !ignoreStorage) {
                             PartTypeCraftingWriter.State partState = (PartTypeCraftingWriter.State) PartHelpers.getPart(input.getCenter()).getState();
                             long initialTick = partState.getInitialTickCraftingTrigger();
-                            long currentTick = input.getCenter().getPos().getWorld(true).getGameTime();
+                            long currentTick = input.getCenter().getPos().getLevel(true).getGameTime();
                             if (initialTick >= 0) {
                                 if (currentTick - initialTick >= craftDelay) {
                                     partState.setInitialTickCraftingTrigger(-1);

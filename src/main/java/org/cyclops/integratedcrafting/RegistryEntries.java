@@ -1,7 +1,7 @@
 package org.cyclops.integratedcrafting;
 
-import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.item.Item;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.ObjectHolder;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCrafting;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettings;
@@ -19,8 +19,8 @@ public class RegistryEntries {
     public static final ItemVariable ITEM_VARIABLE = null;
 
     @ObjectHolder("integratedcrafting:part_interface_crafting")
-    public static final ContainerType<ContainerPartInterfaceCrafting> CONTAINER_INTERFACE_CRAFTING = null;
+    public static final MenuType<ContainerPartInterfaceCrafting> CONTAINER_INTERFACE_CRAFTING = null;
     @ObjectHolder("integratedcrafting:part_interface_crafting_settings")
-    public static final ContainerType<ContainerPartInterfaceCraftingSettings> CONTAINER_INTERFACE_CRAFTING_SETTINGS = null;
+    public static final MenuType<ContainerPartInterfaceCraftingSettings> CONTAINER_INTERFACE_CRAFTING_SETTINGS = null;
 
 }

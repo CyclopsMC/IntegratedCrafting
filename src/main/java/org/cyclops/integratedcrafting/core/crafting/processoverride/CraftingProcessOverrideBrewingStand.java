@@ -1,14 +1,14 @@
 package org.cyclops.integratedcrafting.core.crafting.processoverride;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.BrewingStandTileEntity;
-import net.minecraft.util.Direction;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.cyclopscore.helper.TileHelpers;
+import org.cyclops.cyclopscore.helper.BlockEntityHelpers;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverride;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integrateddynamics.api.part.PartPos;
@@ -35,8 +35,8 @@ public class CraftingProcessOverrideBrewingStand implements ICraftingProcessOver
     }
 
     @Nullable
-    private Optional<BrewingStandTileEntity> getTile(PartPos target) {
-        return TileHelpers.getSafeTile(target.getPos(), BrewingStandTileEntity.class);
+    private Optional<BrewingStandBlockEntity> getTile(PartPos target) {
+        return BlockEntityHelpers.get(target.getPos(), BrewingStandBlockEntity.class);
     }
 
     @Override

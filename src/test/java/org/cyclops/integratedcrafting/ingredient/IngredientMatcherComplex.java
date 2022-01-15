@@ -1,6 +1,6 @@
 package org.cyclops.integratedcrafting.ingredient;
 
-import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.network.chat.MutableComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 
 public class IngredientMatcherComplex implements IIngredientMatcher<ComplexStack, Integer> {
@@ -107,7 +107,7 @@ public class IngredientMatcherComplex implements IIngredientMatcher<ComplexStack
     }
 
     @Override
-    public IFormattableTextComponent getDisplayName(ComplexStack complexStack) {
+    public MutableComponent getDisplayName(ComplexStack complexStack) {
         throw new UnsupportedOperationException();
     }
 

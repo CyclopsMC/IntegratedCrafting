@@ -1,6 +1,6 @@
 package org.cyclops.integratedcrafting.capability.network;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.cyclops.cyclopscore.modcompat.capabilities.DefaultCapabilityProvider;
 import org.cyclops.integratedcrafting.core.network.CraftingNetwork;

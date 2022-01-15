@@ -3,8 +3,8 @@ package org.cyclops.integratedcrafting.core;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
 import org.apache.commons.lang3.tuple.Pair;
@@ -19,7 +19,7 @@ import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IngredientComponentStorageEmpty;
-import org.cyclops.cyclopscore.helper.TileHelpers;
+import org.cyclops.cyclopscore.helper.BlockEntityHelpers;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientArrayList;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionQuantitativeGrouper;
@@ -70,7 +70,7 @@ public class CraftingHelpers {
      * @throws PartStateException If the network could not be found.
      */
     public static INetwork getNetworkChecked(PartPos pos) throws PartStateException {
-        INetwork network = NetworkHelpers.getNetwork(pos.getPos().getWorld(true), pos.getPos().getBlockPos(), pos.getSide()).orElse(null);
+        INetwork network = NetworkHelpers.getNetwork(pos.getPos().getLevel(true), pos.getPos().getBlockPos(), pos.getSide()).orElse(null);
         if (network == null) {
             IntegratedDynamics.clog(Level.ERROR, "Could not get the network for transfer as no network was found.");
             throw new PartStateException(pos.getPos(), pos.getSide());
@@ -1446,11 +1446,11 @@ public class CraftingHelpers {
                                          IMixedIngredients ingredients,
                                          INetwork network, int channel,
                                          boolean simulate) {
-        Map<IngredientComponent<?, ?>, TileEntity> tileMap = Maps.newIdentityHashMap();
+        Map<IngredientComponent<?, ?>, BlockEntity> tileMap = Maps.newIdentityHashMap();
 
         // First, check if we can find valid tiles for all ingredient components
         for (IngredientComponent<?, ?> ingredientComponent : ingredients.getComponents()) {
-            TileEntity tile = TileHelpers.getSafeTile(targetGetter.apply(ingredientComponent).getPos(), TileEntity.class).orElse(null);
+            BlockEntity tile = BlockEntityHelpers.get(targetGetter.apply(ingredientComponent).getPos(), BlockEntity.class).orElse(null);
             if (tile != null) {
                 tileMap.put(ingredientComponent, tile);
             } else {
@@ -1460,7 +1460,7 @@ public class CraftingHelpers {
 
         // Next, insert the instances into the respective tiles
         boolean ok = true;
-        for (Map.Entry<IngredientComponent<?, ?>, TileEntity> entry : tileMap.entrySet()) {
+        for (Map.Entry<IngredientComponent<?, ?>, BlockEntity> entry : tileMap.entrySet()) {
             IIngredientComponentStorage<?, ?> storageNetwork = simulate ? null : getNetworkStorage(network, channel, entry.getKey(), false);
             if (!insertIngredientCrafting((IngredientComponent) entry.getKey(), entry.getValue(),
                     targetGetter.apply(entry.getKey()).getSide(), ingredients,

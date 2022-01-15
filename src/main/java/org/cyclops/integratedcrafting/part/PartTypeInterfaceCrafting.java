@@ -9,25 +9,24 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.INamedContainerProvider;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Level;
@@ -41,13 +40,12 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.cyclopscore.datastructure.DimPos;
-import org.cyclops.cyclopscore.helper.TileHelpers;
-import org.cyclops.cyclopscore.ingredient.storage.IngredientStorageHelpers;
+import org.cyclops.cyclopscore.helper.BlockEntityHelpers;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
 import org.cyclops.cyclopscore.persist.nbt.NBTClassType;
 import org.cyclops.integratedcrafting.Capabilities;
-import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.GeneralConfig;
+import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobStatus;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
@@ -106,16 +104,16 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
     }
 
     @Override
-    public Optional<INamedContainerProvider> getContainerProvider(PartPos pos) {
-        return Optional.of(new INamedContainerProvider() {
+    public Optional<MenuProvider> getContainerProvider(PartPos pos) {
+        return Optional.of(new MenuProvider() {
 
             @Override
-            public IFormattableTextComponent getDisplayName() {
-                return new TranslationTextComponent(getTranslationKey());
+            public MutableComponent getDisplayName() {
+                return new TranslatableComponent(getTranslationKey());
             }
 
             @Override
-            public Container createMenu(int id, PlayerInventory playerInventory, PlayerEntity playerEntity) {
+            public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player playerEntity) {
                 Triple<IPartContainer, PartTypeBase, PartTarget> data = PartHelpers.getContainerPartConstructionData(pos);
                 PartTypeInterfaceCrafting.State partState = (PartTypeInterfaceCrafting.State) data.getLeft().getPartState(data.getRight().getCenter().getSide());
                 return new ContainerPartInterfaceCrafting(id, playerInventory, partState.getInventoryVariables(),
@@ -125,7 +123,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
     }
 
     @Override
-    public void writeExtraGuiData(PacketBuffer packetBuffer, PartPos pos, ServerPlayerEntity player) {
+    public void writeExtraGuiData(FriendlyByteBuf packetBuffer, PartPos pos, ServerPlayer player) {
         // Write inventory size
         IPartContainer partContainer = PartHelpers.getPartContainerChecked(pos);
         PartTypeInterfaceCrafting.State partState = (PartTypeInterfaceCrafting.State) partContainer.getPartState(pos.getSide());
@@ -135,18 +133,18 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
     }
 
     @Override
-    public Optional<INamedContainerProvider> getContainerProviderSettings(PartPos pos) {
-        return Optional.of(new INamedContainerProvider() {
+    public Optional<MenuProvider> getContainerProviderSettings(PartPos pos) {
+        return Optional.of(new MenuProvider() {
 
             @Override
-            public IFormattableTextComponent getDisplayName() {
-                return new TranslationTextComponent(getTranslationKey());
+            public MutableComponent getDisplayName() {
+                return new TranslatableComponent(getTranslationKey());
             }
 
             @Override
-            public Container createMenu(int id, PlayerInventory playerInventory, PlayerEntity playerEntity) {
+            public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player playerEntity) {
                 Triple<IPartContainer, PartTypeBase, PartTarget> data = PartHelpers.getContainerPartConstructionData(pos);
-                return new ContainerPartInterfaceCraftingSettings(id, playerInventory, new Inventory(0),
+                return new ContainerPartInterfaceCraftingSettings(id, playerInventory, new SimpleContainer(0),
                         data.getRight(), Optional.of(data.getLeft()), data.getMiddle());
             }
         });
@@ -319,7 +317,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 itemStacks.add(itemStack);
             }
         }
-        // state.getInventoryVariables().clearContent(); // TODO: restore
+        state.getInventoryVariables().clearContent();
 
         super.addDrops(target, state, itemStacks, dropMainElement, saveState);
     }
@@ -331,7 +329,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private final SimpleInventory inventoryVariables;
         private final List<InventoryVariableEvaluator<ValueObjectTypeRecipe.ValueRecipe>> variableEvaluators;
         private final List<IngredientInstanceWrapper<?, ?>> inventoryOutputBuffer;
-        private final Int2ObjectMap<IFormattableTextComponent> recipeSlotMessages;
+        private final Int2ObjectMap<MutableComponent> recipeSlotMessages;
         private final Int2BooleanMap recipeSlotValidated;
         private final IntSet delayedRecipeReloads;
         private final Map<IVariable, Boolean> variableListeners;
@@ -345,7 +343,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private IPartNetwork partNetwork = null;
         private int channel = -1;
         private boolean shouldAddToCraftingNetwork = false;
-        private PlayerEntity lastPlayer;
+        private Player lastPlayer;
 
         public State() {
             this.craftingJobHandler = new CraftingJobHandler(1,
@@ -374,13 +372,13 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Override
-        public void writeToNBT(CompoundNBT tag) {
+        public void writeToNBT(CompoundTag tag) {
             super.writeToNBT(tag);
             inventoryVariables.writeToNBT(tag, "variables");
 
-            ListNBT instanceTags = new ListNBT();
+            ListTag instanceTags = new ListTag();
             for (IngredientInstanceWrapper instanceWrapper : inventoryOutputBuffer) {
-                CompoundNBT instanceTag = new CompoundNBT();
+                CompoundTag instanceTag = new CompoundTag();
                 instanceTag.putString("component", instanceWrapper.getComponent().getRegistryName().toString());
                 instanceTag.put("instance", instanceWrapper.getComponent().getSerializer().serializeInstance(instanceWrapper.getInstance()));
                 instanceTags.add(instanceTag);
@@ -390,13 +388,13 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             this.craftingJobHandler.writeToNBT(tag);
             tag.putInt("channelCrafting", channelCrafting);
 
-            CompoundNBT recipeSlotErrorsTag = new CompoundNBT();
-            for (Int2ObjectMap.Entry<IFormattableTextComponent> entry : this.recipeSlotMessages.int2ObjectEntrySet()) {
-                NBTClassType.writeNbt(IFormattableTextComponent.class, String.valueOf(entry.getIntKey()), entry.getValue(), recipeSlotErrorsTag);
+            CompoundTag recipeSlotErrorsTag = new CompoundTag();
+            for (Int2ObjectMap.Entry<MutableComponent> entry : this.recipeSlotMessages.int2ObjectEntrySet()) {
+                NBTClassType.writeNbt(MutableComponent.class, String.valueOf(entry.getIntKey()), entry.getValue(), recipeSlotErrorsTag);
             }
             tag.put("recipeSlotMessages", recipeSlotErrorsTag);
 
-            CompoundNBT recipeSlotValidatedTag = new CompoundNBT();
+            CompoundTag recipeSlotValidatedTag = new CompoundTag();
             for (Int2BooleanMap.Entry entry : this.recipeSlotValidated.int2BooleanEntrySet()) {
                 recipeSlotValidatedTag.putBoolean(String.valueOf(entry.getIntKey()), entry.getBooleanValue());
             }
@@ -406,13 +404,13 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Override
-        public void readFromNBT(CompoundNBT tag) {
+        public void readFromNBT(CompoundTag tag) {
             super.readFromNBT(tag);
             inventoryVariables.readFromNBT(tag, "variables");
 
             this.inventoryOutputBuffer.clear();
-            for (INBT instanceTagRaw : tag.getList("inventoryOutputBuffer", Constants.NBT.TAG_COMPOUND)) {
-                CompoundNBT instanceTag = (CompoundNBT) instanceTagRaw;
+            for (Tag instanceTagRaw : tag.getList("inventoryOutputBuffer", Tag.TAG_COMPOUND)) {
+                CompoundTag instanceTag = (CompoundTag) instanceTagRaw;
                 String componentName = instanceTag.getString("component");
                 IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(new ResourceLocation(componentName));
                 this.inventoryOutputBuffer.add(new IngredientInstanceWrapper(component,
@@ -423,14 +421,14 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             this.channelCrafting = tag.getInt("channelCrafting");
 
             this.recipeSlotMessages.clear();
-            CompoundNBT recipeSlotErrorsTag = tag.getCompound("recipeSlotMessages");
+            CompoundTag recipeSlotErrorsTag = tag.getCompound("recipeSlotMessages");
             for (String slot : recipeSlotErrorsTag.getAllKeys()) {
-                IFormattableTextComponent unlocalizedString = NBTClassType.readNbt(IFormattableTextComponent.class, slot, recipeSlotErrorsTag);
+                MutableComponent unlocalizedString = NBTClassType.readNbt(MutableComponent.class, slot, recipeSlotErrorsTag);
                 this.recipeSlotMessages.put(Integer.parseInt(slot), unlocalizedString);
             }
 
             this.recipeSlotValidated.clear();
-            CompoundNBT recipeSlotValidatedTag = tag.getCompound("recipeSlotValidated");
+            CompoundTag recipeSlotValidatedTag = tag.getCompound("recipeSlotValidated");
             for (String slot : recipeSlotValidatedTag.getAllKeys()) {
                 this.recipeSlotValidated.put(Integer.parseInt(slot), recipeSlotValidatedTag.getBoolean(slot));
             }
@@ -484,7 +482,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             }
         }
 
-        private void setLocalErrors(int slot, List<IFormattableTextComponent> errors) {
+        private void setLocalErrors(int slot, List<MutableComponent> errors) {
             if (errors.isEmpty()) {
                 if (this.recipeSlotMessages.size() > slot) {
                     this.recipeSlotMessages.remove(slot);
@@ -526,19 +524,19 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                                 if (!GeneralConfig.validateRecipesCraftingInterface || this.disableCraftingCheck || isValid(recipe)) {
                                     this.currentRecipes.put(slot, recipe);
                                     this.recipeSlotValidated.put(slot, true);
-                                    this.recipeSlotMessages.put(slot, new TranslationTextComponent("gui.integratedcrafting.partinterface.slot.message.valid"));
+                                    this.recipeSlotMessages.put(slot, new TranslatableComponent("gui.integratedcrafting.partinterface.slot.message.valid"));
                                 } else {
-                                    this.recipeSlotMessages.put(slot, new TranslationTextComponent("gui.integratedcrafting.partinterface.slot.message.invalid"));
+                                    this.recipeSlotMessages.put(slot, new TranslatableComponent("gui.integratedcrafting.partinterface.slot.message.invalid"));
                                 }
                             }
                         } else {
-                            this.recipeSlotMessages.put(slot, new TranslationTextComponent("gui.integratedcrafting.partinterface.slot.message.norecipe"));
+                            this.recipeSlotMessages.put(slot, new TranslatableComponent("gui.integratedcrafting.partinterface.slot.message.norecipe"));
                         }
                     } catch (EvaluationException e) {
                         this.recipeSlotMessages.put(slot, e.getErrorMessage());
                     }
                 } else {
-                    this.recipeSlotMessages.put(slot, new TranslationTextComponent("gui.integratedcrafting.partinterface.slot.message.norecipe"));
+                    this.recipeSlotMessages.put(slot, new TranslatableComponent("gui.integratedcrafting.partinterface.slot.message.norecipe"));
                 }
 
                 try {
@@ -554,7 +552,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             sendUpdate();
         }
 
-        public void setLastPlayer(PlayerEntity lastPlayer) {
+        public void setLastPlayer(Player lastPlayer) {
             this.lastPlayer = lastPlayer;
         }
 
@@ -566,11 +564,11 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private boolean isValid(IRecipeDefinition recipe) {
             DimPos dimPos = getTarget().getTarget().getPos();
             Direction side = getTarget().getTarget().getSide();
-            IRecipeHandler recipeHandler = TileHelpers.getCapability(dimPos.getWorld(true), dimPos.getBlockPos(), side, Capabilities.RECIPE_HANDLER).orElse(null);
+            IRecipeHandler recipeHandler = BlockEntityHelpers.getCapability(dimPos.getLevel(true), dimPos.getBlockPos(), side, Capabilities.RECIPE_HANDLER).orElse(null);
             if (recipeHandler == null) {
-                BlockState blockState = dimPos.getWorld(true).getBlockState(dimPos.getBlockPos());
+                BlockState blockState = dimPos.getLevel(true).getBlockState(dimPos.getBlockPos());
                 recipeHandler = BlockCapabilities.getInstance().getCapability(blockState, Capabilities.RECIPE_HANDLER,
-                        dimPos.getWorld(true), dimPos.getBlockPos(), side)
+                        dimPos.getLevel(true), dimPos.getBlockPos(), side)
                 .orElse(null);
             }
             if (recipeHandler != null) {
@@ -603,7 +601,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             }
 
             // Recalculate recipes
-            if (getTarget() != null && !getTarget().getCenter().getPos().getWorld(true).isClientSide) {
+            if (getTarget() != null && !getTarget().getCenter().getPos().getLevel(true).isClientSide) {
                 reloadRecipes();
             }
 
@@ -768,7 +766,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Nullable
-        public IFormattableTextComponent getRecipeSlotUnlocalizedMessage(int slot) {
+        public MutableComponent getRecipeSlotUnlocalizedMessage(int slot) {
             return this.recipeSlotMessages.get(slot);
         }
 
