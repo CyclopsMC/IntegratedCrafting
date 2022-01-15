@@ -294,7 +294,7 @@ public class CraftingJobDependencyGraph {
 
         Int2ObjectMap<IntCollection> dependencies = new Int2ObjectOpenHashMap<>();
         CompoundNBT dependenciesTag = tag.getCompound("dependencies");
-        for (String key : dependenciesTag.keySet()) {
+        for (String key : dependenciesTag.getAllKeys()) {
             int id = Integer.parseInt(key);
             int[] value = dependenciesTag.getIntArray(key);
             dependencies.put(id, new IntArrayList(value));
@@ -302,7 +302,7 @@ public class CraftingJobDependencyGraph {
 
         Int2ObjectMap<IntCollection> dependents = new Int2ObjectOpenHashMap<>();
         CompoundNBT dependentsTag = tag.getCompound("dependencies");
-        for (String key : dependentsTag.keySet()) {
+        for (String key : dependentsTag.getAllKeys()) {
             int id = Integer.parseInt(key);
             int[] value = dependentsTag.getIntArray(key);
             dependents.put(id, new IntArrayList(value));

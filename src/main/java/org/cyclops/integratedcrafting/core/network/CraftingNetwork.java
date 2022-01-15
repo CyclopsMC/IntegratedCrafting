@@ -264,7 +264,7 @@ public class CraftingNetwork implements ICraftingNetwork {
     }
 
     protected long getCurrentTick() {
-        return ServerLifecycleHooks.getCurrentServer().getWorld(World.OVERWORLD).getGameTime();
+        return ServerLifecycleHooks.getCurrentServer().getLevel(World.OVERWORLD).getGameTime();
     }
 
     @Override

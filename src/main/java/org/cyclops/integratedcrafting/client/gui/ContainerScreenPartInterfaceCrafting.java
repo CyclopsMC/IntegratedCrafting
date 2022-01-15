@@ -32,7 +32,7 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
     @Override
     public void init() {
         super.init();
-        addButton(new ButtonImage(this.guiLeft + 155, this.guiTop + 4, 15, 15,
+        addButton(new ButtonImage(this.leftPos + 155, this.topPos + 4, 15, 15,
                 new TranslationTextComponent("gui.integrateddynamics.part_settings"),
                 createServerPressable(ContainerMultipartAspects.BUTTON_SETTINGS, b -> {}), true,
                 Images.CONFIG_BOARD, -2, -3));
@@ -54,14 +54,14 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int mouseX, int mouseY) {
-        super.drawGuiContainerBackgroundLayer(matrixStack, partialTicks, mouseX, mouseY);
+    protected void renderBg(MatrixStack matrixStack, float partialTicks, int mouseX, int mouseY) {
+        // super.renderBg(matrixStack, partialTicks, mouseX, mouseY); // TODO: restore
 
-        GlStateManager.color4f(1, 1, 1, 1);
-        int y = guiTop + 42;
-        for (int i = 0; i < getContainer().getContainerInventory().getSizeInventory(); i++) {
-            int x = guiLeft + 10 + i * GuiHelpers.SLOT_SIZE;
-            if (!getContainer().getContainerInventory().getStackInSlot(i).isEmpty()) {
+        GlStateManager._color4f(1, 1, 1, 1);
+        int y = topPos + 42;
+        for (int i = 0; i < getMenu().getContainerInventory().getContainerSize(); i++) {
+            int x = leftPos + 10 + i * GuiHelpers.SLOT_SIZE;
+            if (!getMenu().getContainerInventory().getItem(i).isEmpty()) {
                 IImage image = container.isRecipeSlotValid(i) ? Images.OK : Images.ERROR;
                 image.draw(this, matrixStack, x, y);
             }
@@ -69,17 +69,17 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
     }
 
     @Override
-    protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int mouseX, int mouseY) {
+    protected void renderLabels(MatrixStack matrixStack, int mouseX, int mouseY) {
         // super.drawGuiContainerForegroundLayer(matrixStack, mouseX, mouseY);
-        this.font.func_243248_b(matrixStack, this.title, (float)this.titleX, (float)this.titleY, 4210752);
+        this.font.draw(matrixStack, this.title, (float)this.titleLabelX, (float)this.titleLabelY, 4210752);
 
         int y = 42;
-        for (int i = 0; i < getContainer().getContainerInventory().getSizeInventory(); i++) {
+        for (int i = 0; i < getMenu().getContainerInventory().getContainerSize(); i++) {
             int x = 10 + i * GuiHelpers.SLOT_SIZE;
             int slot = i;
             GuiHelpers.renderTooltipOptional(this, x, y, 14, 13, mouseX, mouseY,
                     () -> {
-                        if (!getContainer().getInventory().get(slot).isEmpty()) {
+                        if (!getMenu().getItems().get(slot).isEmpty()) {
                             ITextComponent unlocalizedMessage = container.getRecipeSlotUnlocalizedMessage(slot);
                             if (unlocalizedMessage != null) {
                                 return Optional.of(Collections.singletonList(unlocalizedMessage));

@@ -129,7 +129,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         // Write inventory size
         IPartContainer partContainer = PartHelpers.getPartContainerChecked(pos);
         PartTypeInterfaceCrafting.State partState = (PartTypeInterfaceCrafting.State) partContainer.getPartState(pos.getSide());
-        packetBuffer.writeInt(partState.getInventoryVariables().getSizeInventory());
+        packetBuffer.writeInt(partState.getInventoryVariables().getContainerSize());
 
         super.writeExtraGuiData(packetBuffer, pos, player);
     }
@@ -313,13 +313,13 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         state.getInventoryOutputBuffer().clear();
 
         // Drop the stored variables
-        for(int i = 0; i < state.getInventoryVariables().getSizeInventory(); i++) {
-            ItemStack itemStack = state.getInventoryVariables().getStackInSlot(i);
+        for(int i = 0; i < state.getInventoryVariables().getContainerSize(); i++) {
+            ItemStack itemStack = state.getInventoryVariables().getItem(i);
             if(!itemStack.isEmpty()) {
                 itemStacks.add(itemStack);
             }
         }
-        state.getInventoryVariables().clear();
+        // state.getInventoryVariables().clearContent(); // TODO: restore
 
         super.addDrops(target, state, itemStacks, dropMainElement, saveState);
     }
@@ -424,14 +424,14 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
             this.recipeSlotMessages.clear();
             CompoundNBT recipeSlotErrorsTag = tag.getCompound("recipeSlotMessages");
-            for (String slot : recipeSlotErrorsTag.keySet()) {
+            for (String slot : recipeSlotErrorsTag.getAllKeys()) {
                 IFormattableTextComponent unlocalizedString = NBTClassType.readNbt(IFormattableTextComponent.class, slot, recipeSlotErrorsTag);
                 this.recipeSlotMessages.put(Integer.parseInt(slot), unlocalizedString);
             }
 
             this.recipeSlotValidated.clear();
             CompoundNBT recipeSlotValidatedTag = tag.getCompound("recipeSlotValidated");
-            for (String slot : recipeSlotValidatedTag.keySet()) {
+            for (String slot : recipeSlotValidatedTag.getAllKeys()) {
                 this.recipeSlotValidated.put(Integer.parseInt(slot), recipeSlotValidatedTag.getBoolean(slot));
             }
 
@@ -466,7 +466,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             this.recipeSlotMessages.clear();
             this.recipeSlotValidated.clear();
             variableEvaluators.clear();
-            for (int i = 0; i < getInventoryVariables().getSizeInventory(); i++) {
+            for (int i = 0; i < getInventoryVariables().getContainerSize(); i++) {
                 int slot = i;
                 variableEvaluators.add(new InventoryVariableEvaluator<ValueObjectTypeRecipe.ValueRecipe>(
                         getInventoryVariables(), slot, ValueTypes.OBJECT_RECIPE) {
@@ -478,7 +478,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 });
             }
             if (this.partNetwork != null) {
-                for (int i = 0; i < getInventoryVariables().getSizeInventory(); i++) {
+                for (int i = 0; i < getInventoryVariables().getContainerSize(); i++) {
                     reloadRecipe(i);
                 }
             }
@@ -603,7 +603,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             }
 
             // Recalculate recipes
-            if (getTarget() != null && !getTarget().getCenter().getPos().getWorld(true).isRemote) {
+            if (getTarget() != null && !getTarget().getCenter().getPos().getWorld(true).isClientSide) {
                 reloadRecipes();
             }
 

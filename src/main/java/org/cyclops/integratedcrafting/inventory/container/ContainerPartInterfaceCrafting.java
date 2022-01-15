@@ -1,6 +1,7 @@
 package org.cyclops.integratedcrafting.inventory.container;
 
 import com.google.common.collect.Lists;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.IInventory;
@@ -44,19 +45,19 @@ public class ContainerPartInterfaceCrafting extends ContainerMultipart<PartTypeI
                                           Optional<PartTarget> target, Optional<IPartContainer> partContainer, PartTypeInterfaceCrafting partType) {
         super(RegistryEntries.CONTAINER_INTERFACE_CRAFTING, id, playerInventory, inventory, target, partContainer, partType);
 
-        addInventory(inventory, 0, 8, 22, 1, inventory.getSizeInventory());
+        addInventory(inventory, 0, 8, 22, 1, inventory.getContainerSize());
         addPlayerInventory(player.inventory, 8, 59);
 
         getPartState().ifPresent(p -> p.setLastPlayer(player));
 
         this.readSlotValidIds = Lists.newArrayList();
         this.readSlotErrorIds = Lists.newArrayList();
-        for (int i = 0; i < inventory.getSizeInventory(); i++) {
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
             this.readSlotValidIds.add(getNextValueId());
             this.readSlotErrorIds.add(getNextValueId());
         }
 
-        if (!player.getEntityWorld().isRemote()) {
+        if (!player.getCommandSenderWorld().isClientSide()) {
             putButtonAction(ContainerMultipartAspects.BUTTON_SETTINGS, (s, containerExtended) -> {
                 PartHelpers.openContainerPartSettings((ServerPlayerEntity) player, target.get().getCenter(), partType);
             });
@@ -64,15 +65,20 @@ public class ContainerPartInterfaceCrafting extends ContainerMultipart<PartTypeI
     }
 
     @Override
-    public void detectAndSendChanges() {
-        super.detectAndSendChanges();
+    public void broadcastChanges() {
+        super.broadcastChanges();
 
         getPartState().ifPresent(partState -> {
-            for (int i = 0; i < inventory.getSizeInventory(); i++) {
+            for (int i = 0; i < inventory.getContainerSize(); i++) {
                 ValueNotifierHelpers.setValue(this, this.readSlotValidIds.get(i), partState.isRecipeSlotValid(i));
                 ValueNotifierHelpers.setValue(this, this.readSlotErrorIds.get(i), partState.getRecipeSlotUnlocalizedMessage(i));
             }
         });
+    }
+
+    @Override
+    public boolean stillValid(PlayerEntity p_75145_1_) {
+        return false; // TODO: rm
     }
 
     public boolean isRecipeSlotValid(int slot) {
@@ -89,11 +95,11 @@ public class ContainerPartInterfaceCrafting extends ContainerMultipart<PartTypeI
         if (inventory instanceof SimpleInventory) {
             return new SlotVariable(inventory, index, x, y) {
                 @Override
-                public boolean isItemValid(ItemStack itemStack) {
+                public boolean mayPlace(ItemStack itemStack) {
                     IVariableFacade variableFacade = RegistryEntries.ITEM_VARIABLE.getVariableFacade(itemStack);
                     return variableFacade != null
                             && ValueHelpers.correspondsTo(variableFacade.getOutputType(), ValueTypes.OBJECT_RECIPE)
-                            && super.isItemValid(itemStack);
+                            && super.mayPlace(itemStack);
                 }
             };
         }

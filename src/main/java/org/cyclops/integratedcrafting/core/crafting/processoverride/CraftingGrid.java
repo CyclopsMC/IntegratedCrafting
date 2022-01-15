@@ -20,7 +20,7 @@ public class CraftingGrid extends CraftingInventory {
     public CraftingGrid(IMixedIngredients ingredients, int rows, int columns) {
         super(new Container(null, 0) {
             @Override
-            public boolean canInteractWith(PlayerEntity playerIn) {
+            public boolean stillValid(PlayerEntity playerIn) {
                 return false;
             }
         }, rows, columns);
@@ -39,7 +39,7 @@ public class CraftingGrid extends CraftingInventory {
         // Insert items into grid
         int slot = 0;
         for (ItemStack itemStack : itemStacks) {
-            setInventorySlotContents(slot++, itemStack);
+            setItem(slot++, itemStack);
         }
     }
 
@@ -48,8 +48,8 @@ public class CraftingGrid extends CraftingInventory {
         if (!(obj instanceof CraftingGrid)) {
             return false;
         }
-        for (int i = 0; i < getSizeInventory(); i++) {
-            if (!ItemStack.areItemStacksEqual(this.getStackInSlot(i), ((CraftingGrid) obj).getStackInSlot(i))) {
+        for (int i = 0; i < getContainerSize(); i++) {
+            if (!ItemStack.matches(this.getItem(i), ((CraftingGrid) obj).getItem(i))) {
                 return false;
             }
         }
@@ -58,10 +58,10 @@ public class CraftingGrid extends CraftingInventory {
 
     @Override
     public int hashCode() {
-        int hash = 11 + getSizeInventory();
-        for (int i = 0; i < getSizeInventory(); i++) {
+        int hash = 11 + getContainerSize();
+        for (int i = 0; i < getContainerSize(); i++) {
             hash = hash << 1;
-            hash |= ItemStackHelpers.getItemStackHashCode(getStackInSlot(i));
+            hash |= ItemStackHelpers.getItemStackHashCode(getItem(i));
         }
         return hash;
     }
@@ -69,8 +69,8 @@ public class CraftingGrid extends CraftingInventory {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < this.getSizeInventory(); i++) {
-            sb.append(this.getStackInSlot(i));
+        for (int i = 0; i < this.getContainerSize(); i++) {
+            sb.append(this.getItem(i));
             sb.append(",");
         }
         return sb.toString();

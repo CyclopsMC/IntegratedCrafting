@@ -179,7 +179,7 @@ public class CraftingJobHandler {
 
         this.ingredientComponentTargetOverrides.clear();
         CompoundNBT targetOverrides = tag.getCompound("targetOverrides");
-        for (String componentName : targetOverrides.keySet()) {
+        for (String componentName : targetOverrides.getAllKeys()) {
             IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(new ResourceLocation(componentName));
             this.ingredientComponentTargetOverrides.put(component, Direction.values()[targetOverrides.getInt(componentName)]);
         }

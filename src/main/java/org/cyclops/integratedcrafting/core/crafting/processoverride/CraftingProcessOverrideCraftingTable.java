@@ -51,7 +51,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
 
         return CraftingHelpers.findServerRecipe(IRecipeType.CRAFTING, grid, target.getPos().getWorld(true))
                 .map(recipe -> {
-                    ItemStack result = recipe.getCraftingResult(grid);
+                    ItemStack result = recipe.assemble(grid);
 
                     if (result.isEmpty()) {
                         return false;
@@ -61,7 +61,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
                         PlayerEntity player = getFakePlayer((ServerWorld) target.getPos().getWorld(true));
 
                         // Fire all required events
-                        result.onCrafting(target.getPos().getWorld(true), player, 1);
+                        result.onCraftedBy(target.getPos().getWorld(true), player, 1);
                         BasicEventHooks.firePlayerCraftingEvent(player, result, grid);
 
                         // Insert the result into the sink

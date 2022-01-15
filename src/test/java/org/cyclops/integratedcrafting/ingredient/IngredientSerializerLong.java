@@ -18,7 +18,7 @@ public class IngredientSerializerLong implements IIngredientSerializer<Long, Boo
         if (!(tag instanceof LongNBT)) {
             throw new IllegalArgumentException("This deserializer only accepts NBTTagInt");
         }
-        return ((LongNBT) tag).getLong();
+        return ((LongNBT) tag).getAsLong();
     }
 
     @Override
@@ -31,7 +31,7 @@ public class IngredientSerializerLong implements IIngredientSerializer<Long, Boo
         if (!(tag instanceof ByteNBT)) {
             throw new IllegalArgumentException("This deserializer only accepts NBTTagByte");
         }
-        return ((ByteNBT) tag).getByte() == 1;
+        return ((ByteNBT) tag).getAsByte() == 1;
     }
 
 }

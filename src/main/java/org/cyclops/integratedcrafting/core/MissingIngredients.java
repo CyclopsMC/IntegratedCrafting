@@ -73,7 +73,7 @@ public class MissingIngredients<T, M> {
     public static Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> deserialize(CompoundNBT tag)
             throws IllegalArgumentException {
         Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> map = Maps.newIdentityHashMap();
-        for (String componentName : tag.keySet()) {
+        for (String componentName : tag.getAllKeys()) {
             IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(new ResourceLocation(componentName));
             if (component == null) {
                 throw new IllegalArgumentException("Could not find the ingredient component type " + componentName);

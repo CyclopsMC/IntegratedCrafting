@@ -63,7 +63,7 @@ public abstract class PartTypeCraftingBase<P extends IPartType<P, S>, S extends 
     @Override
     public void writeExtraGuiDataSettings(PacketBuffer packetBuffer, PartPos pos, ServerPlayerEntity player) {
         PacketCodec.write(packetBuffer, pos);
-        packetBuffer.writeString(this.getUniqueName().toString());
+        packetBuffer.writeUtf(this.getUniqueName().toString());
     }
 
 }

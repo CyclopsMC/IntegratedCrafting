@@ -29,6 +29,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.cyclops.integrateddynamics.core.client.gui.container.ContainerScreenPartSettings.SideDropdownEntry;
+
 /**
  * @author rubensworks
  */
@@ -81,11 +83,11 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         try {
             Direction selectedSide = dropdownFieldSide.getSelectedDropdownPossibility() == null ? null : dropdownFieldSide.getSelectedDropdownPossibility().getValue();
             int side = selectedSide != null && selectedSide != getDefaultSide() ? selectedSide.ordinal() : -1;
-            ValueNotifierHelpers.setValue(getContainer(), getContainer().getTargetSideOverrideValueId(selectedIngredientComponent), side);
+            ValueNotifierHelpers.setValue(getMenu(), getMenu().getTargetSideOverrideValueId(selectedIngredientComponent), side);
 
             int channelInterface = numberFieldChannelInterfaceCrafting.getInt();
-            ValueNotifierHelpers.setValue(getContainer(), getContainer().getLastChannelInterfaceCraftingValueId(), channelInterface);
-            getContainer().setLastDisableCraftingCheckValue(checkboxFieldDisabledCraftingCheck.isChecked());
+            ValueNotifierHelpers.setValue(getMenu(), getMenu().getLastChannelInterfaceCraftingValueId(), channelInterface);
+            getMenu().setLastDisableCraftingCheckValue(checkboxFieldDisabledCraftingCheck.isChecked());
         } catch (NumberFormatException e) {
         }
     }
@@ -95,7 +97,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         super.init();
 
         ingredientComponentSideSelector = new WidgetArrowedListField<IngredientComponent<?, ?>>(font,
-                guiLeft + 106, guiTop + 9, 68, 15, true,
+                leftPos + 106, topPos + 9, 68, 15, true,
                 new TranslationTextComponent("gui.integratedcrafting.partsettings.ingredient"),
                 true, Lists.newArrayList(IngredientComponent.REGISTRY.getValues())) {
             @Override
@@ -107,24 +109,24 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         selectedIngredientComponent = ingredientComponentSideSelector.getActiveElement();
 
         dropdownEntries = Arrays.stream(Direction.values()).map(SideDropdownEntry::new).collect(Collectors.toList());
-        dropdownFieldSide = new WidgetTextFieldDropdown(font, guiLeft + 106, guiTop + 34,
+        dropdownFieldSide = new WidgetTextFieldDropdown(font, leftPos + 106, topPos + 34,
                 68, 14, new TranslationTextComponent("gui.integrateddynamics.partsettings.side"),
                 true, Sets.newHashSet(dropdownEntries));
         setSideInDropdownField(selectedIngredientComponent, ((ContainerPartInterfaceCraftingSettings) container).getTargetSideOverrideValue(selectedIngredientComponent));
-        dropdownFieldSide.setMaxStringLength(15);
+        dropdownFieldSide.setMaxLength(15);
         dropdownFieldSide.setVisible(true);
         dropdownFieldSide.setTextColor(16777215);
         dropdownFieldSide.setCanLoseFocus(true);
 
-        numberFieldChannelInterfaceCrafting = new WidgetNumberField(font, guiLeft + 106, guiTop + 134, 70, 14,
+        numberFieldChannelInterfaceCrafting = new WidgetNumberField(font, leftPos + 106, topPos + 134, 70, 14,
                 true, new TranslationTextComponent("gui.integratedcrafting.partsettings.channel.interface"), true);
         numberFieldChannelInterfaceCrafting.setPositiveOnly(false);
-        numberFieldChannelInterfaceCrafting.setMaxStringLength(15);
+        numberFieldChannelInterfaceCrafting.setMaxLength(15);
         numberFieldChannelInterfaceCrafting.setVisible(true);
         numberFieldChannelInterfaceCrafting.setTextColor(16777215);
         numberFieldChannelInterfaceCrafting.setCanLoseFocus(true);
 
-        checkboxFieldDisabledCraftingCheck = new ButtonCheckbox(guiLeft + 110, guiTop + 159, 110, 10,
+        checkboxFieldDisabledCraftingCheck = new ButtonCheckbox(leftPos + 110, topPos + 159, 110, 10,
                 new TranslationTextComponent("gui.integratedcrafting.partsettings.craftingcheckdisabled"), (entry) ->  {});
 
         this.refreshValues();
@@ -170,20 +172,20 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int mouseX, int mouseY) {
-        super.drawGuiContainerBackgroundLayer(matrixStack, partialTicks, mouseX, mouseY);
+    protected void renderBg(MatrixStack matrixStack, float partialTicks, int mouseX, int mouseY) {
+        // super.renderBg(matrixStack, partialTicks, mouseX, mouseY); // TODO: restore
 
-        font.drawString(matrixStack, L10NHelpers.localize("gui.integrateddynamics.partsettings.side"), guiLeft + 8, guiTop + 12, Helpers.RGBToInt(0, 0, 0));
-        GlStateManager.color4f(1, 1, 1, 1);
+        font.draw(matrixStack, L10NHelpers.localize("gui.integrateddynamics.partsettings.side"), leftPos + 8, topPos + 12, Helpers.RGBToInt(0, 0, 0));
+        GlStateManager._color4f(1, 1, 1, 1);
         ingredientComponentSideSelector.render(matrixStack, mouseX, mouseY, partialTicks);
         dropdownFieldSide.render(matrixStack, mouseX, mouseY, partialTicks);
 
-        font.drawString(matrixStack, L10NHelpers.localize("gui.integratedcrafting.partsettings.channel.interface"),
-                guiLeft + 8, guiTop + 137, 0);
+        font.draw(matrixStack, L10NHelpers.localize("gui.integratedcrafting.partsettings.channel.interface"),
+                leftPos + 8, topPos + 137, 0);
         numberFieldChannelInterfaceCrafting.render(matrixStack, mouseX, mouseY, partialTicks);
 
-        font.drawString(matrixStack, L10NHelpers.localize("gui.integratedcrafting.partsettings.craftingcheckdisabled"),
-                guiLeft + 8, guiTop + 162, 0);
+        font.draw(matrixStack, L10NHelpers.localize("gui.integratedcrafting.partsettings.craftingcheckdisabled"),
+                leftPos + 8, topPos + 162, 0);
         checkboxFieldDisabledCraftingCheck.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
@@ -202,16 +204,16 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     public void onUpdate(int valueId, CompoundNBT value) {
         super.onUpdate(valueId, value);
         for (IngredientComponent<?, ?> ingredientComponent : IngredientComponent.REGISTRY.getValues()) {
-            if (valueId == getContainer().getTargetSideOverrideValueId(ingredientComponent)) {
-                int side = getContainer().getTargetSideOverrideValue(ingredientComponent).ordinal();
+            if (valueId == getMenu().getTargetSideOverrideValueId(ingredientComponent)) {
+                int side = getMenu().getTargetSideOverrideValue(ingredientComponent).ordinal();
                 setSideInDropdownField(ingredientComponent, side == -1 ? getDefaultSide() : Direction.values()[side]);
             }
         }
-        if (valueId == getContainer().getLastChannelInterfaceCraftingValueId()) {
-            numberFieldChannelInterfaceCrafting.setText(Integer.toString(getContainer().getLastChannelInterfaceValue()));
+        if (valueId == getMenu().getLastChannelInterfaceCraftingValueId()) {
+            numberFieldChannelInterfaceCrafting.setValue(Integer.toString(getMenu().getLastChannelInterfaceValue()));
         }
-        if (valueId == getContainer().getLastDisableCraftingCheckValueId()) {
-            checkboxFieldDisabledCraftingCheck.setChecked(getContainer().getLastDisableCraftingCheckValue());
+        if (valueId == getMenu().getLastDisableCraftingCheckValueId()) {
+            checkboxFieldDisabledCraftingCheck.setChecked(getMenu().getLastDisableCraftingCheckValue());
         }
     }
 
@@ -219,6 +221,6 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     public void onChanged() {
         this.onSave();
         selectedIngredientComponent = ingredientComponentSideSelector.getActiveElement();
-        setSideInDropdownField(selectedIngredientComponent, getContainer().getTargetSideOverrideValue(selectedIngredientComponent));
+        setSideInDropdownField(selectedIngredientComponent, getMenu().getTargetSideOverrideValue(selectedIngredientComponent));
     }
 }
