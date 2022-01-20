@@ -16,7 +16,7 @@ Craft stuff in Integrated Dynamics networks.
 [[dependencies.integratedcrafting]]
     modId="cyclopscore"
     mandatory=true
-    versionRange="[1.12.1,)"
+    versionRange="[1.13.0,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.integratedcrafting]]
@@ -28,7 +28,7 @@ Craft stuff in Integrated Dynamics networks.
 [[dependencies.integratedcrafting]]
     modId="commoncapabilities"
     mandatory=true
-    versionRange="[2.8.0,)"
+    versionRange="[2.8.1,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.integratedcrafting]]
