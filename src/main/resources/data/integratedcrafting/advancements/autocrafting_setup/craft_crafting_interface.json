@@ -17,7 +17,9 @@
       "conditions": {
         "items": [
           {
-            "item": "integratedcrafting:part_interface_crafting"
+            "items": [
+              "integratedcrafting:part_interface_crafting"
+            ]
           }
         ]
       }

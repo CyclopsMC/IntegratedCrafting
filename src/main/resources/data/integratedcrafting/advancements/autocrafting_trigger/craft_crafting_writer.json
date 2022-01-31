@@ -17,7 +17,9 @@
       "conditions": {
         "items": [
           {
-            "item": "integratedcrafting:part_crafting_writer"
+            "items": [
+              "integratedcrafting:part_crafting_writer"
+            ]
           }
         ]
       }
