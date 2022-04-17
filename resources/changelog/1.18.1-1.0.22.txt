@@ -1,0 +1,10 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.13.0 or higher.
+
+Fixes:
+* Flush crafting output buffer in same tick
+  This resolves cases where the crafting result may be missed
+  and get stuck in a pending state if it is extracted from the
+  target storage too quickly.
+  Closes #81
+
