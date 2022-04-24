@@ -4,10 +4,11 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.NewRegistryEvent;
 import org.apache.logging.log4j.Level;
 import org.cyclops.cyclopscore.config.ConfigHandler;
 import org.cyclops.cyclopscore.infobook.IInfoBookRegistry;
@@ -55,9 +56,10 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
         registerWorldStorage(globalCounters = new GlobalCounters(this));
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onRegistriesCreate);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::afterSetup);
     }
 
-    public void onRegistriesCreate(RegistryEvent.NewRegistry event) {
+    public void onRegistriesCreate(NewRegistryEvent event) {
         CraftingAspects.load();
         PartTypes.load();
         MinecraftForge.EVENT_BUS.register(new CraftingNetworkCapabilityConstructors());
@@ -67,7 +69,9 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
     @Override
     protected void setup(FMLCommonSetupEvent event) {
         super.setup(event);
+    }
 
+    protected void afterSetup(FMLLoadCompleteEvent event) {
         IntegratedDynamics._instance.getRegistryManager().getRegistry(INetworkCraftingHandlerRegistry.class)
                 .register(new NetworkCraftingHandlerCraftingNetwork());
 
