@@ -395,13 +395,18 @@ public class CraftingJobHandler {
                     markCraftingJobProcessing(startingCraftingJob,
                             CraftingHelpers.getRecipeOutputs(startingCraftingJob.getRecipe()));
 
+                    // Register listeners for pending ingredients
+                    for (IngredientComponent<?, ?> component : startingCraftingJob.getRecipe().getOutput().getComponents()) {
+                        registerIngredientObserver(component, network);
+                    }
+
                     // Push the ingredients to the crafting interface
-                    if (insertCrafting(targetPos, ingredients, network, channel, false)) {
-                        // Register listeners for pending ingredients
+                    if (!insertCrafting(targetPos, ingredients, network, channel, false)) {
+                        // Unregister listeners again for pending ingredients
                         for (IngredientComponent<?, ?> component : startingCraftingJob.getRecipe().getOutput().getComponents()) {
-                            registerIngredientObserver(component, network);
+                            unregisterIngredientObserver(component, network);
                         }
-                    } else {
+
                         // If we reach this point, the target does not accept the recipe inputs,
                         // even though they were acceptable in simulation mode.
                         // The failed ingredients were already re-inserted into the network at this point,
