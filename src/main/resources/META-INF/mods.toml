@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[40,)"
+loaderVersion="[41,)"
 issueTrackerURL="https://github.com/CyclopsMC/IntegratedCrafting/issues"
 displayURL="https://www.curseforge.com/minecraft/mc-mods/integrated-crafting"
 license="MIT"
@@ -16,13 +16,13 @@ Craft stuff in Integrated Dynamics networks.
 [[dependencies.integratedcrafting]]
     modId="cyclopscore"
     mandatory=true
-    versionRange="[1.13.4,)"
+    versionRange="[1.15.0,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.integratedcrafting]]
     modId="integrateddynamics"
     mandatory=true
-    versionRange="[1.10.13,)"
+    versionRange="[1.11.3,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.integratedcrafting]]
@@ -34,12 +34,12 @@ Craft stuff in Integrated Dynamics networks.
 [[dependencies.integratedcrafting]]
     modId="forge"
     mandatory=true
-    versionRange="[40,)"
+    versionRange="[41,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.integratedcrafting]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.18.2,]"
+    versionRange="[1.19,]"
     ordering="NONE"
     side="BOTH"

@@ -94,7 +94,7 @@ public class CraftingJobHandler {
                 CompoundTag ingredientInstance = new CompoundTag();
 
                 IngredientComponent<?, ?> ingredientComponent = ingredientComponentListEntry.getKey();
-                ingredientInstance.putString("ingredientComponent", ingredientComponent.getRegistryName().toString());
+                ingredientInstance.putString("ingredientComponent", IngredientComponent.REGISTRY.getKey(ingredientComponent).toString());
 
                 ListTag instances = new ListTag();
                 IIngredientSerializer serializer = ingredientComponent.getSerializer();

@@ -7,7 +7,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
@@ -95,7 +94,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
 
         ingredientComponentSideSelector = new WidgetArrowedListField<IngredientComponent<?, ?>>(font,
                 leftPos + 106, topPos + 9, 68, 15, true,
-                new TranslatableComponent("gui.integratedcrafting.partsettings.ingredient"),
+                Component.translatable("gui.integratedcrafting.partsettings.ingredient"),
                 true, Lists.newArrayList(IngredientComponent.REGISTRY.getValues())) {
             @Override
             protected String activeElementToString(IngredientComponent<?, ?> element) {
@@ -107,7 +106,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
 
         dropdownEntries = Arrays.stream(Direction.values()).map(SideDropdownEntry::new).collect(Collectors.toList());
         dropdownFieldSide = new WidgetTextFieldDropdown(font, leftPos + 106, topPos + 34,
-                68, 14, new TranslatableComponent("gui.integrateddynamics.partsettings.side"),
+                68, 14, Component.translatable("gui.integrateddynamics.partsettings.side"),
                 true, Sets.newHashSet(dropdownEntries));
         setSideInDropdownField(selectedIngredientComponent, ((ContainerPartInterfaceCraftingSettings) container).getTargetSideOverrideValue(selectedIngredientComponent));
         dropdownFieldSide.setMaxLength(15);
@@ -116,7 +115,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         dropdownFieldSide.setCanLoseFocus(true);
 
         numberFieldChannelInterfaceCrafting = new WidgetNumberField(font, leftPos + 106, topPos + 134, 70, 14,
-                true, new TranslatableComponent("gui.integratedcrafting.partsettings.channel.interface"), true);
+                true, Component.translatable("gui.integratedcrafting.partsettings.channel.interface"), true);
         numberFieldChannelInterfaceCrafting.setPositiveOnly(false);
         numberFieldChannelInterfaceCrafting.setMaxLength(15);
         numberFieldChannelInterfaceCrafting.setVisible(true);
@@ -124,7 +123,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         numberFieldChannelInterfaceCrafting.setCanLoseFocus(true);
 
         checkboxFieldDisabledCraftingCheck = new ButtonCheckbox(leftPos + 110, topPos + 159, 110, 10,
-                new TranslatableComponent("gui.integratedcrafting.partsettings.craftingcheckdisabled"), (entry) ->  {});
+                Component.translatable("gui.integratedcrafting.partsettings.craftingcheckdisabled"), (entry) ->  {});
 
         this.refreshValues();
     }

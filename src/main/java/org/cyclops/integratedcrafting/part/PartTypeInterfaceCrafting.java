@@ -14,8 +14,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
@@ -109,7 +109,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
             @Override
             public MutableComponent getDisplayName() {
-                return new TranslatableComponent(getTranslationKey());
+                return Component.translatable(getTranslationKey());
             }
 
             @Override
@@ -138,7 +138,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
             @Override
             public MutableComponent getDisplayName() {
-                return new TranslatableComponent(getTranslationKey());
+                return Component.translatable(getTranslationKey());
             }
 
             @Override
@@ -370,7 +370,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             ListTag instanceTags = new ListTag();
             for (IngredientInstanceWrapper instanceWrapper : inventoryOutputBuffer) {
                 CompoundTag instanceTag = new CompoundTag();
-                instanceTag.putString("component", instanceWrapper.getComponent().getRegistryName().toString());
+                instanceTag.putString("component", IngredientComponent.REGISTRY.getKey(instanceWrapper.getComponent()).toString());
                 instanceTag.put("instance", instanceWrapper.getComponent().getSerializer().serializeInstance(instanceWrapper.getInstance()));
                 instanceTags.add(instanceTag);
             }
@@ -515,19 +515,19 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                                 if (!GeneralConfig.validateRecipesCraftingInterface || this.disableCraftingCheck || isValid(recipe)) {
                                     this.currentRecipes.put(slot, recipe);
                                     this.recipeSlotValidated.put(slot, true);
-                                    this.recipeSlotMessages.put(slot, new TranslatableComponent("gui.integratedcrafting.partinterface.slot.message.valid"));
+                                    this.recipeSlotMessages.put(slot, Component.translatable("gui.integratedcrafting.partinterface.slot.message.valid"));
                                 } else {
-                                    this.recipeSlotMessages.put(slot, new TranslatableComponent("gui.integratedcrafting.partinterface.slot.message.invalid"));
+                                    this.recipeSlotMessages.put(slot, Component.translatable("gui.integratedcrafting.partinterface.slot.message.invalid"));
                                 }
                             }
                         } else {
-                            this.recipeSlotMessages.put(slot, new TranslatableComponent("gui.integratedcrafting.partinterface.slot.message.norecipe"));
+                            this.recipeSlotMessages.put(slot, Component.translatable("gui.integratedcrafting.partinterface.slot.message.norecipe"));
                         }
                     } catch (EvaluationException e) {
                         this.recipeSlotMessages.put(slot, e.getErrorMessage());
                     }
                 } else {
-                    this.recipeSlotMessages.put(slot, new TranslatableComponent("gui.integratedcrafting.partinterface.slot.message.norecipe"));
+                    this.recipeSlotMessages.put(slot, Component.translatable("gui.integratedcrafting.partinterface.slot.message.norecipe"));
                 }
 
                 try {

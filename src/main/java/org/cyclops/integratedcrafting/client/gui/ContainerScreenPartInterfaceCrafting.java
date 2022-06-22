@@ -3,7 +3,6 @@ package org.cyclops.integratedcrafting.client.gui;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import org.cyclops.cyclopscore.client.gui.component.button.ButtonImage;
@@ -32,7 +31,7 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
     public void init() {
         super.init();
         addRenderableWidget(new ButtonImage(this.leftPos + 155, this.topPos + 4, 15, 15,
-                new TranslatableComponent("gui.integrateddynamics.part_settings"),
+                Component.translatable("gui.integrateddynamics.part_settings"),
                 createServerPressable(ContainerMultipartAspects.BUTTON_SETTINGS, b -> {}), true,
                 Images.CONFIG_BOARD, -2, -3));
     }

@@ -13,14 +13,14 @@ import org.cyclops.integrateddynamics.item.ItemVariable;
  */
 public class RegistryEntries {
 
-    @ObjectHolder("integratedcrafting:part_interface_crafting")
+    @ObjectHolder(registryName = "item", value = "integratedcrafting:part_interface_crafting")
     public static final Item ITEM_PART_INTERFACE_CRAFTING = null;
-    @ObjectHolder("integrateddynamics:variable")
+    @ObjectHolder(registryName = "item", value = "integrateddynamics:variable")
     public static final ItemVariable ITEM_VARIABLE = null;
 
-    @ObjectHolder("integratedcrafting:part_interface_crafting")
+    @ObjectHolder(registryName = "menu", value = "integratedcrafting:part_interface_crafting")
     public static final MenuType<ContainerPartInterfaceCrafting> CONTAINER_INTERFACE_CRAFTING = null;
-    @ObjectHolder("integratedcrafting:part_interface_crafting_settings")
+    @ObjectHolder(registryName = "menu", value = "integratedcrafting:part_interface_crafting_settings")
     public static final MenuType<ContainerPartInterfaceCraftingSettings> CONTAINER_INTERFACE_CRAFTING_SETTINGS = null;
 
 }
