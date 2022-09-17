@@ -153,10 +153,10 @@ public class CraftingAspectWriteBuilders {
                     boolean craftMissing = properties.getValue(PROP_CRAFT_MISSING).getRawValue();
                     int craftDelay = properties.getValue(PROP_CRAFT_DELAY).getRawValue();
 
-                    if (ignoreStorage || !CraftingHelpers.hasStorageInstance(network, channel,
-                            ingredientComponent, instance, ingredientComponent.getMatcher().getExactMatchCondition())
-                            && (ignoreCrafting || !CraftingHelpers.isCrafting(craftingNetwork, channel, ingredientComponent,
-                            instance, matchCondition))) {
+                    if ((ignoreStorage || !CraftingHelpers.hasStorageInstance(network, channel, ingredientComponent,
+                            instance, ingredientComponent.getMatcher().getExactMatchCondition()))
+                            && (ignoreCrafting || !CraftingHelpers.isCrafting(craftingNetwork, channel,
+                                ingredientComponent, instance, matchCondition))) {
                         // Handle craft delay (only if we are checking storage)
                         boolean allowCraft;
                         if (craftDelay > 0 && !ignoreStorage) {
