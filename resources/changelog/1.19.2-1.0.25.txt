@@ -1,0 +1,19 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.17.0 or higher.
+
+Additions:
+
+Changes:
+
+Fixes:
+* Fix ignore storage contents overriding ignore crafting jobs, Closes #87
+
+* Bump mod version
+
+* Fix jobs after initial one getting stuck, Closes #83
+
+This bug was introduced in febd15d7343b71c654d61b2574a126039ba2304b
+due to synchronous item insertion into the network.
+The fix involves registering observers earlier so that
+crafting job completion can always be tracked.
+
