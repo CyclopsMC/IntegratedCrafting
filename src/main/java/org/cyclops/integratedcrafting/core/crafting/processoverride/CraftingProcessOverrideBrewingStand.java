@@ -1,10 +1,10 @@
 package org.cyclops.integratedcrafting.core.crafting.processoverride;
 
+import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
-import net.minecraft.core.Direction;
 import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
-import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
@@ -51,8 +51,8 @@ public class CraftingProcessOverrideBrewingStand implements ICraftingProcessOver
         // Insert the ingredients into the target
         return getTile(targetGetter.apply(IngredientComponent.ITEMSTACK))
                 .map(tile -> {
-                    IItemHandler ingredientHandler = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, SIDE_INGREDIENT).orElse(null);
-                    IItemHandler bottleHandler = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, SIDE_BOTTLE).orElse(null);
+                    IItemHandler ingredientHandler = tile.getCapability(ForgeCapabilities.ITEM_HANDLER, SIDE_INGREDIENT).orElse(null);
+                    IItemHandler bottleHandler = tile.getCapability(ForgeCapabilities.ITEM_HANDLER, SIDE_BOTTLE).orElse(null);
                     if (ingredientHandler != null && bottleHandler != null) {
                         int ingredientSlotIndex = 0;
                         int bottleSlotIndex = 0;

@@ -12,6 +12,7 @@ import org.cyclops.cyclopscore.helper.ValueNotifierHelpers;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
 import org.cyclops.integratedcrafting.RegistryEntries;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
+import org.cyclops.integrateddynamics.api.evaluate.variable.ValueDeseralizationContext;
 import org.cyclops.integrateddynamics.api.item.IVariableFacade;
 import org.cyclops.integrateddynamics.api.part.IPartContainer;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
@@ -90,7 +91,7 @@ public class ContainerPartInterfaceCrafting extends ContainerMultipart<PartTypeI
             return new SlotVariable(inventory, index, x, y) {
                 @Override
                 public boolean mayPlace(ItemStack itemStack) {
-                    IVariableFacade variableFacade = RegistryEntries.ITEM_VARIABLE.getVariableFacade(itemStack);
+                    IVariableFacade variableFacade = RegistryEntries.ITEM_VARIABLE.getVariableFacade(ValueDeseralizationContext.ofAllEnabled(), itemStack);
                     return variableFacade != null
                             && ValueHelpers.correspondsTo(variableFacade.getOutputType(), ValueTypes.OBJECT_RECIPE)
                             && super.mayPlace(itemStack);

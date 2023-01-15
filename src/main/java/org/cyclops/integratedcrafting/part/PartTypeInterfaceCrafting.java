@@ -63,6 +63,7 @@ import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterface
 import org.cyclops.integrateddynamics.api.evaluate.EvaluationException;
 import org.cyclops.integrateddynamics.api.evaluate.variable.IValue;
 import org.cyclops.integrateddynamics.api.evaluate.variable.IVariable;
+import org.cyclops.integrateddynamics.api.evaluate.variable.ValueDeseralizationContext;
 import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.IPartNetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
@@ -191,7 +192,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 .ifPresent(craftingNetwork -> {
                     int channelCrafting = state.getChannelCrafting();
                     state.setTarget(pos);
-                    state.setNetworks(network, craftingNetwork, NetworkHelpers.getPartNetworkChecked(network), channelCrafting);
+                    state.setNetworks(network, craftingNetwork, NetworkHelpers.getPartNetworkChecked(network), channelCrafting, ValueDeseralizationContext.of(pos.getCenter().getPos().getLevel(true)));
                     state.setShouldAddToCraftingNetwork(true);
                 });
     }
@@ -202,7 +203,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             network.getCapability(getNetworkCapability())
                     .ifPresent(n -> n.removeCraftingInterface(state.getChannelCrafting(), state));
         }
-        state.setNetworks(null, null, null, -1);
+        state.setNetworks(null, null, null, -1, null);
         state.setTarget(null);
     }
 
@@ -333,6 +334,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private ICraftingNetwork craftingNetwork = null;
         private IPartNetwork partNetwork = null;
         private int channel = -1;
+        private ValueDeseralizationContext valueDeseralizationContext;
         private boolean shouldAddToCraftingNetwork = false;
         private Player lastPlayer;
 
@@ -395,8 +397,8 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Override
-        public void readFromNBT(CompoundTag tag) {
-            super.readFromNBT(tag);
+        public void readFromNBT(ValueDeseralizationContext valueDeseralizationContext, CompoundTag tag) {
+            super.readFromNBT(valueDeseralizationContext, tag);
             inventoryVariables.readFromNBT(tag, "variables");
 
             this.inventoryOutputBuffer.clear();
@@ -458,7 +460,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             for (int i = 0; i < getInventoryVariables().getContainerSize(); i++) {
                 int slot = i;
                 variableEvaluators.add(new InventoryVariableEvaluator<ValueObjectTypeRecipe.ValueRecipe>(
-                        getInventoryVariables(), slot, ValueTypes.OBJECT_RECIPE) {
+                        getInventoryVariables(), slot, valueDeseralizationContext, ValueTypes.OBJECT_RECIPE) {
                     @Override
                     public void onErrorsChanged() {
                         super.onErrorsChanged();
@@ -611,11 +613,13 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         public void setNetworks(@Nullable INetwork network, @Nullable ICraftingNetwork craftingNetwork,
-                                @Nullable IPartNetwork partNetwork, int channel) {
+                                @Nullable IPartNetwork partNetwork, int channel,
+                                @Nullable ValueDeseralizationContext valueDeseralizationContext) {
             this.network = network;
             this.craftingNetwork = craftingNetwork;
             this.partNetwork = partNetwork;
             this.channel = channel;
+            this.valueDeseralizationContext = valueDeseralizationContext;
             reloadRecipes();
             if (network != null) {
                 this.getCraftingJobHandler().reRegisterObservers(network);

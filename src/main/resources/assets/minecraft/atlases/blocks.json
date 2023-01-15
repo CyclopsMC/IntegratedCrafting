@@ -1,0 +1,14 @@
+{ "sources": [
+  { "type": "minecraft:single", "resource": "integratedcrafting:aspect/write/energy/craft" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:aspect/write/recipe/craft" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:aspect/write/fluid/craft" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:aspect/write/item/craft" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:aspect/read/list/network/recipes" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:aspect/read/list/network/craftingingredients" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:aspect/read/list/network/craftingjobs" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:part/crafting_writer_front_error" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:part/crafting_writer_front_active" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:part/crafting_writer_front_inactive" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:part/interface_crafting" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:part/crafting_writer_back" }
+]}
