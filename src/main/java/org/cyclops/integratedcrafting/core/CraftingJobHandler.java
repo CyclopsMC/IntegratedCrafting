@@ -354,7 +354,7 @@ public class CraftingJobHandler {
                 // This requires checking the available ingredients AND if the crafting handler can accept it.
                 Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputs = CraftingHelpers.getRecipeInputs(
                         CraftingHelpers.getNetworkStorageGetter(network, pendingCraftingJob.getChannel(), false),
-                        pendingCraftingJob.getRecipe(), true, Maps.newIdentityHashMap(), true, 1);
+                        pendingCraftingJob.getRecipe(), true, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), true, 1);
                 if (inputs.getRight().isEmpty()) { // If we have no missing ingredients
                     if (insertCrafting(targetPos, new MixedIngredients(inputs.getLeft()), network, channel, true)) {
                         startingCraftingJob = pendingCraftingJob;
