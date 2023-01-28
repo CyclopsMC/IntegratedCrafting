@@ -368,6 +368,33 @@ public class CraftingJobHandler {
                     if (pendingCraftingJob.getLastMissingIngredients().isEmpty()) {
                         for (IngredientComponent<?, ?> component : inputs.getRight().keySet()) {
                             registerIngredientObserver(component, network);
+
+                            // For the missing ingredients that are reusable,
+                            // trigger a crafting job for them if no job is running yet.
+                            // This special case is needed because reusable ingredients are usually durability-based,
+                            // and may be consumed _during_ a bulk crafting job.
+                            MissingIngredients<?, ?> missingIngredients = inputs.getRight().get(component);
+                            for (MissingIngredients.Element<?, ?> element : missingIngredients.getElements()) {
+                                if (element.isInputReusable()) {
+                                    for (MissingIngredients.PrototypedWithRequested alternative : element.getAlternatives()) {
+                                        // Try to start crafting jobs for each alternative until one of them succeeds.
+                                        if (CraftingHelpers.isCrafting(craftingNetwork, channel,
+                                                alternative.getRequestedPrototype().getComponent(), alternative.getRequestedPrototype().getPrototype(), alternative.getRequestedPrototype().getCondition())) {
+                                            // Break loop if we have found an existing job for our dependency
+                                            // This may occur if a crafting job was triggered in a parallelized job
+                                            break;
+                                        }
+                                        CraftingJob craftingJob = CraftingHelpers.calculateAndScheduleCraftingJob(network, channel,
+                                                alternative.getRequestedPrototype().getComponent(), alternative.getRequestedPrototype().getPrototype(), alternative.getRequestedPrototype().getCondition(), true, true,
+                                                CraftingHelpers.getGlobalCraftingJobIdentifier(), null);
+                                        if (craftingJob != null) {
+                                            pendingCraftingJob.addDependency(craftingJob);
+                                            // Break loop once we have found a valid job
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
