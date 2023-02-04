@@ -39,6 +39,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     private IngredientComponent<?, ?> selectedIngredientComponent = null;
     private WidgetNumberField numberFieldChannelInterfaceCrafting = null;
     private ButtonCheckbox checkboxFieldDisabledCraftingCheck = null;
+    private ButtonCheckbox checkboxFieldBlockingMode = null;
 
     public ContainerScreenPartInterfaceCraftingSettings(ContainerPartInterfaceCraftingSettings container, Inventory inventory, Component title) {
         super(container, inventory, title);
@@ -85,6 +86,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
             int channelInterface = numberFieldChannelInterfaceCrafting.getInt();
             ValueNotifierHelpers.setValue(getMenu(), getMenu().getLastChannelInterfaceCraftingValueId(), channelInterface);
             getMenu().setLastDisableCraftingCheckValue(checkboxFieldDisabledCraftingCheck.isChecked());
+            getMenu().setLastBlockingModeValue(checkboxFieldBlockingMode.isChecked());
         } catch (NumberFormatException e) {
         }
     }
@@ -123,8 +125,11 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         numberFieldChannelInterfaceCrafting.setTextColor(16777215);
         numberFieldChannelInterfaceCrafting.setCanLoseFocus(true);
 
-        checkboxFieldDisabledCraftingCheck = new ButtonCheckbox(leftPos + 110, topPos + 159, 110, 10,
+        checkboxFieldDisabledCraftingCheck = new ButtonCheckbox(leftPos + 110, topPos + 149, 110, 10,
                 new TranslatableComponent("gui.integratedcrafting.partsettings.craftingcheckdisabled"), (entry) ->  {});
+
+        checkboxFieldBlockingMode = new ButtonCheckbox(leftPos + 110, topPos + 159, 110, 10,
+                new TranslatableComponent("gui.integratedcrafting.partsettings.blockingmode"), (entry) ->  {});
 
         this.refreshValues();
     }
@@ -165,6 +170,9 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         if (this.checkboxFieldDisabledCraftingCheck.mouseClicked(mouseX, mouseY, mouseButton)) {
             return true;
         }
+        if (this.checkboxFieldBlockingMode.mouseClicked(mouseX, mouseY, mouseButton)) {
+            return true;
+        }
         return super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
@@ -182,8 +190,12 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         numberFieldChannelInterfaceCrafting.render(matrixStack, mouseX, mouseY, partialTicks);
 
         font.draw(matrixStack, L10NHelpers.localize("gui.integratedcrafting.partsettings.craftingcheckdisabled"),
-                leftPos + 8, topPos + 162, 0);
+                leftPos + 8, topPos + 152, 0);
         checkboxFieldDisabledCraftingCheck.render(matrixStack, mouseX, mouseY, partialTicks);
+
+        font.draw(matrixStack, L10NHelpers.localize("gui.integratedcrafting.partsettings.blockingmode"),
+                leftPos + 8, topPos + 162, 0);
+        checkboxFieldBlockingMode.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
     @Override
@@ -211,6 +223,9 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         }
         if (valueId == getMenu().getLastDisableCraftingCheckValueId()) {
             checkboxFieldDisabledCraftingCheck.setChecked(getMenu().getLastDisableCraftingCheckValue());
+        }
+        if (valueId == getMenu().getLastBlockingModeValueId()) {
+            checkboxFieldBlockingMode.setChecked(getMenu().getLastBlockingModeValue());
         }
     }
 
