@@ -9,6 +9,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.cyclopscore.datastructure.Wrapper;
+import org.cyclops.cyclopscore.ingredient.collection.IIngredientCollectionMutable;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
 import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageCollectionWrapper;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
@@ -53,6 +54,7 @@ public class TestCaseJobCalculationFluxedArmorPlating {
 
     private Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter;
     private Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemory;
+    private Map<IngredientComponent<?, ?>, IIngredientCollectionMutable<?, ?>> simulatedExtractionMemoryReusable;
     private CraftingHelpers.IIdentifierGenerator identifierGenerator;
     private CraftingJobDependencyGraph craftingJobDependencyGraph;
     private Set<IPrototypedIngredient> parentDependencies;
@@ -92,6 +94,7 @@ public class TestCaseJobCalculationFluxedArmorPlating {
         recipeIndex.addRecipe(recipePlating);
 
         simulatedExtractionMemory = Maps.newIdentityHashMap();
+        simulatedExtractionMemoryReusable = Maps.newIdentityHashMap();
         Wrapper<Integer> id = new Wrapper<>(0);
         identifierGenerator = () -> {
             int last = id.get();
@@ -114,7 +117,7 @@ public class TestCaseJobCalculationFluxedArmorPlating {
 
         CraftingJob j16 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, C_PLATING, ComplexStack.Match.EXACT, true,
-                simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
+                simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
 
         assertThat(j16.getId(), equalTo(16));
         assertThat(j16.getChannel(), equalTo(0));
@@ -188,7 +191,7 @@ public class TestCaseJobCalculationFluxedArmorPlating {
 
         PartialCraftingJobCalculation calculation = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 recipePlating, 1, true,
-                simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
+                simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
         assertThat(calculation.getPartialCraftingJobs(), nullValue());
         assertThat(calculation.getIngredientsStorage().keySet().size(), equalTo(1));
         assertThat(calculation.getIngredientsStorage().get(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
@@ -269,7 +272,7 @@ public class TestCaseJobCalculationFluxedArmorPlating {
 
         CraftingJob j16 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, C_PLATING.withAmount(4), ComplexStack.Match.EXACT, true,
-                simulatedExtractionMemory, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
+                simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
 
         assertThat(j16.getId(), equalTo(16));
         assertThat(j16.getChannel(), equalTo(0));

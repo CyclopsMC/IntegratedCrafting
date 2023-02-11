@@ -2,7 +2,6 @@ package org.cyclops.integratedcrafting.part;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
-import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.ints.Int2BooleanArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
@@ -339,7 +338,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private Player lastPlayer;
 
         public State() {
-            this.craftingJobHandler = new CraftingJobHandler(1,
+            this.craftingJobHandler = new CraftingJobHandler(1, true,
                     CraftingProcessOverrides.REGISTRY.getCraftingProcessOverrides(), this);
             this.inventoryVariables = new SimpleInventory(9, 1);
             this.inventoryVariables.addDirtyMarkListener(this);
@@ -665,10 +664,10 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Override
-        public Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> getPendingCraftingJobOutputs(int craftingJobId) {
-            Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pending = this.craftingJobHandler.getProcessingCraftingJobsPendingIngredients().get(craftingJobId);
+        public List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> getPendingCraftingJobOutputs(int craftingJobId) {
+            List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> pending = this.craftingJobHandler.getProcessingCraftingJobsPendingIngredients().get(craftingJobId);
             if (pending == null) {
-                pending = Maps.newIdentityHashMap();
+                pending = Lists.newArrayList();
             }
             return pending;
         }

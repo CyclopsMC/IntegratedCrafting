@@ -100,19 +100,21 @@ public class CraftingAspects {
                                                 it.remove();
                                                 continue;
                                             }
-                                            Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pendingPrototypes = craftingInterface
+                                            List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> pendingPrototypesList = craftingInterface
                                                     .getPendingCraftingJobOutputs(crafingJob.getId());
 
-                                            if (pendingPrototypes.isEmpty()) {
+                                            if (pendingPrototypesList.isEmpty() || pendingPrototypesList.get(0).isEmpty()) {
                                                 continue;
                                             }
 
                                             Map<IngredientComponent<?, ?>, List<?>> pendingIngredients = Maps.newIdentityHashMap();
-                                            for (IngredientComponent<?, ?> ingredientComponent : pendingPrototypes.keySet()) {
-                                                pendingIngredients.put(ingredientComponent, pendingPrototypes
-                                                        .get(ingredientComponent).stream()
-                                                        .map(IPrototypedIngredient::getPrototype)
-                                                        .collect(Collectors.toList()));
+                                            for (Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pendingPrototypes : pendingPrototypesList) {
+                                                for (IngredientComponent<?, ?> ingredientComponent : pendingPrototypes.keySet()) {
+                                                    pendingIngredients.put(ingredientComponent, pendingPrototypes
+                                                            .get(ingredientComponent).stream()
+                                                            .map(IPrototypedIngredient::getPrototype)
+                                                            .collect(Collectors.toList()));
+                                                }
                                             }
 
                                             ingredients.add(ValueObjectTypeIngredients.ValueIngredients.of(new MixedIngredients(pendingIngredients)));

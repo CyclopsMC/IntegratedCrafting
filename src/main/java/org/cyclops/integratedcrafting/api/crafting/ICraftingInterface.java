@@ -45,11 +45,12 @@ public interface ICraftingInterface {
     public Iterator<CraftingJob> getCraftingJobs();
 
     /**
-     * Get the pending outputs for the given crafting job.
+     * Get the pending outputs for the given crafting job,
+     * where the list indicates the different entries running in parallel.
      * @param craftingJobId A crafting job id.
      * @return A collection of all pending prototype-based ingredients.
      */
-    public Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> getPendingCraftingJobOutputs(int craftingJobId);
+    public List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> getPendingCraftingJobOutputs(int craftingJobId);
 
     /**
      * Get the status for the given crafting job.

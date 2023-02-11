@@ -1,0 +1,29 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.17.0 or higher.
+
+Additions:
+* Allow reusable recipe ingredients, Closes #36
+  If the player marks a recipe ingredient as reusable, this ingredient
+  will not be crafted multiple times if the recipe is requested in bulk.
+  This is useful for recipes that make use of items that only consume
+  durability if they are used in a recipe.
+* Add option to crafting interfaces to disable blocking mode
+  When this option is enabled, the crafting interface will try to push as
+  much parallel crafting jobs into the target as possible for bulk
+  crafting jobs.
+  This is mainly useful for machines that can process multiple inputs in
+  parallel.
+  Closes #90
+
+Changes:
+* Allow jobs to partially start if dependencies are not fully finished
+  This fixes issues with multi-amount jobs with many dependencies,
+  where the root job would not be able to start unless the dependencies would
+  be fully finished.
+  For example, recipes that involve chains of multiple machines
+  will result in more efficient pipelining.
+  Closes #6
+* Only craft missing number of items in Crafting Writer
+  This will now properly take into account the stacksize of items as desired amount.
+  Closes #77
+
