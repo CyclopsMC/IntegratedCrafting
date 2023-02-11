@@ -332,7 +332,8 @@ public class CraftingJobHandler {
         if (count == 0) {
             IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers
                     .getIngredientsNetworkChecked(network, ingredientComponent);
-            PendingCraftingJobResultIndexObserver<T, M> observer = new PendingCraftingJobResultIndexObserver<>(ingredientComponent, this);
+            ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetworkChecked(network);
+            PendingCraftingJobResultIndexObserver<T, M> observer = new PendingCraftingJobResultIndexObserver<>(ingredientComponent, this, craftingNetwork);
             ingredientsNetwork.addObserver(observer);
             ingredientsNetwork.scheduleObservation();
             ingredientObservers.put(ingredientComponent, observer);
@@ -381,12 +382,18 @@ public class CraftingJobHandler {
         }
     }
 
-    public void onCraftingJobEntryFinished(int craftingJobId) {
+    public void onCraftingJobEntryFinished(ICraftingNetwork craftingNetwork, int craftingJobId) {
         CraftingJob craftingJob = this.allCraftingJobs.get(craftingJobId);
         craftingJob.setAmount(craftingJob.getAmount() - 1);
 
         if (this.nonBlockingJobsRunningAmount.containsKey(craftingJobId)) {
             this.nonBlockingJobsRunningAmount.put(craftingJobId, this.nonBlockingJobsRunningAmount.get(craftingJobId) - 1);
+        }
+
+        // We mark each dependent job that it may attempt to be started,
+        // because its (partially) finished dependency may have produced ingredients to already start part of this job.
+        for (CraftingJob dependent : craftingNetwork.getCraftingJobDependencyGraph().getDependents(craftingJob)) {
+            dependent.setIgnoreDependencyCheck(true);
         }
     }
 
@@ -454,8 +461,14 @@ public class CraftingJobHandler {
             CraftingJobDependencyGraph dependencyGraph = craftingNetwork.getCraftingJobDependencyGraph();
             for (CraftingJob pendingCraftingJob : getPendingCraftingJobs()) {
                 // Make sure that this crafting job has no incomplete dependency jobs
-                if (dependencyGraph.hasDependencies(pendingCraftingJob)) {
+                // This check can be overridden if the ignoreDependencyCheck flag is set
+                // (which is done once a dependent finishes a job entry).
+                // This override only applies for a single tick.
+                if (dependencyGraph.hasDependencies(pendingCraftingJob) && !pendingCraftingJob.isIgnoreDependencyCheck()) {
                     continue;
+                }
+                if (pendingCraftingJob.isIgnoreDependencyCheck()) {
+                    pendingCraftingJob.setIgnoreDependencyCheck(false);
                 }
 
                 // Check if pendingCraftingJob can start and set as startingCraftingJob

@@ -11,6 +11,7 @@ import org.cyclops.cyclopscore.ingredient.collection.IIngredientCollection;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
 import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageCollectionWrapper;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
+import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integrateddynamics.api.ingredient.IIngredientComponentStorageObservable;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetwork;
 
@@ -31,10 +32,12 @@ public class PendingCraftingJobResultIndexObserver<T, M>
 
     private final IngredientComponent<T, M> ingredientComponent;
     private final CraftingJobHandler handler;
+    private final ICraftingNetwork craftingNetwork;
 
-    public PendingCraftingJobResultIndexObserver(IngredientComponent<T, M> ingredientComponent, CraftingJobHandler handler) {
+    public PendingCraftingJobResultIndexObserver(IngredientComponent<T, M> ingredientComponent, CraftingJobHandler handler, ICraftingNetwork craftingNetwork) {
         this.ingredientComponent = ingredientComponent;
         this.handler = handler;
+        this.craftingNetwork = craftingNetwork;
     }
 
     @Override
@@ -118,7 +121,7 @@ public class PendingCraftingJobResultIndexObserver<T, M>
                                 jobEntry.remove(ingredientComponent);
                                 if (jobEntry.isEmpty()) {
                                     // No ingredients are pending for this non-blocking-mode-entry are pending
-                                    handler.onCraftingJobEntryFinished(craftingJobId);
+                                    handler.onCraftingJobEntryFinished(this.craftingNetwork, craftingJobId);
                                     jobEntryIt.remove();
                                 }
                                 if (jobsEntry.getValue().isEmpty()) {

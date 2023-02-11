@@ -33,6 +33,7 @@ public class CraftingJob {
     private boolean invalidInputs;
     @Nullable
     private String initiatorUuid;
+    private boolean ignoreDependencyCheck;
 
     public CraftingJob(int id, int channel, IRecipeDefinition recipe, int amount, IMixedIngredients ingredientsStorage) {
         this.id = id;
@@ -44,6 +45,7 @@ public class CraftingJob {
         this.dependencyCraftingJobs = new IntArrayList();
         this.dependentCraftingJobs = new IntArrayList();
         this.invalidInputs = false;
+        this.ignoreDependencyCheck = false;
     }
 
     public int getId() {
@@ -132,6 +134,14 @@ public class CraftingJob {
         this.initiatorUuid = initiatorUuid;
     }
 
+    public void setIgnoreDependencyCheck(boolean ignoreDependencyCheck) {
+        this.ignoreDependencyCheck = ignoreDependencyCheck;
+    }
+
+    public boolean isIgnoreDependencyCheck() {
+        return ignoreDependencyCheck;
+    }
+
     public static CompoundTag serialize(CraftingJob craftingJob) {
         CompoundTag tag = new CompoundTag();
         tag.putInt("id", craftingJob.id);
@@ -147,6 +157,7 @@ public class CraftingJob {
         if (craftingJob.initiatorUuid != null) {
             tag.putString("initiatorUuid", craftingJob.initiatorUuid);
         }
+        tag.putBoolean("ignoreDependencyCheck", craftingJob.ignoreDependencyCheck);
         return tag;
     }
 
@@ -201,6 +212,7 @@ public class CraftingJob {
         if (tag.contains("initiatorUuid", Tag.TAG_STRING)) {
             craftingJob.setInitiatorUuid(tag.getString("initiatorUuid"));
         }
+        craftingJob.setIgnoreDependencyCheck(tag.getBoolean("ignoreDependencyCheck"));
         return craftingJob;
     }
 
