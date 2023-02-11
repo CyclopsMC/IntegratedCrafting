@@ -46,6 +46,15 @@
             <paragraph>info_book.integratedcrafting.crafting_interface.distribution.text2</paragraph>
         </section>
 
+        <section name="info_book.integratedcrafting.crafting_interface.blocking">
+            <paragraph>info_book.integratedcrafting.crafting_interface.blocking.text1</paragraph>
+            <paragraph>info_book.integratedcrafting.crafting_interface.blocking.text2</paragraph>
+        </section>
+
+        <section name="info_book.integratedcrafting.crafting_interface.reusable">
+            <paragraph>info_book.integratedcrafting.crafting_interface.reusable.text1</paragraph>
+        </section>
+
         <section name="info_book.integratedcrafting.crafting_interface.dynamic_recipes">
             <paragraph>info_book.integratedcrafting.crafting_interface.dynamic_recipes.text1</paragraph>
             <paragraph>info_book.integratedcrafting.crafting_interface.dynamic_recipes.text2</paragraph>

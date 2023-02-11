@@ -55,6 +55,7 @@ public class MissingIngredients<T, M> {
                     CompoundTag alternativeTag = new CompoundTag();
                     alternativeTag.put("requestedPrototype", IPrototypedIngredient.serialize(alternative.getRequestedPrototype()));
                     alternativeTag.putLong("quantityMissing", alternative.getQuantityMissing());
+                    alternativeTag.putBoolean("inputReusable", element.isInputReusable()); // Hack, should actually be one level higher, but this is for backwards-compat
                     elementsTag.add(alternativeTag);
                 }
                 missingIngredientsTag.add(elementsTag);
@@ -85,13 +86,15 @@ public class MissingIngredients<T, M> {
             for (int i = 0; i < missingIngredientsTag.size(); i++) {
                 ListTag elementsTag = (ListTag) missingIngredientsTag.get(i);
                 List<MissingIngredients.PrototypedWithRequested<?, ?>> alternatives = Lists.newArrayList();
+                boolean inputReusable = false;
                 for (int j = 0; j < elementsTag.size(); j++) {
                     CompoundTag alternativeTag = elementsTag.getCompound(j);
                     IPrototypedIngredient<?, ?> requestedPrototype = IPrototypedIngredient.deserialize(alternativeTag.getCompound("requestedPrototype"));
                     long quantityMissing = alternativeTag.getLong("quantityMissing");
+                    inputReusable = alternativeTag.getBoolean("inputReusable");
                     alternatives.add(new PrototypedWithRequested<>(requestedPrototype, quantityMissing));
                 }
-                elements.add(new Element(alternatives));
+                elements.add(new Element(alternatives, inputReusable));
             }
 
             MissingIngredients<?, ?> missingIngredients = new MissingIngredients(elements);
@@ -108,23 +111,31 @@ public class MissingIngredients<T, M> {
     public static class Element<T, M> {
 
         private final List<MissingIngredients.PrototypedWithRequested<T, M>> alternatives;
+        private final boolean inputReusable;
 
-        public Element(List<MissingIngredients.PrototypedWithRequested<T, M>> alternatives) {
+        public Element(List<MissingIngredients.PrototypedWithRequested<T, M>> alternatives, boolean inputReusable) {
             this.alternatives = alternatives;
+            this.inputReusable = inputReusable;
         }
 
         public List<PrototypedWithRequested<T, M>> getAlternatives() {
             return alternatives;
         }
 
+        public boolean isInputReusable() {
+            return inputReusable;
+        }
+
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof Element && this.getAlternatives().equals(((Element) obj).getAlternatives());
+            return obj instanceof Element
+                    && this.getAlternatives().equals(((Element) obj).getAlternatives())
+                    && this.isInputReusable() == ((Element) obj).isInputReusable();
         }
 
         @Override
         public String toString() {
-            return getAlternatives().toString();
+            return getAlternatives().toString() + "::" + isInputReusable();
         }
     }
 

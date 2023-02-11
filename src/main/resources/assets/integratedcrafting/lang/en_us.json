@@ -7,6 +7,7 @@
   "gui.integratedcrafting.partsettings.channel.interface": "Crafting Channel",
   "gui.integratedcrafting.partsettings.ingredient": "Ingredient Type",
   "gui.integratedcrafting.partsettings.craftingcheckdisabled": "Disable Craft Check",
+  "gui.integratedcrafting.partsettings.blockingmode": "Blocking Mode",
 
   "gui.integratedcrafting.partinterface.slot.message.valid": "Recipe is valid for the target.",
   "gui.integratedcrafting.partinterface.slot.message.invalid": "Recipe is not acceptable by the target.",
@@ -96,6 +97,13 @@
   "info_book.integratedcrafting.crafting_interface.distribution": "Distributed Crafting Jobs",
   "info_book.integratedcrafting.crafting_interface.distribution.text1": "If you are working with slow machines, or if you want to improve the efficiency of certain crafting jobs, you can &odistribute&r a crafting job over multiple &lCrafting Interfaces&r. For example, this feature allows you to distribute the crafting of 40 iron ingots evenly over 10 furnaces.",
   "info_book.integratedcrafting.crafting_interface.distribution.text2": "The only things that is needed to make this work, is to make sure that all machines that you want to distribute over, have a &lCrafting Interface&r that (at least) expose exactly the same recipe that you want to distribute. In the case of our previous example, you would have to make sure that all 10 furnaces have a &lCrafting Interface&r containing (at least) exactly the same recipe for smelting iron ingots.",
+
+  "info_book.integratedcrafting.crafting_interface.blocking": "Blocking Mode",
+  "info_book.integratedcrafting.crafting_interface.blocking.text1": "By default, the &lCrafting Interface&r will have &oblocking mode&r enabled. This will cause the machine to only accept one recipe at a time. It will only start with the next recipe if the previous one has completed.",
+  "info_book.integratedcrafting.crafting_interface.blocking.text2": "For machines that can process multiple inputs in parallel, you may disable &oblocking mode&r via the settings GUI of the &lCrafting Interface&r. When disabling &oblocking mode&r, as many inputs as possible will be processed by the machine as possible if you have a multi-amount crafting job.",
+
+  "info_book.integratedcrafting.crafting_interface.reusable": "Reusable ingredients",
+  "info_book.integratedcrafting.crafting_interface.reusable.text1": "If you want to configure recipes that do not fully consume input items, but for example only consume part of the durability of that item, you may configure those recipe ingredients as &oreusable&r. This can be done during recipe &lVariable Card&r creation by shift-clicking on an input slot inside the &lLogic Programmer&r and enabling the &oReusable&r checkbox.",
 
   "info_book.integratedcrafting.crafting_interface.dynamic_recipes": "Dynamic Recipes",
   "info_book.integratedcrafting.crafting_interface.dynamic_recipes.text1": "Following the dynamic nature of &lIntegrated Dynamics&r &lVariable Cards&r, recipes that are exposed through &lCrafting Interfaces&r can also be fully dynamic. For example, you could expose a recipe that changes based on it being day or night, or the availability of a certain item in the network.",

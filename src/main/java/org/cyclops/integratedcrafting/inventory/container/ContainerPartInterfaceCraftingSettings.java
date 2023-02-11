@@ -30,6 +30,7 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
     private final int lastChannelInterfaceCraftingValueId;
     private final Map<IngredientComponent<?, ?>, Integer> targetSideOverrideValueIds;
     private final int lastDisableCraftingCheckValueId;
+    private final int lastBlockingModeValueId;
 
     public ContainerPartInterfaceCraftingSettings(int id, Inventory playerInventory, FriendlyByteBuf packetBuffer) {
         this(id, playerInventory, new SimpleContainer(0), PartHelpers.readPartTarget(packetBuffer), Optional.empty(), PartHelpers.readPart(packetBuffer));
@@ -45,6 +46,7 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
             targetSideOverrideValueIds.put(ingredientComponent, getNextValueId());
         }
         lastDisableCraftingCheckValueId = getNextValueId();
+        lastBlockingModeValueId = getNextValueId();
     }
 
     @Override
@@ -61,6 +63,7 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
                     ((PartTypeInterfaceCrafting.State) getPartState()).getIngredientComponentTargetSideOverride(ingredientComponent).ordinal());
         }
         ValueNotifierHelpers.setValue(this, lastDisableCraftingCheckValueId, ((PartTypeInterfaceCrafting.State) getPartState()).isDisableCraftingCheck());
+        ValueNotifierHelpers.setValue(this, lastBlockingModeValueId, ((PartTypeInterfaceCrafting.State) getPartState()).getCraftingJobHandler().isBlockingJobsMode());
     }
 
     public int getLastChannelInterfaceCraftingValueId() {
@@ -88,12 +91,24 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
         return lastDisableCraftingCheckValueId;
     }
 
+    public int getLastBlockingModeValueId() {
+        return lastBlockingModeValueId;
+    }
+
     public boolean getLastDisableCraftingCheckValue() {
         return ValueNotifierHelpers.getValueBoolean(this, lastDisableCraftingCheckValueId);
     }
 
+    public boolean getLastBlockingModeValue() {
+        return ValueNotifierHelpers.getValueBoolean(this, lastBlockingModeValueId);
+    }
+
     public void setLastDisableCraftingCheckValue(boolean value) {
         ValueNotifierHelpers.setValue(this, lastDisableCraftingCheckValueId, value);
+    }
+
+    public void setLastBlockingModeValue(boolean value) {
+        ValueNotifierHelpers.setValue(this, lastBlockingModeValueId, value);
     }
 
     @Override
@@ -105,5 +120,9 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
                     getTargetSideOverrideValue(ingredientComponent));
         }
         ((PartTypeInterfaceCrafting.State) getPartState()).setDisableCraftingCheck(getLastDisableCraftingCheckValue());
+        if (((PartTypeInterfaceCrafting.State) getPartState()).getCraftingJobHandler().setBlockingJobsMode(getLastBlockingModeValue())) {
+            ((PartTypeInterfaceCrafting.State) getPartState()).sendUpdate();
+            ((PartTypeInterfaceCrafting.State) getPartState()).onDirty();
+        }
     }
 }
