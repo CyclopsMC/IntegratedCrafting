@@ -5,6 +5,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
+import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
@@ -142,7 +143,8 @@ public class CraftingAspectWriteBuilders {
             IAspectProperties properties = input.getProperties();
             T instance = input.getInstance();
 
-            M matchCondition = ingredientComponent.getMatcher().getExactMatchNoQuantityCondition();
+            IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
+            M matchCondition = matcher.getExactMatchNoQuantityCondition();
             if (!ingredientComponent.getMatcher().isEmpty(instance)) {
                 INetwork network = input.getNetwork();
                 ICraftingNetwork craftingNetwork = input.getCraftingNetwork();
@@ -180,6 +182,13 @@ public class CraftingAspectWriteBuilders {
 
                         // If delay check passed, trigger a new crafting job
                         if (allowCraft) {
+                            // If a quantity of > 1 was set, only craft the missing quantity.
+                            if (matcher.getQuantity(instance) > 1) {
+                                long missingQuantity = matcher.getQuantity(instance) - CraftingHelpers.getStorageInstanceQuantity(network, channel, ingredientComponent,
+                                        instance, ingredientComponent.getMatcher().getExactMatchCondition());
+                                instance = matcher.withQuantity(instance, missingQuantity);
+                            }
+
                             CraftingHelpers.calculateAndScheduleCraftingJob(network, channel,
                                     ingredientComponent, instance, matchCondition, craftMissing, true,
                                     CraftingHelpers.getGlobalCraftingJobIdentifier(), null);

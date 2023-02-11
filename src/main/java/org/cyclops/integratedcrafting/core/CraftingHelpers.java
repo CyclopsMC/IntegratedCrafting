@@ -846,6 +846,32 @@ public class CraftingHelpers {
     }
 
     /**
+     * Check the quantity of the given instance in the network.
+     * @param network The target network.
+     * @param channel The target channel.
+     * @param ingredientComponent The ingredient component type of the instance.
+     * @param instance The instance to check.
+     * @param matchCondition The match condition of the instance.
+     * @param <T> The instance type.
+     * @param <M> The matching condition parameter.
+     * @return The quantity in the network.
+     */
+    public static <T, M> long getStorageInstanceQuantity(INetwork network, int channel,
+                                                         IngredientComponent<T, M> ingredientComponent,
+                                                         T instance, M matchCondition) {
+        IIngredientComponentStorage<T, M> storage = getNetworkStorage(network, channel, ingredientComponent, true);
+        if (storage instanceof IngredientChannelAdapter) ((IngredientChannelAdapter) storage).disableLimits();
+        long quantityPresent;
+        if (storage instanceof IngredientChannelIndexed) {
+            quantityPresent = ((IngredientChannelIndexed<T, M>) storage).getIndex().getQuantity(instance);
+        } else {
+            quantityPresent = ingredientComponent.getMatcher().getQuantity(storage.extract(instance, matchCondition, true));
+        }
+        if (storage instanceof IngredientChannelAdapter) ((IngredientChannelAdapter) storage).enableLimits();
+        return quantityPresent;
+    }
+
+    /**
      * Check if there is a scheduled crafting job for the given instance.
      * @param craftingNetwork The target crafting network.
      * @param channel The target channel.
