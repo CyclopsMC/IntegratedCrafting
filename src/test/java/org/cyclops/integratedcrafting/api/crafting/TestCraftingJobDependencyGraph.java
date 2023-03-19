@@ -229,31 +229,37 @@ public class TestCraftingJobDependencyGraph {
         assertThat(Sets.newHashSet(g.getDependents(J3)), equalTo(Sets.newHashSet(J2)));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testOnFinishedInvalid1() {
         g.addDependency(J0, J1);
         g.addDependency(J1, J2);
         g.addDependency(J2, J3);
 
         g.onCraftingJobFinished(J2);
+
+        assertThat(Sets.newHashSet(g.getCraftingJobs()), equalTo(Sets.newHashSet(J0, J1, J3)));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testOnFinishedInvalid2() {
         g.addDependency(J0, J1);
         g.addDependency(J1, J2);
         g.addDependency(J2, J3);
 
         g.onCraftingJobFinished(J1);
+
+        assertThat(Sets.newHashSet(g.getCraftingJobs()), equalTo(Sets.newHashSet(J2, J3)));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testOnFinishedInvalid3() {
         g.addDependency(J0, J1);
         g.addDependency(J1, J2);
         g.addDependency(J2, J3);
 
         g.onCraftingJobFinished(J0);
+
+        assertThat(Sets.newHashSet(g.getCraftingJobs()), equalTo(Sets.newHashSet(J1, J2, J3)));
     }
 
     @Test
