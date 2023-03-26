@@ -3,6 +3,7 @@ package org.cyclops.integratedcrafting.inventory.container;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.cyclops.cyclopscore.client.gui.ScreenFactorySafe;
@@ -20,7 +21,7 @@ public class ContainerPartInterfaceCraftingSettingsConfig extends GuiConfig<Cont
     public ContainerPartInterfaceCraftingSettingsConfig() {
         super(IntegratedCrafting._instance,
                 "part_interface_crafting_settings",
-                eConfig -> new ContainerTypeData<>(ContainerPartInterfaceCraftingSettings::new));
+                eConfig -> new ContainerTypeData<>(ContainerPartInterfaceCraftingSettings::new, FeatureFlags.VANILLA_SET));
     }
 
     @OnlyIn(Dist.CLIENT)

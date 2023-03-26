@@ -5,6 +5,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.CraftingTableBlock;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -48,10 +49,11 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
                          IMixedIngredients ingredients, ICraftingResultsSink resultsSink, boolean simulate) {
         PartPos target = targetGetter.apply(IngredientComponent.ITEMSTACK);
         CraftingGrid grid = new CraftingGrid(ingredients, 3, 3);
+        Level level = target.getPos().getLevel(true);
 
-        return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, grid, target.getPos().getLevel(true))
+        return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, grid, level)
                 .map(recipe -> {
-                    ItemStack result = recipe.assemble(grid);
+                    ItemStack result = recipe.assemble(grid, level.registryAccess());
 
                     if (result.isEmpty()) {
                         return false;
