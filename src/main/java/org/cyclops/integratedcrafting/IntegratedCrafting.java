@@ -7,7 +7,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.NewRegistryEvent;
 import org.apache.logging.log4j.Level;
@@ -32,6 +31,7 @@ import org.cyclops.integratedcrafting.proxy.ClientProxy;
 import org.cyclops.integratedcrafting.proxy.CommonProxy;
 import org.cyclops.integrateddynamics.IntegratedDynamics;
 import org.cyclops.integrateddynamics.api.network.INetworkCraftingHandlerRegistry;
+import org.cyclops.integrateddynamics.core.event.IntegratedDynamicsSetupEvent;
 import org.cyclops.integrateddynamics.infobook.OnTheDynamicsOfIntegrationBook;
 
 /**
@@ -56,7 +56,7 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
         registerWorldStorage(globalCounters = new GlobalCounters(this));
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onRegistriesCreate);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::afterSetup);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onSetup);
     }
 
     public void onRegistriesCreate(NewRegistryEvent event) {
@@ -71,7 +71,7 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
         super.setup(event);
     }
 
-    protected void afterSetup(FMLLoadCompleteEvent event) {
+    protected void onSetup(IntegratedDynamicsSetupEvent event) {
         IntegratedDynamics._instance.getRegistryManager().getRegistry(INetworkCraftingHandlerRegistry.class)
                 .register(new NetworkCraftingHandlerCraftingNetwork());
 
