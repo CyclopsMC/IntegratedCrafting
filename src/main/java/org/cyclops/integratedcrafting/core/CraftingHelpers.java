@@ -1049,6 +1049,7 @@ public class CraftingHelpers {
                 long prototypeQuantity = matcher.getQuantity(inputPrototype.getPrototype());
                 if (inputReusable && extractionMemoryReusable.contains(inputPrototype.getPrototype())) {
                     // If the reusable item has been extracted before, mark as valid, and don't extract again.
+                    inputInstance = inputPrototype.getComponent().getMatcher().getEmptyInstance();
                     hasInputInstance = true;
                     shouldBreak = true;
                 } else {
@@ -1097,6 +1098,7 @@ public class CraftingHelpers {
                             if (inputReusable) {
                                 extractionMemoryReusableBuffer.add(inputPrototype.getPrototype());
                             }
+                            inputInstance = inputPrototype.getComponent().getMatcher().getEmptyInstance();
                             hasInputInstance = true;
                             shouldBreak = true;
                         }
