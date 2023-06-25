@@ -3,7 +3,8 @@ package org.cyclops.integratedcrafting.client.gui;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -176,25 +177,29 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     }
 
     @Override
-    protected void renderBg(PoseStack matrixStack, float partialTicks, int mouseX, int mouseY) {
-        super.renderBg(matrixStack, partialTicks, mouseX, mouseY);
+    protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+        super.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
 
-        font.draw(matrixStack, L10NHelpers.localize("gui.integrateddynamics.partsettings.side"), leftPos + 8, topPos + 12, Helpers.RGBToInt(0, 0, 0));
+        font.drawInBatch(L10NHelpers.localize("gui.integrateddynamics.partsettings.side"), leftPos + 8, topPos + 12, Helpers.RGBToInt(0, 0, 0), false,
+                guiGraphics.pose().last().pose(), guiGraphics.bufferSource(), Font.DisplayMode.NORMAL, 0, 15728880);
         RenderSystem.setShaderColor(1, 1, 1, 1);
-        ingredientComponentSideSelector.render(matrixStack, mouseX, mouseY, partialTicks);
-        dropdownFieldSide.render(matrixStack, mouseX, mouseY, partialTicks);
+        ingredientComponentSideSelector.render(guiGraphics, mouseX, mouseY, partialTicks);
+        dropdownFieldSide.render(guiGraphics, mouseX, mouseY, partialTicks);
 
-        font.draw(matrixStack, L10NHelpers.localize("gui.integratedcrafting.partsettings.channel.interface"),
-                leftPos + 8, topPos + 137, 0);
-        numberFieldChannelInterfaceCrafting.render(matrixStack, mouseX, mouseY, partialTicks);
+        font.drawInBatch(L10NHelpers.localize("gui.integratedcrafting.partsettings.channel.interface"),
+                leftPos + 8, topPos + 137, 0, false,
+                guiGraphics.pose().last().pose(), guiGraphics.bufferSource(), Font.DisplayMode.NORMAL, 0, 15728880);
+        numberFieldChannelInterfaceCrafting.render(guiGraphics, mouseX, mouseY, partialTicks);
 
-        font.draw(matrixStack, L10NHelpers.localize("gui.integratedcrafting.partsettings.craftingcheckdisabled"),
-                leftPos + 8, topPos + 152, 0);
-        checkboxFieldDisabledCraftingCheck.render(matrixStack, mouseX, mouseY, partialTicks);
+        font.drawInBatch(L10NHelpers.localize("gui.integratedcrafting.partsettings.craftingcheckdisabled"),
+                leftPos + 8, topPos + 152, 0, false,
+                guiGraphics.pose().last().pose(), guiGraphics.bufferSource(), Font.DisplayMode.NORMAL, 0, 15728880);
+        checkboxFieldDisabledCraftingCheck.render(guiGraphics, mouseX, mouseY, partialTicks);
 
-        font.draw(matrixStack, L10NHelpers.localize("gui.integratedcrafting.partsettings.blockingmode"),
-                leftPos + 8, topPos + 162, 0);
-        checkboxFieldBlockingMode.render(matrixStack, mouseX, mouseY, partialTicks);
+        font.drawInBatch(L10NHelpers.localize("gui.integratedcrafting.partsettings.blockingmode"),
+                leftPos + 8, topPos + 162, 0, false,
+                guiGraphics.pose().last().pose(), guiGraphics.bufferSource(), Font.DisplayMode.NORMAL, 0, 15728880);
+        checkboxFieldBlockingMode.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
     @Override
