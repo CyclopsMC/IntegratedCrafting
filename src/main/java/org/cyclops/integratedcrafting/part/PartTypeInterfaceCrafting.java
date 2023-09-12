@@ -828,7 +828,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers.getIngredientsNetwork(network, oldWrapper.getComponent()).orElse(null);
             if (ingredientsNetwork != null) {
                 boolean marked = false;
-                INetworkIngredientsChannel<?, ?> ingredientsNetworkChannel = ingredientsNetwork.getChannel(this.getChannelCrafting());
+                INetworkIngredientsChannel<?, ?> ingredientsNetworkChannel = ingredientsNetwork.getChannelInternal(this.getChannelCrafting());
                 T instance = oldWrapper.getInstance();
                 for (PartPos position : ingredientsNetworkChannel.findNonFullPositions()) {
                     T instanceOut = ingredientsNetwork.getPositionedStorage(position).insert(instance, true);
