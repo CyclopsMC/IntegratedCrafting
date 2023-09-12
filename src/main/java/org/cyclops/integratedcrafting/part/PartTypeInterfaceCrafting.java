@@ -32,6 +32,7 @@ import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.capability.block.BlockCapabilities;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeHandler;
+import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
@@ -63,6 +64,7 @@ import org.cyclops.integrateddynamics.api.evaluate.EvaluationException;
 import org.cyclops.integrateddynamics.api.evaluate.variable.IValue;
 import org.cyclops.integrateddynamics.api.evaluate.variable.IVariable;
 import org.cyclops.integrateddynamics.api.network.INetwork;
+import org.cyclops.integrateddynamics.api.network.INetworkIngredientsChannel;
 import org.cyclops.integrateddynamics.api.network.IPartNetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.api.part.IPartContainer;
@@ -787,6 +789,10 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             ListIterator<IngredientInstanceWrapper<?, ?>> outputBufferIt = this.getInventoryOutputBuffer().listIterator();
             while (outputBufferIt.hasNext()) {
                 IngredientInstanceWrapper<?, ?> oldWrapper = outputBufferIt.next();
+
+                // Force observation before insertion (see #98 on why this is necessary)
+                this.forceObservationOnInsertable(oldWrapper);
+
                 IngredientInstanceWrapper<?, ?> newWrapper = insertIntoNetwork(oldWrapper,
                         network, this.getChannelCrafting());
                 if (newWrapper != oldWrapper) {
@@ -802,6 +808,43 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             // If at least one ingredient was inserted, force a sync observer update in the network.
             if (changed) {
                 CraftingHelpers.beforeCalculateCraftingJobs(network, getChannelCrafting());
+            }
+        }
+
+        /**
+         * Iterate over all positions that *could* accept the given instance,
+         * and force an observation over them.
+         *
+         * This is necessary to ensure that we have the latest state indexed right before insertion.
+         * This allows us to force another observation right after the insertion,
+         * which will guarantee that we will track the expected diff events as result.
+         *
+         * @param oldWrapper The ingredient to attempt to insert (simulated).
+         * @param <T> Ingredient type.
+         * @param <M> Match flags.
+         */
+        protected <T, M> void forceObservationOnInsertable(IngredientInstanceWrapper<T, M> oldWrapper) {
+            IIngredientMatcher<T, M> matcher = oldWrapper.getComponent().getMatcher();
+            IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers.getIngredientsNetwork(network, oldWrapper.getComponent()).orElse(null);
+            if (ingredientsNetwork != null) {
+                boolean marked = false;
+                INetworkIngredientsChannel<?, ?> ingredientsNetworkChannel = ingredientsNetwork.getChannel(this.getChannelCrafting());
+                T instance = oldWrapper.getInstance();
+                for (PartPos position : ingredientsNetworkChannel.findNonFullPositions()) {
+                    T instanceOut = ingredientsNetwork.getPositionedStorage(position).insert(instance, true);
+                    if (!matcher.matchesExactly(instanceOut, instance)) {
+                        marked = true;
+                        instance = instanceOut;
+                        ingredientsNetwork.scheduleObservationForced(this.getChannelCrafting(), position);
+                        if (matcher.isEmpty(instance)) {
+                            break;
+                        }
+                    }
+                }
+
+                if (marked || ingredientsNetwork.isObservationForcedPending(channel)) {
+                    ingredientsNetwork.runObserverSync();
+                }
             }
         }
     }
