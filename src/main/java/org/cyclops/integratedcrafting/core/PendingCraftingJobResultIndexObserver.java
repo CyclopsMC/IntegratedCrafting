@@ -42,7 +42,10 @@ public class PendingCraftingJobResultIndexObserver<T, M>
 
     @Override
     public void onChange(IIngredientComponentStorageObservable.StorageChangeEvent<T, M> event) {
-        if (event.getChangeType() == IIngredientComponentStorageObservable.Change.ADDITION) {
+        if (event.getChangeType() == IIngredientComponentStorageObservable.Change.ADDITION
+                // If we're still initializing the network, skip addition events.
+                // Otherwise, we could incorrectly mark running crafting jobs as finished.
+                && !event.isInitialChange()) {
             IIngredientCollection<T, M> addedIngredients = event.getInstances();
             IIngredientComponentStorage<T, M> ingredientsHayStack = null; // A mutable copy of addedIngredients (lazily created)
             IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
