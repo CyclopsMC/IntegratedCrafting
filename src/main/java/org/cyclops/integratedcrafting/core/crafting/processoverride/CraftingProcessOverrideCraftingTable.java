@@ -52,6 +52,10 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
         Level level = target.getPos().getLevel(true);
 
         return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, grid, level)
+                .or(() -> {
+                    CraftingGrid gridSmall = new CraftingGrid(ingredients, 2, 2);
+                    return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, gridSmall, level);
+                })
                 .map(recipe -> {
                     ItemStack result = recipe.assemble(grid, level.registryAccess());
 
