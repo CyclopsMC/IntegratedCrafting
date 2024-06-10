@@ -2,12 +2,12 @@ package org.cyclops.integratedcrafting.inventory.container;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.core.Direction;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.helper.ValueNotifierHelpers;
 import org.cyclops.integratedcrafting.RegistryEntries;
@@ -38,11 +38,11 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
 
     public ContainerPartInterfaceCraftingSettings(int id, Inventory playerInventory, Container inventory,
                                                   PartTarget target, Optional<IPartContainer> partContainer, IPartType partType) {
-        super(RegistryEntries.CONTAINER_INTERFACE_CRAFTING_SETTINGS, id, playerInventory, inventory, target, partContainer, partType);
+        super(RegistryEntries.CONTAINER_INTERFACE_CRAFTING_SETTINGS.get(), id, playerInventory, inventory, target, partContainer, partType);
         lastChannelInterfaceCraftingValueId = getNextValueId();
         targetSideOverrideValueIds = Maps.newIdentityHashMap();
-        for (ResourceLocation key : Sets.newTreeSet(IngredientComponent.REGISTRY.getKeys())) { // Consistently order keys
-            IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.getValue(key);
+        for (ResourceLocation key : Sets.newTreeSet(IngredientComponent.REGISTRY.keySet())) { // Consistently order keys
+            IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.get(key);
             targetSideOverrideValueIds.put(ingredientComponent, getNextValueId());
         }
         lastDisableCraftingCheckValueId = getNextValueId();
@@ -58,7 +58,7 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
     protected void initializeValues() {
         super.initializeValues();
         ValueNotifierHelpers.setValue(this, lastChannelInterfaceCraftingValueId, ((PartTypeInterfaceCrafting.State) getPartState()).getChannelCrafting());
-        for (IngredientComponent<?, ?> ingredientComponent : IngredientComponent.REGISTRY.getValues()) {
+        for (IngredientComponent<?, ?> ingredientComponent : IngredientComponent.REGISTRY.stream().toList()) {
             ValueNotifierHelpers.setValue(this, getTargetSideOverrideValueId(ingredientComponent),
                     ((PartTypeInterfaceCrafting.State) getPartState()).getIngredientComponentTargetSideOverride(ingredientComponent).ordinal());
         }
@@ -115,7 +115,7 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
     protected void updatePartSettings() {
         super.updatePartSettings();
         ((PartTypeInterfaceCrafting.State) getPartState()).setChannelCrafting(getLastChannelInterfaceValue());
-        for (IngredientComponent<?, ?> ingredientComponent : IngredientComponent.REGISTRY.getValues()) {
+        for (IngredientComponent<?, ?> ingredientComponent : IngredientComponent.REGISTRY.stream().toList()) {
             ((PartTypeInterfaceCrafting.State) getPartState()).setIngredientComponentTargetSideOverride(ingredientComponent,
                     getTargetSideOverrideValue(ingredientComponent));
         }

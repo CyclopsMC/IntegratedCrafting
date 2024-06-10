@@ -16,11 +16,14 @@
     "criteria_0": {
       "trigger": "integrateddynamics:part_variable_driven",
       "conditions": {
-        "parttype": "integratedcrafting:interface_crafting",
+        "part_type": "integratedcrafting:interface_crafting",
         "variable": {
-          "type": "integrateddynamics:valuetype",
-          "valuetype": "integrateddynamics:recipe",
-          "value": "{output:{\"minecraft:itemstack\":[{id:\"minecraft:oak_planks\",Count:4b}]},input:{\"minecraft:itemstack\":[{val:[{condition:1,prototype:{id:\"minecraft:oak_log\",Count:1b}}],type:0b}]}}"
+          "type": "value_type",
+          "value": {
+            "type": "serialized",
+            "value_type": "integrateddynamics:recipe",
+            "value": "{output:{\"minecraft:itemstack\":[{id:\"minecraft:oak_planks\",Count:4}]},input:{\"minecraft:itemstack\":[{val:[{condition:1,prototype:{id:\"minecraft:oak_log\",Count:1}}],type:0b}]}}"
+          }
         }
       }
     }

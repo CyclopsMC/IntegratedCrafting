@@ -23,13 +23,9 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.LazyOptional;
+import net.neoforged.neoforge.common.NeoForge;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Level;
-import org.cyclops.commoncapabilities.api.capability.block.BlockCapabilities;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeHandler;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
@@ -51,8 +47,6 @@ import org.cyclops.integratedcrafting.api.crafting.CraftingJobStatus;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
-import org.cyclops.integratedcrafting.capability.network.CraftingInterfaceConfig;
-import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
 import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.core.CraftingJobHandler;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
@@ -68,11 +62,12 @@ import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.INetworkIngredientsChannel;
 import org.cyclops.integrateddynamics.api.network.IPartNetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
+import org.cyclops.integrateddynamics.api.network.NetworkCapability;
 import org.cyclops.integrateddynamics.api.part.IPartContainer;
+import org.cyclops.integrateddynamics.api.part.PartCapability;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
 import org.cyclops.integrateddynamics.api.part.PrioritizedPartPos;
-import org.cyclops.integrateddynamics.capability.network.PositionedAddonsNetworkIngredientsHandlerConfig;
 import org.cyclops.integrateddynamics.core.evaluate.InventoryVariableEvaluator;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
@@ -184,8 +179,8 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         addTargetToNetwork(network, target, state);
     }
 
-    protected Capability<ICraftingNetwork> getNetworkCapability() {
-        return CraftingNetworkConfig.CAPABILITY;
+    protected NetworkCapability<ICraftingNetwork> getNetworkCapability() {
+        return Capabilities.CraftingNetwork.NETWORK;
     }
 
     protected void addTargetToNetwork(INetwork network, PartTarget pos, PartTypeInterfaceCrafting.State state) {
@@ -278,7 +273,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
     protected static <T, M> IngredientInstanceWrapper<T, M> insertIntoNetwork(IngredientInstanceWrapper<T, M> wrapper,
                                                                               INetwork network, int channel) {
         IPositionedAddonsNetworkIngredients<T, M> storageNetwork = wrapper.getComponent()
-                .getCapability(PositionedAddonsNetworkIngredientsHandlerConfig.CAPABILITY)
+                .getCapability(org.cyclops.integrateddynamics.Capabilities.PositionedAddonsNetworkIngredientsHandler.INGREDIENT)
                 .map(n -> (IPositionedAddonsNetworkIngredients<T, M>) n.getStorage(network).orElse(null))
                 .orElse(null);
         if (storageNetwork != null) {
@@ -406,7 +401,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             for (Tag instanceTagRaw : tag.getList("inventoryOutputBuffer", Tag.TAG_COMPOUND)) {
                 CompoundTag instanceTag = (CompoundTag) instanceTagRaw;
                 String componentName = instanceTag.getString("component");
-                IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(new ResourceLocation(componentName));
+                IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.get(new ResourceLocation(componentName));
                 this.inventoryOutputBuffer.add(new IngredientInstanceWrapper(component,
                         component.getSerializer().deserializeInstance(instanceTag.get("instance"))));
             }
@@ -535,7 +530,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
                 try {
                     IPartNetwork partNetwork = NetworkHelpers.getPartNetworkChecked(network);
-                    MinecraftForge.EVENT_BUS.post(new PartVariableDrivenVariableContentsUpdatedEvent<>(network,
+                    NeoForge.EVENT_BUS.post(new PartVariableDrivenVariableContentsUpdatedEvent<>(network,
                             partNetwork, getTarget(),
                             PartTypes.INTERFACE_CRAFTING, this, lastPlayer, variable,
                             variable != null ? variable.getValue() : null));
@@ -558,13 +553,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private boolean isValid(IRecipeDefinition recipe) {
             DimPos dimPos = getTarget().getTarget().getPos();
             Direction side = getTarget().getTarget().getSide();
-            IRecipeHandler recipeHandler = BlockEntityHelpers.getCapability(dimPos.getLevel(true), dimPos.getBlockPos(), side, Capabilities.RECIPE_HANDLER).orElse(null);
-            if (recipeHandler == null) {
-                BlockState blockState = dimPos.getLevel(true).getBlockState(dimPos.getBlockPos());
-                recipeHandler = BlockCapabilities.getInstance().getCapability(blockState, Capabilities.RECIPE_HANDLER,
-                        dimPos.getLevel(true), dimPos.getBlockPos(), side)
-                .orElse(null);
-            }
+            IRecipeHandler recipeHandler = BlockEntityHelpers.getCapability(dimPos.getLevel(true), dimPos.getBlockPos(), side, org.cyclops.commoncapabilities.api.capability.Capabilities.RecipeHandler.BLOCK).orElse(null);
             if (recipeHandler != null) {
                 IMixedIngredients simulatedOutput = recipeHandler.simulate(MixedIngredients.fromRecipeInput(recipe));
                 if (simulatedOutput != null && !simulatedOutput.isEmpty()) {
@@ -706,9 +695,9 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Override
-        public <T> LazyOptional<T> getCapability(Capability<T> capability, INetwork network, IPartNetwork partNetwork, PartTarget target) {
-            if (capability == CraftingInterfaceConfig.CAPABILITY) {
-                return LazyOptional.of(() -> this).cast();
+        public <T> Optional<T> getCapability(PartTypeInterfaceCrafting partType, PartCapability<T> capability, INetwork network, IPartNetwork partNetwork, PartTarget target) {
+            if (capability == Capabilities.CraftingInterface.PART) {
+                return Optional.of((T) this);
             }
 
             // Expose the whole storage
@@ -717,15 +706,15 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 if (ingredientComponent != null) {
                     T cap = wrapStorageCapability(capability, ingredientComponent);
                     if (cap != null) {
-                        return LazyOptional.of(() -> cap);
+                        return Optional.of(cap);
                     }
                 }
             }
 
-            return super.getCapability(capability, network, partNetwork, target);
+            return super.getCapability(partType, capability, network, partNetwork, target);
         }
 
-        protected <C, T, M> C wrapStorageCapability(Capability<C> capability, IngredientComponent<T, M> ingredientComponent) {
+        protected <C, T, M> C wrapStorageCapability(PartCapability<C> capability, IngredientComponent<T, M> ingredientComponent) {
             IIngredientComponentStorage<T, M> storage = CraftingHelpers.getNetworkStorage(this.network, this.channelCrafting,
                     ingredientComponent, false);
 
@@ -832,7 +821,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers.getIngredientsNetwork(network, oldWrapper.getComponent()).orElse(null);
             if (ingredientsNetwork != null) {
                 boolean marked = false;
-                INetworkIngredientsChannel<?, ?> ingredientsNetworkChannel = ingredientsNetwork.getChannelInternal(this.getChannelCrafting());
+                INetworkIngredientsChannel<?, ?> ingredientsNetworkChannel = ingredientsNetwork.getChannel(this.getChannelCrafting());
                 T instance = oldWrapper.getInstance();
                 for (PartPos position : ingredientsNetworkChannel.findNonFullPositions()) {
                     T instanceOut = ingredientsNetwork.getPositionedStorage(position).insert(instance, true);

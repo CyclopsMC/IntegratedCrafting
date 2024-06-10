@@ -2,7 +2,7 @@ package org.cyclops.integratedcrafting.part.aspect;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;

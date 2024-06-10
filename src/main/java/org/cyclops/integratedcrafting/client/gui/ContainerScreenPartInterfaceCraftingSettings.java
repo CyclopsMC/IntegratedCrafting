@@ -98,7 +98,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         ingredientComponentSideSelector = new WidgetArrowedListField<IngredientComponent<?, ?>>(font,
                 leftPos + 106, topPos + 9, 68, 15, true,
                 Component.translatable("gui.integratedcrafting.partsettings.ingredient"),
-                true, Lists.newArrayList(IngredientComponent.REGISTRY.getValues())) {
+                true, Lists.newArrayList(IngredientComponent.REGISTRY)) {
             @Override
             protected String activeElementToString(IngredientComponent<?, ?> element) {
                 return L10NHelpers.localize(element.getTranslationKey());
@@ -216,7 +216,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     @Override
     public void onUpdate(int valueId, CompoundTag value) {
         super.onUpdate(valueId, value);
-        for (IngredientComponent<?, ?> ingredientComponent : IngredientComponent.REGISTRY.getValues()) {
+        for (IngredientComponent<?, ?> ingredientComponent : IngredientComponent.REGISTRY.stream().toList()) {
             if (valueId == getMenu().getTargetSideOverrideValueId(ingredientComponent)) {
                 int side = getMenu().getTargetSideOverrideValue(ingredientComponent).ordinal();
                 setSideInDropdownField(ingredientComponent, side == -1 ? getDefaultSide() : Direction.values()[side]);

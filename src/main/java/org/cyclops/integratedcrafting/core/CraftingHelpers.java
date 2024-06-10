@@ -4,9 +4,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.common.util.LazyOptional;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIngredientAlternatives;
@@ -17,6 +16,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
+import org.cyclops.commoncapabilities.api.ingredient.capability.ICapabilityGetter;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IngredientComponentStorageEmpty;
 import org.cyclops.cyclopscore.helper.BlockEntityHelpers;
@@ -35,7 +35,6 @@ import org.cyclops.integratedcrafting.api.crafting.UnavailableCraftingInterfaces
 import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeException;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
-import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
 import org.cyclops.integrateddynamics.IntegratedDynamics;
 import org.cyclops.integrateddynamics.api.PartStateException;
 import org.cyclops.integrateddynamics.api.ingredient.capability.IPositionedAddonsNetworkIngredientsHandler;
@@ -53,6 +52,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -86,11 +86,11 @@ public class CraftingHelpers {
      * @param network A network.
      * @return The crafting network.
      */
-    public static LazyOptional<ICraftingNetwork> getCraftingNetwork(@Nullable INetwork network) {
+    public static Optional<ICraftingNetwork> getCraftingNetwork(@Nullable INetwork network) {
         if (network != null) {
-            return network.getCapability(CraftingNetworkConfig.CAPABILITY);
+            return network.getCapability(Capabilities.CraftingNetwork.NETWORK);
         }
-        return null;
+        return Optional.empty();
     }
 
     /**
@@ -111,13 +111,11 @@ public class CraftingHelpers {
      * @param <M> The matching condition parameter.
      * @return The storage network.
      */
-    public static <T, M> LazyOptional<IPositionedAddonsNetworkIngredients<T, M>> getIngredientsNetwork(INetwork network,
+    public static <T, M> Optional<IPositionedAddonsNetworkIngredients<T, M>> getIngredientsNetwork(INetwork network,
                                                                                                        IngredientComponent<T, M> ingredientComponent) {
-        IPositionedAddonsNetworkIngredientsHandler<T, M> ingredientsHandler = ingredientComponent.getCapability(Capabilities.POSITIONED_ADDONS_NETWORK_INGREDIENTS_HANDLER).orElse(null);
-        if (ingredientsHandler != null) {
-            return ingredientsHandler.getStorage(network);
-        }
-        return LazyOptional.empty();
+        return ingredientComponent
+                .getCapability(org.cyclops.integrateddynamics.Capabilities.PositionedAddonsNetworkIngredientsHandler.INGREDIENT)
+                .flatMap(ingredientsHandler -> ((IPositionedAddonsNetworkIngredientsHandler<T, M>) ingredientsHandler).getStorage(network));
     }
 
     /**
@@ -164,7 +162,7 @@ public class CraftingHelpers {
      * @param channel A network channel.
      */
     public static void beforeCalculateCraftingJobs(INetwork network, int channel) {
-        for (IngredientComponent<?, ?> ingredientComponent : IngredientComponent.REGISTRY.getValues()) {
+        for (IngredientComponent<?, ?> ingredientComponent : IngredientComponent.REGISTRY.stream().toList()) {
             IPositionedAddonsNetworkIngredients<?, ?> ingredientsNetwork = getIngredientsNetwork(network, ingredientComponent).orElse(null);
             if (ingredientsNetwork != null && (ingredientsNetwork.isObservationForcedPending(channel))) {
                 ingredientsNetwork.runObserverSync();
@@ -1485,7 +1483,9 @@ public class CraftingHelpers {
      * ingredients will be re-inserted into the network.
      *
      * @param ingredientComponent The ingredient component type.
-     * @param capabilityProvider The target capability provider.
+     * @param capabilityType capabilityType The type of capability, usually Block.class, Item.class, or Entity.class.
+     * @param capabilityGetter A capability provider.
+     * @param capabilityTarget The capability target for error reporting.
      * @param side The target side.
      * @param ingredients The ingredients to insert.
      * @param storageFallback The storage to insert any failed ingredients back into. Can be null in simulation mode.
@@ -1494,14 +1494,16 @@ public class CraftingHelpers {
      * @param <M> The matching condition parameter.
      * @return If all instances could be inserted.
      */
-    public static <T, M> boolean insertIngredientCrafting(IngredientComponent<T, M> ingredientComponent,
-                                                          ICapabilityProvider capabilityProvider,
+    public static <T, M, C> boolean insertIngredientCrafting(IngredientComponent<T, M> ingredientComponent,
+                                                          Class<?> capabilityType,
+                                                          ICapabilityGetter<Direction> capabilityGetter,
+                                                          Object capabilityTarget,
                                                           @Nullable Direction side,
                                                           IMixedIngredients ingredients,
                                                           IIngredientComponentStorage<T, M> storageFallback,
                                                           boolean simulate) {
         IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
-        IIngredientComponentStorage<T, M> storage = ingredientComponent.getStorage(capabilityProvider, side);
+        IIngredientComponentStorage<T, M> storage = ingredientComponent.getStorage(capabilityType, capabilityGetter, side);
         List<T> instances = ingredients.getInstances(ingredientComponent);
         List<T> failedInstances = Lists.newArrayList();
         boolean ok = true;
@@ -1521,7 +1523,7 @@ public class CraftingHelpers {
             if (!matcher.isEmpty(remaining)) {
                 throw new IllegalStateException("Insertion for a crafting recipe failed" +
                         "due to inconsistent insertion behaviour by destination in simulation " +
-                        "and non-simulation: " + capabilityProvider + ". Lost: " + instances);
+                        "and non-simulation: " + capabilityTarget + ". Lost: " + instances);
             }
         }
 
@@ -1561,7 +1563,8 @@ public class CraftingHelpers {
         boolean ok = true;
         for (Map.Entry<IngredientComponent<?, ?>, BlockEntity> entry : tileMap.entrySet()) {
             IIngredientComponentStorage<?, ?> storageNetwork = simulate ? null : getNetworkStorage(network, channel, entry.getKey(), false);
-            if (!insertIngredientCrafting((IngredientComponent) entry.getKey(), entry.getValue(),
+            if (!insertIngredientCrafting((IngredientComponent) entry.getKey(),
+                    Block.class, ICapabilityGetter.forBlockEntity(entry.getValue()), entry.getValue(),
                     targetGetter.apply(entry.getKey()).getSide(), ingredients,
                     storageNetwork, simulate)) {
                 ok = false;

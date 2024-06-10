@@ -15,13 +15,9 @@
     "criteria_0": {
       "trigger": "cyclopscore:item_crafted",
       "conditions": {
-        "items": [
-          {
-            "items": [
-              "integratedcrafting:part_interface_crafting"
-            ]
-          }
-        ]
+        "item": {
+          "item": "integratedcrafting:part_interface_crafting"
+        }
       }
     }
   }

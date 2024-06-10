@@ -43,7 +43,7 @@ public class ContainerPartInterfaceCrafting extends ContainerMultipart<PartTypeI
 
     public ContainerPartInterfaceCrafting(int id, Inventory playerInventory, Container inventory,
                                           Optional<PartTarget> target, Optional<IPartContainer> partContainer, PartTypeInterfaceCrafting partType) {
-        super(RegistryEntries.CONTAINER_INTERFACE_CRAFTING, id, playerInventory, inventory, target, partContainer, partType);
+        super(RegistryEntries.CONTAINER_INTERFACE_CRAFTING.get(), id, playerInventory, inventory, target, partContainer, partType);
 
         addInventory(inventory, 0, 8, 22, 1, inventory.getContainerSize());
         addPlayerInventory(player.getInventory(), 8, 59);
@@ -91,7 +91,7 @@ public class ContainerPartInterfaceCrafting extends ContainerMultipart<PartTypeI
             return new SlotVariable(inventory, index, x, y) {
                 @Override
                 public boolean mayPlace(ItemStack itemStack) {
-                    IVariableFacade variableFacade = RegistryEntries.ITEM_VARIABLE.getVariableFacade(ValueDeseralizationContext.ofAllEnabled(), itemStack);
+                    IVariableFacade variableFacade = RegistryEntries.ITEM_VARIABLE.get().getVariableFacade(ValueDeseralizationContext.ofAllEnabled(), itemStack);
                     return variableFacade != null
                             && ValueHelpers.correspondsTo(variableFacade.getOutputType(), ValueTypes.OBJECT_RECIPE)
                             && super.mayPlace(itemStack);

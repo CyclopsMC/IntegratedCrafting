@@ -4,11 +4,12 @@ import com.mojang.authlib.GameProfile;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.CraftingTableBlock;
-import net.minecraftforge.common.util.FakePlayer;
-import net.minecraftforge.event.ForgeEventFactory;
+import net.neoforged.neoforge.common.util.FakePlayer;
+import net.neoforged.neoforge.event.EventHooks;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.helper.CraftingHelpers;
@@ -56,7 +57,8 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
                     CraftingGrid gridSmall = new CraftingGrid(ingredients, 2, 2);
                     return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, gridSmall, level);
                 })
-                .map(recipe -> {
+                .map(recipeHolder -> {
+                    CraftingRecipe recipe = recipeHolder.value();
                     ItemStack result = recipe.assemble(grid, level.registryAccess());
 
                     if (result.isEmpty()) {
@@ -68,7 +70,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
 
                         // Fire all required events
                         result.onCraftedBy(target.getPos().getLevel(true), player, 1);
-                        ForgeEventFactory.firePlayerCraftingEvent(player, result, grid);
+                        EventHooks.firePlayerCraftingEvent(player, result, grid);
 
                         // Insert the result into the sink
                         resultsSink.addResult(IngredientComponent.ITEMSTACK, result);

@@ -2,13 +2,12 @@ package org.cyclops.integratedcrafting;
 
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.NewRegistryEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.registries.NewRegistryEvent;
 import org.apache.logging.log4j.Level;
 import org.cyclops.cyclopscore.config.ConfigHandler;
 import org.cyclops.cyclopscore.infobook.IInfoBookRegistry;
@@ -17,9 +16,7 @@ import org.cyclops.cyclopscore.persist.world.GlobalCounters;
 import org.cyclops.cyclopscore.proxy.IClientProxy;
 import org.cyclops.cyclopscore.proxy.ICommonProxy;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverrideRegistry;
-import org.cyclops.integratedcrafting.capability.network.CraftingInterfaceConfig;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkCapabilityConstructors;
-import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
 import org.cyclops.integratedcrafting.capability.network.NetworkCraftingHandlerCraftingNetwork;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrideRegistry;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
@@ -46,8 +43,8 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
 
     public static GlobalCounters globalCounters = null;
 
-    public IntegratedCrafting() {
-        super(Reference.MOD_ID, (instance) -> _instance = instance);
+    public IntegratedCrafting(IEventBus modEventBus) {
+        super(Reference.MOD_ID, (instance) -> _instance = instance, modEventBus);
 
         // Registries
         getRegistryManager().addRegistry(ICraftingProcessOverrideRegistry.class, CraftingProcessOverrideRegistry.getInstance());
@@ -55,14 +52,14 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
         // Register world storages
         registerWorldStorage(globalCounters = new GlobalCounters(this));
 
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onRegistriesCreate);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onSetup);
+        modEventBus.addListener(this::onRegistriesCreate);
+        modEventBus.addListener(this::onSetup);
+        modEventBus.register(new CraftingNetworkCapabilityConstructors());
     }
 
     public void onRegistriesCreate(NewRegistryEvent event) {
         CraftingAspects.load();
         PartTypes.load();
-        MinecraftForge.EVENT_BUS.register(new CraftingNetworkCapabilityConstructors());
         CraftingProcessOverrides.load();
     }
 
@@ -108,9 +105,6 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
         super.onConfigsRegister(configHandler);
 
         configHandler.addConfigurable(new GeneralConfig());
-
-        configHandler.addConfigurable(new CraftingNetworkConfig());
-        configHandler.addConfigurable(new CraftingInterfaceConfig());
 
         configHandler.addConfigurable(new ContainerPartInterfaceCraftingConfig());
         configHandler.addConfigurable(new ContainerPartInterfaceCraftingSettingsConfig());

@@ -15,15 +15,15 @@
     "criteria_0": {
       "trigger": "integrateddynamics:part_writer_aspect",
       "conditions": {
-        "parttype": "integratedcrafting:crafting_writer",
+        "part_type": "integratedcrafting:crafting_writer",
         "aspect": "integratedcrafting:write_itemstack_craft",
         "variable": {
-          "type": "integrateddynamics:valuetype",
-          "valuetype": "integrateddynamics:itemstack",
+          "type": "value_type",
           "value": {
-            "items": [
-              "minecraft:oak_planks"
-            ]
+            "type": "itemstack",
+            "item": {
+              "item": "minecraft:oak_planks"
+            }
           }
         }
       }
