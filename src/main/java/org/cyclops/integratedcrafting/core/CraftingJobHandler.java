@@ -165,7 +165,7 @@ public class CraftingJobHandler {
                 for (Tag pendingIngredient : pendingIngredientsList) {
                     CompoundTag pendingIngredientTag = (CompoundTag) pendingIngredient;
                     String componentName = pendingIngredientTag.getString("ingredientComponent");
-                    IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.get(new ResourceLocation(componentName));
+                    IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.get(ResourceLocation.parse(componentName));
                     if (ingredientComponent == null) {
                         throw new IllegalArgumentException("Could not find the ingredient component type " + componentName);
                     }
@@ -191,7 +191,7 @@ public class CraftingJobHandler {
                     for (Tag pendingIngredient : pendingIngredientsList) {
                         CompoundTag pendingIngredientTag = (CompoundTag) pendingIngredient;
                         String componentName = pendingIngredientTag.getString("ingredientComponent");
-                        IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.get(new ResourceLocation(componentName));
+                        IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.get(ResourceLocation.parse(componentName));
                         if (ingredientComponent == null) {
                             throw new IllegalArgumentException("Could not find the ingredient component type " + componentName);
                         }
@@ -241,7 +241,7 @@ public class CraftingJobHandler {
         this.ingredientComponentTargetOverrides.clear();
         CompoundTag targetOverrides = tag.getCompound("targetOverrides");
         for (String componentName : targetOverrides.getAllKeys()) {
-            IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.get(new ResourceLocation(componentName));
+            IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.get(ResourceLocation.parse(componentName));
             this.ingredientComponentTargetOverrides.put(component, Direction.values()[targetOverrides.getInt(componentName)]);
         }
 

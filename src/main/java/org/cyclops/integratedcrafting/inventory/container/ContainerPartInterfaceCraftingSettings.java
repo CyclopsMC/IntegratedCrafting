@@ -3,7 +3,7 @@ package org.cyclops.integratedcrafting.inventory.container;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import net.minecraft.core.Direction;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -32,7 +32,7 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
     private final int lastDisableCraftingCheckValueId;
     private final int lastBlockingModeValueId;
 
-    public ContainerPartInterfaceCraftingSettings(int id, Inventory playerInventory, FriendlyByteBuf packetBuffer) {
+    public ContainerPartInterfaceCraftingSettings(int id, Inventory playerInventory, RegistryFriendlyByteBuf packetBuffer) {
         this(id, playerInventory, new SimpleContainer(0), PartHelpers.readPartTarget(packetBuffer), Optional.empty(), PartHelpers.readPart(packetBuffer));
     }
 

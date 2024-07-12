@@ -39,7 +39,7 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
 
     @Override
     protected ResourceLocation constructGuiTexture() {
-        return new ResourceLocation(Reference.MOD_ID, "textures/gui/part_interface_crafting.png");
+        return ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "textures/gui/part_interface_crafting.png");
     }
 
     @Override

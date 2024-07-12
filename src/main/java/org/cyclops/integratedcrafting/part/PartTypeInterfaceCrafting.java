@@ -12,7 +12,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -120,7 +120,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
     }
 
     @Override
-    public void writeExtraGuiData(FriendlyByteBuf packetBuffer, PartPos pos, ServerPlayer player) {
+    public void writeExtraGuiData(RegistryFriendlyByteBuf packetBuffer, PartPos pos, ServerPlayer player) {
         // Write inventory size
         IPartContainer partContainer = PartHelpers.getPartContainerChecked(pos);
         PartTypeInterfaceCrafting.State partState = (PartTypeInterfaceCrafting.State) partContainer.getPartState(pos.getSide());
@@ -361,9 +361,9 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Override
-        public void writeToNBT(CompoundTag tag) {
-            super.writeToNBT(tag);
-            inventoryVariables.writeToNBT(tag, "variables");
+        public void writeToNBT(ValueDeseralizationContext valueDeseralizationContext, CompoundTag tag) {
+            super.writeToNBT(valueDeseralizationContext, tag);
+            inventoryVariables.writeToNBT(valueDeseralizationContext.holderLookupProvider(), tag, "variables");
 
             ListTag instanceTags = new ListTag();
             for (IngredientInstanceWrapper instanceWrapper : inventoryOutputBuffer) {
@@ -379,7 +379,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
             CompoundTag recipeSlotErrorsTag = new CompoundTag();
             for (Int2ObjectMap.Entry<MutableComponent> entry : this.recipeSlotMessages.int2ObjectEntrySet()) {
-                NBTClassType.writeNbt(MutableComponent.class, String.valueOf(entry.getIntKey()), entry.getValue(), recipeSlotErrorsTag);
+                NBTClassType.writeNbt(MutableComponent.class, String.valueOf(entry.getIntKey()), entry.getValue(), recipeSlotErrorsTag, valueDeseralizationContext.holderLookupProvider());
             }
             tag.put("recipeSlotMessages", recipeSlotErrorsTag);
 
@@ -395,13 +395,13 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         @Override
         public void readFromNBT(ValueDeseralizationContext valueDeseralizationContext, CompoundTag tag) {
             super.readFromNBT(valueDeseralizationContext, tag);
-            inventoryVariables.readFromNBT(tag, "variables");
+            inventoryVariables.readFromNBT(valueDeseralizationContext.holderLookupProvider(), tag, "variables");
 
             this.inventoryOutputBuffer.clear();
             for (Tag instanceTagRaw : tag.getList("inventoryOutputBuffer", Tag.TAG_COMPOUND)) {
                 CompoundTag instanceTag = (CompoundTag) instanceTagRaw;
                 String componentName = instanceTag.getString("component");
-                IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.get(new ResourceLocation(componentName));
+                IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.get(ResourceLocation.parse(componentName));
                 this.inventoryOutputBuffer.add(new IngredientInstanceWrapper(component,
                         component.getSerializer().deserializeInstance(instanceTag.get("instance"))));
             }
@@ -412,7 +412,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             this.recipeSlotMessages.clear();
             CompoundTag recipeSlotErrorsTag = tag.getCompound("recipeSlotMessages");
             for (String slot : recipeSlotErrorsTag.getAllKeys()) {
-                MutableComponent unlocalizedString = NBTClassType.readNbt(MutableComponent.class, slot, recipeSlotErrorsTag);
+                MutableComponent unlocalizedString = NBTClassType.readNbt(MutableComponent.class, slot, recipeSlotErrorsTag, valueDeseralizationContext.holderLookupProvider());
                 this.recipeSlotMessages.put(Integer.parseInt(slot), unlocalizedString);
             }
 

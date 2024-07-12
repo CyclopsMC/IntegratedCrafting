@@ -4,7 +4,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.common.brewing.BrewingRecipeRegistry;
 import net.neoforged.neoforge.items.IItemHandler;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
@@ -57,7 +56,7 @@ public class CraftingProcessOverrideBrewingStand implements ICraftingProcessOver
                         int ingredientSlotIndex = 0;
                         int bottleSlotIndex = 0;
                         for (ItemStack instance : instances) {
-                            if (BrewingRecipeRegistry.isValidIngredient(instance)) {
+                            if (tile.getLevel().potionBrewing().isIngredient(instance)) {
                                 // The instance is for the ingredient slot
                                 if (!ingredientHandler.insertItem(ingredientSlotIndex++, instance, simulate).isEmpty()) {
                                     return false;

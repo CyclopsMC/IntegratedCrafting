@@ -12,9 +12,9 @@ import org.cyclops.integrateddynamics.api.part.PartCapability;
  */
 public class Capabilities {
     public static final class CraftingNetwork {
-        public static final NetworkCapability<ICraftingNetwork> NETWORK = NetworkCapability.create(new ResourceLocation(Reference.MOD_ID, "crafting_network"), ICraftingNetwork.class);
+        public static final NetworkCapability<ICraftingNetwork> NETWORK = NetworkCapability.create(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "crafting_network"), ICraftingNetwork.class);
     }
     public static final class CraftingInterface {
-        public static final PartCapability<ICraftingInterface> PART = PartCapability.create(new ResourceLocation(Reference.MOD_ID, "crafting_interface"), ICraftingInterface.class);
+        public static final PartCapability<ICraftingInterface> PART = PartCapability.create(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "crafting_interface"), ICraftingInterface.class);
     }
 }

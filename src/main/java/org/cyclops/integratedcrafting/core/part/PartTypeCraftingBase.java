@@ -1,6 +1,6 @@
 package org.cyclops.integratedcrafting.core.part;
 
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
@@ -60,7 +60,7 @@ public abstract class PartTypeCraftingBase<P extends IPartType<P, S>, S extends 
     }
 
     @Override
-    public void writeExtraGuiDataSettings(FriendlyByteBuf packetBuffer, PartPos pos, ServerPlayer player) {
+    public void writeExtraGuiDataSettings(RegistryFriendlyByteBuf packetBuffer, PartPos pos, ServerPlayer player) {
         PacketCodec.write(packetBuffer, pos);
         packetBuffer.writeUtf(this.getUniqueName().toString());
     }

@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
@@ -49,17 +50,18 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
     public boolean craft(Function<IngredientComponent<?, ?>, PartPos> targetGetter,
                          IMixedIngredients ingredients, ICraftingResultsSink resultsSink, boolean simulate) {
         PartPos target = targetGetter.apply(IngredientComponent.ITEMSTACK);
-        CraftingGrid grid = new CraftingGrid(ingredients, 3, 3);
+        CraftingGrid gridFull = new CraftingGrid(ingredients, 3, 3);
+        CraftingInput gridInput = gridFull.asCraftInput();
         Level level = target.getPos().getLevel(true);
 
-        return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, grid, level)
+        return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, gridInput, level)
                 .or(() -> {
                     CraftingGrid gridSmall = new CraftingGrid(ingredients, 2, 2);
-                    return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, gridSmall, level);
+                    return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, gridSmall.asCraftInput(), level);
                 })
                 .map(recipeHolder -> {
                     CraftingRecipe recipe = recipeHolder.value();
-                    ItemStack result = recipe.assemble(grid, level.registryAccess());
+                    ItemStack result = recipe.assemble(gridInput, level.registryAccess());
 
                     if (result.isEmpty()) {
                         return false;
@@ -70,13 +72,13 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
 
                         // Fire all required events
                         result.onCraftedBy(target.getPos().getLevel(true), player, 1);
-                        EventHooks.firePlayerCraftingEvent(player, result, grid);
+                        EventHooks.firePlayerCraftingEvent(player, result, gridFull);
 
                         // Insert the result into the sink
                         resultsSink.addResult(IngredientComponent.ITEMSTACK, result);
 
                         // Insert the remaining items into the sink
-                        for (ItemStack remainingItem : recipe.getRemainingItems(grid)) {
+                        for (ItemStack remainingItem : recipe.getRemainingItems(gridInput)) {
                             if (!remainingItem.isEmpty()) {
                                 resultsSink.addResult(IngredientComponent.ITEMSTACK, remainingItem);
                             }
