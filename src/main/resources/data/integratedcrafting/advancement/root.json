@@ -1,7 +1,7 @@
 {
   "display": {
     "icon": {
-      "item": "integratedcrafting:part_interface_crafting"
+      "id": "integratedcrafting:part_interface_crafting"
     },
     "title": {
       "translate": "itemGroup.integratedcrafting"

@@ -1,7 +1,7 @@
 {
   "display": {
     "icon": {
-      "item": "minecraft:oak_planks"
+      "id": "minecraft:oak_planks"
     },
     "title": {
       "translate": "advancement.integratedcrafting.craft_planks"
