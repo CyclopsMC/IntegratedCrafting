@@ -16,7 +16,7 @@
       "trigger": "cyclopscore:item_crafted",
       "conditions": {
         "item": {
-          "item": "integratedcrafting:part_interface_crafting"
+          "items": ["integratedcrafting:part_interface_crafting"]
         }
       }
     }
