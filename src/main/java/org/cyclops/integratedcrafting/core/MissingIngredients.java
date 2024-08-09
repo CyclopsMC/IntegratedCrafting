@@ -2,6 +2,7 @@ package org.cyclops.integratedcrafting.core;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -45,7 +46,7 @@ public class MissingIngredients<T, M> {
      * @param ingredients Ingredients.
      * @return An NBT representation of the given ingredients.
      */
-    public static CompoundTag serialize(Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> ingredients) {
+    public static CompoundTag serialize(HolderLookup.Provider lookupProvider, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> ingredients) {
         CompoundTag tag = new CompoundTag();
         for (Map.Entry<IngredientComponent<?, ?>, MissingIngredients<?, ?>> entry : ingredients.entrySet()) {
             ListTag missingIngredientsTag = new ListTag();
@@ -53,7 +54,7 @@ public class MissingIngredients<T, M> {
                 ListTag elementsTag = new ListTag();
                 for (PrototypedWithRequested<?, ?> alternative : element.getAlternatives()) {
                     CompoundTag alternativeTag = new CompoundTag();
-                    alternativeTag.put("requestedPrototype", IPrototypedIngredient.serialize(alternative.getRequestedPrototype()));
+                    alternativeTag.put("requestedPrototype", IPrototypedIngredient.serialize(lookupProvider, alternative.getRequestedPrototype()));
                     alternativeTag.putLong("quantityMissing", alternative.getQuantityMissing());
                     alternativeTag.putBoolean("inputReusable", element.isInputReusable()); // Hack, should actually be one level higher, but this is for backwards-compat
                     elementsTag.add(alternativeTag);
@@ -71,7 +72,7 @@ public class MissingIngredients<T, M> {
      * @return A new mixed ingredients instance.
      * @throws IllegalArgumentException If the given tag is invalid or does not contain data on the given ingredients.
      */
-    public static Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> deserialize(CompoundTag tag)
+    public static Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> deserialize(HolderLookup.Provider lookupProvider, CompoundTag tag)
             throws IllegalArgumentException {
         Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> map = Maps.newIdentityHashMap();
         for (String componentName : tag.getAllKeys()) {
@@ -89,7 +90,7 @@ public class MissingIngredients<T, M> {
                 boolean inputReusable = false;
                 for (int j = 0; j < elementsTag.size(); j++) {
                     CompoundTag alternativeTag = elementsTag.getCompound(j);
-                    IPrototypedIngredient<?, ?> requestedPrototype = IPrototypedIngredient.deserialize(alternativeTag.getCompound("requestedPrototype"));
+                    IPrototypedIngredient<?, ?> requestedPrototype = IPrototypedIngredient.deserialize(lookupProvider, alternativeTag.getCompound("requestedPrototype"));
                     long quantityMissing = alternativeTag.getLong("quantityMissing");
                     inputReusable = alternativeTag.getBoolean("inputReusable");
                     alternatives.add(new PrototypedWithRequested<>(requestedPrototype, quantityMissing));

@@ -369,12 +369,12 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             for (IngredientInstanceWrapper instanceWrapper : inventoryOutputBuffer) {
                 CompoundTag instanceTag = new CompoundTag();
                 instanceTag.putString("component", IngredientComponent.REGISTRY.getKey(instanceWrapper.getComponent()).toString());
-                instanceTag.put("instance", instanceWrapper.getComponent().getSerializer().serializeInstance(instanceWrapper.getInstance()));
+                instanceTag.put("instance", instanceWrapper.getComponent().getSerializer().serializeInstance(valueDeseralizationContext.holderLookupProvider(), instanceWrapper.getInstance()));
                 instanceTags.add(instanceTag);
             }
             tag.put("inventoryOutputBuffer", instanceTags);
 
-            this.craftingJobHandler.writeToNBT(tag);
+            this.craftingJobHandler.writeToNBT(valueDeseralizationContext.holderLookupProvider(), tag);
             tag.putInt("channelCrafting", channelCrafting);
 
             CompoundTag recipeSlotErrorsTag = new CompoundTag();
@@ -403,10 +403,10 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 String componentName = instanceTag.getString("component");
                 IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.get(ResourceLocation.parse(componentName));
                 this.inventoryOutputBuffer.add(new IngredientInstanceWrapper(component,
-                        component.getSerializer().deserializeInstance(instanceTag.get("instance"))));
+                        component.getSerializer().deserializeInstance(valueDeseralizationContext.holderLookupProvider(), instanceTag.get("instance"))));
             }
 
-            this.craftingJobHandler.readFromNBT(tag);
+            this.craftingJobHandler.readFromNBT(valueDeseralizationContext.holderLookupProvider(), tag);
             this.channelCrafting = tag.getInt("channelCrafting");
 
             this.recipeSlotMessages.clear();

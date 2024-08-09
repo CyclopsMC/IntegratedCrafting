@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -92,13 +93,13 @@ public class CraftingJobHandler {
         this.nonBlockingJobsRunningAmount = new Int2IntOpenHashMap();
     }
 
-    public void writeToNBT(CompoundTag tag) {
+    public void writeToNBT(HolderLookup.Provider lookupProvider, CompoundTag tag) {
         tag.putBoolean("blockingJobsMode", this.blockingJobsMode);
 
         ListTag processingCraftingJobs = new ListTag();
         for (CraftingJob processingCraftingJob : this.processingCraftingJobs.values()) {
             CompoundTag entriesTag = new CompoundTag();
-            entriesTag.put("craftingJob", CraftingJob.serialize(processingCraftingJob));
+            entriesTag.put("craftingJob", CraftingJob.serialize(lookupProvider, processingCraftingJob));
 
             List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> ingredientsEntries = this.processingCraftingJobsPendingIngredients.get(processingCraftingJob.getId());
             ListTag pendingEntries = new ListTag();
@@ -114,7 +115,7 @@ public class CraftingJobHandler {
                     IIngredientSerializer serializer = ingredientComponent.getSerializer();
                     for (IPrototypedIngredient<?, ?> prototypedIngredient : ingredientComponentListEntry.getValue()) {
                         CompoundTag instance = new CompoundTag();
-                        instance.put("prototype", serializer.serializeInstance(prototypedIngredient.getPrototype()));
+                        instance.put("prototype", serializer.serializeInstance(lookupProvider, prototypedIngredient.getPrototype()));
                         instance.put("condition", serializer.serializeCondition(prototypedIngredient.getCondition()));
                         instances.add(instance);
                     }
@@ -131,7 +132,7 @@ public class CraftingJobHandler {
 
         ListTag pendingCraftingJobs = new ListTag();
         for (CraftingJob craftingJob : this.pendingCraftingJobs.values()) {
-            pendingCraftingJobs.add(CraftingJob.serialize(craftingJob));
+            pendingCraftingJobs.add(CraftingJob.serialize(lookupProvider, craftingJob));
         }
         tag.put("pendingCraftingJobs", pendingCraftingJobs);
 
@@ -148,7 +149,7 @@ public class CraftingJobHandler {
         tag.put("nonBlockingJobsRunningAmount", nonBlockingJobsRunningAmount);
     }
 
-    public void readFromNBT(CompoundTag tag) {
+    public void readFromNBT(HolderLookup.Provider lookupProvider, CompoundTag tag) {
         if (tag.contains("blockingJobsMode")) {
             this.blockingJobsMode = tag.getBoolean("blockingJobsMode");
         }
@@ -174,7 +175,7 @@ public class CraftingJobHandler {
                     List<IPrototypedIngredient<?, ?>> pendingIngredients = Lists.newArrayList();
                     for (Tag instanceTagUnsafe : pendingIngredientTag.getList("instances", Tag.TAG_COMPOUND)) {
                         CompoundTag instanceTag = (CompoundTag) instanceTagUnsafe;
-                        Object instance = serializer.deserializeInstance(instanceTag.get("prototype"));
+                        Object instance = serializer.deserializeInstance(lookupProvider, instanceTag.get("prototype"));
                         Object condition = serializer.deserializeCondition(instanceTag.get("condition"));
                         pendingIngredients.add(new PrototypedIngredient(ingredientComponent, instance, condition));
                     }
@@ -200,7 +201,7 @@ public class CraftingJobHandler {
                         List<IPrototypedIngredient<?, ?>> pendingIngredients = Lists.newArrayList();
                         for (Tag instanceTagUnsafe : pendingIngredientTag.getList("instances", Tag.TAG_COMPOUND)) {
                             CompoundTag instanceTag = (CompoundTag) instanceTagUnsafe;
-                            Object instance = serializer.deserializeInstance(instanceTag.get("prototype"));
+                            Object instance = serializer.deserializeInstance(lookupProvider, instanceTag.get("prototype"));
                             Object condition = serializer.deserializeCondition(instanceTag.get("condition"));
                             pendingIngredients.add(new PrototypedIngredient(ingredientComponent, instance, condition));
                         }
@@ -212,7 +213,7 @@ public class CraftingJobHandler {
                 }
             }
 
-            CraftingJob craftingJob = CraftingJob.deserialize(entryTag.getCompound("craftingJob"));
+            CraftingJob craftingJob = CraftingJob.deserialize(lookupProvider, entryTag.getCompound("craftingJob"));
 
             this.processingCraftingJobs.put(craftingJob.getId(), craftingJob);
             this.allCraftingJobs.put(craftingJob.getId(), craftingJob);
@@ -224,7 +225,7 @@ public class CraftingJobHandler {
 
         ListTag pendingCraftingJobs = tag.getList("pendingCraftingJobs", Tag.TAG_COMPOUND);
         for (Tag craftingJob : pendingCraftingJobs) {
-            CraftingJob craftingJobInstance = CraftingJob.deserialize((CompoundTag) craftingJob);
+            CraftingJob craftingJobInstance = CraftingJob.deserialize(lookupProvider, (CompoundTag) craftingJob);
             this.pendingCraftingJobs.put(craftingJobInstance.getId(), craftingJobInstance);
             this.allCraftingJobs.put(craftingJobInstance.getId(), craftingJobInstance);
         }

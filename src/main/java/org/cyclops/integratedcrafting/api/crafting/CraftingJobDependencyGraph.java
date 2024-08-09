@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
@@ -239,12 +240,12 @@ public class CraftingJobDependencyGraph {
         }
     }
 
-    public static CompoundTag serialize(CraftingJobDependencyGraph graph) {
+    public static CompoundTag serialize(HolderLookup.Provider lookupProvider, CraftingJobDependencyGraph graph) {
         CompoundTag tag = new CompoundTag();
 
         ListTag craftingJobs = new ListTag();
         for (CraftingJob craftingJob : graph.getCraftingJobs()) {
-            craftingJobs.add(CraftingJob.serialize(craftingJob));
+            craftingJobs.add(CraftingJob.serialize(lookupProvider, craftingJob));
         }
         tag.put("craftingJobs", craftingJobs);
 
@@ -269,7 +270,7 @@ public class CraftingJobDependencyGraph {
         return tag;
     }
 
-    public static CraftingJobDependencyGraph deserialize(CompoundTag tag) {
+    public static CraftingJobDependencyGraph deserialize(HolderLookup.Provider lookupProvider, CompoundTag tag) {
         if (!tag.contains("craftingJobs", Tag.TAG_LIST)) {
             throw new IllegalArgumentException("Could not find a craftingJobs entry in the given tag");
         }
@@ -283,7 +284,7 @@ public class CraftingJobDependencyGraph {
         Int2ObjectMap<CraftingJob> craftingJobs = new Int2ObjectOpenHashMap<>();
         ListTag craftingJobsTag = tag.getList("craftingJobs", Tag.TAG_COMPOUND);
         for (int i = 0; i < craftingJobsTag.size(); i++) {
-            CraftingJob craftingJob = CraftingJob.deserialize(craftingJobsTag.getCompound(i));
+            CraftingJob craftingJob = CraftingJob.deserialize(lookupProvider, craftingJobsTag.getCompound(i));
             craftingJobs.put(craftingJob.getId(), craftingJob);
         }
 
