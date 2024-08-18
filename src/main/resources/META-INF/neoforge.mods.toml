@@ -9,7 +9,7 @@ authors="rubensworks (aka kroeser)"
 modId="integratedcrafting"
 version="${file.jarVersion}"
 displayName="IntegratedCrafting"
-updateJSONURL="https://raw.githubusercontent.com/CyclopsMC/Versions/master/forge_update/integrated-crafting.json"
+updateJSONURL="https://raw.githubusercontent.com/CyclopsMC/Versions/master/neoforge_update/integrated-crafting.json"
 description='''
 Craft stuff in Integrated Dynamics networks.
 '''
