@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -155,7 +156,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
     @Override
     public void afterNetworkReAlive(INetwork network, IPartNetwork partNetwork, PartTarget target, PartTypeInterfaceCrafting.State state) {
         super.afterNetworkReAlive(network, partNetwork, target, state);
-        addTargetToNetwork(network, target, state);
+        addTargetToNetwork(network, target, state, true);
     }
 
     @Override
@@ -167,7 +168,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
     @Override
     public void onNetworkAddition(INetwork network, IPartNetwork partNetwork, PartTarget target, PartTypeInterfaceCrafting.State state) {
         super.onNetworkAddition(network, partNetwork, target, state);
-        addTargetToNetwork(network, target, state);
+        addTargetToNetwork(network, target, state, true);
     }
 
     @Override
@@ -176,19 +177,19 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         // so we have to re-add it.
         removeTargetFromNetwork(network, target.getTarget(), state);
         super.setPriorityAndChannel(network, partNetwork, target, state, priority, channel);
-        addTargetToNetwork(network, target, state);
+        addTargetToNetwork(network, target, state, false);
     }
 
     protected NetworkCapability<ICraftingNetwork> getNetworkCapability() {
         return Capabilities.CraftingNetwork.NETWORK;
     }
 
-    protected void addTargetToNetwork(INetwork network, PartTarget pos, PartTypeInterfaceCrafting.State state) {
+    protected void addTargetToNetwork(INetwork network, PartTarget pos, PartTypeInterfaceCrafting.State state, boolean initialize) {
         network.getCapability(getNetworkCapability())
                 .ifPresent(craftingNetwork -> {
                     int channelCrafting = state.getChannelCrafting();
                     state.setTarget(pos);
-                    state.setNetworks(network, craftingNetwork, NetworkHelpers.getPartNetworkChecked(network), channelCrafting, ValueDeseralizationContext.of(pos.getCenter().getPos().getLevel(true)));
+                    state.setNetworks(network, craftingNetwork, NetworkHelpers.getPartNetworkChecked(network), channelCrafting, ValueDeseralizationContext.of(pos.getCenter().getPos().getLevel(true)), initialize);
                     state.setShouldAddToCraftingNetwork(true);
                 });
     }
@@ -199,7 +200,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             network.getCapability(getNetworkCapability())
                     .ifPresent(n -> n.removeCraftingInterface(state.getChannelCrafting(), state));
         }
-        state.setNetworks(null, null, null, -1, null);
+        state.setNetworks(null, null, null, -1, null, false);
         state.setTarget(null);
     }
 
@@ -220,7 +221,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         // Init network data in part state if it has not been done yet.
         // This can occur when the part chunk is being reloaded.
         if (state.getCraftingNetwork() == null) {
-            addTargetToNetwork(network, target, state);
+            addTargetToNetwork(network, target, state, false);
         }
 
         int channel = state.getChannelCrafting();
@@ -247,7 +248,9 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         if (!slots.isEmpty()) {
             ICraftingNetwork craftingNetwork = network.getCapability(getNetworkCapability()).orElse(null);
             if (craftingNetwork != null) {
-                for (Integer slot : slots) {
+                IntSet slotsCopy = new IntOpenHashSet(slots); // Create a copy, to allow insertion into slots during this loop
+                slots.clear();
+                for (Integer slot : slotsCopy) {
                     // Remove the old recipe from the network
                     Int2ObjectMap<IRecipeDefinition> recipes = state.getRecipesIndexed();
                     IRecipeDefinition oldRecipe = recipes.get(slot);
@@ -256,7 +259,10 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                     }
 
                     // Reload the recipe in the slot
-                    state.reloadRecipe(slot);
+                    // We simulate initialization for the first two ticks, as dependency variables may still be loading,
+                    // and errored may only go away after these dependencies are fully loaded.
+                    // Related to CyclopsMC/IntegratedCrafting#110
+                    state.reloadRecipe(slot, state.ticksAfterReload <= 1);
 
                     // Add the new recipe to the network
                     IRecipeDefinition newRecipe = recipes.get(slot);
@@ -265,8 +271,10 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                     }
                 }
             }
-            slots.clear();
         }
+
+        // Internal tick counter
+        state.ticksAfterReload++;
     }
 
     @Nullable
@@ -312,6 +320,8 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
     public static class State extends PartStateBase<PartTypeInterfaceCrafting>
             implements ICraftingInterface, ICraftingResultsSink {
+
+        protected int ticksAfterReload = 0;
 
         private final CraftingJobHandler craftingJobHandler;
         private final SimpleInventory inventoryVariables;
@@ -448,7 +458,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             return channelCrafting;
         }
 
-        public void reloadRecipes() {
+        public void reloadRecipes(boolean initialize) {
             this.currentRecipes.clear();
             this.recipeSlotMessages.clear();
             this.recipeSlotValidated.clear();
@@ -466,7 +476,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             }
             if (this.partNetwork != null) {
                 for (int i = 0; i < getInventoryVariables().getContainerSize(); i++) {
-                    reloadRecipe(i);
+                    reloadRecipe(i, initialize);
                 }
             }
         }
@@ -481,7 +491,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             }
         }
 
-        protected void reloadRecipe(int slot) {
+        protected void reloadRecipe(int slot, boolean initialize) {
             this.currentRecipes.remove(slot);
             if (this.recipeSlotMessages.size() > slot) {
                 this.recipeSlotMessages.remove(slot);
@@ -525,7 +535,13 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                         this.recipeSlotMessages.put(slot, e.getErrorMessage());
                     }
                 } else {
-                    this.recipeSlotMessages.put(slot, Component.translatable("gui.integratedcrafting.partinterface.slot.message.norecipe"));
+                    // If we're initializing, the variable might be referencing other variables that are not yet loaded.
+                    // So let's retry once in the next tick.
+                    if (initialize && evaluator.hasVariable()) {
+                        this.delayedReloadRecipe(slot);
+                    } else {
+                        this.recipeSlotMessages.put(slot, Component.translatable("gui.integratedcrafting.partinterface.slot.message.norecipe"));
+                    }
                 }
 
                 try {
@@ -585,7 +601,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
             // Recalculate recipes
             if (getTarget() != null && !getTarget().getCenter().getPos().getLevel(true).isClientSide) {
-                reloadRecipes();
+                reloadRecipes(false);
             }
 
             // Re-register to the network, to force an update for all new recipes
@@ -604,13 +620,14 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
 
         public void setNetworks(@Nullable INetwork network, @Nullable ICraftingNetwork craftingNetwork,
                                 @Nullable IPartNetwork partNetwork, int channel,
-                                @Nullable ValueDeseralizationContext valueDeseralizationContext) {
+                                @Nullable ValueDeseralizationContext valueDeseralizationContext,
+                                boolean initialize) {
             this.network = network;
             this.craftingNetwork = craftingNetwork;
             this.partNetwork = partNetwork;
             this.channel = channel;
             this.valueDeseralizationContext = valueDeseralizationContext;
-            reloadRecipes();
+            reloadRecipes(initialize);
             if (network != null) {
                 this.getCraftingJobHandler().reRegisterObservers(network);
             }
