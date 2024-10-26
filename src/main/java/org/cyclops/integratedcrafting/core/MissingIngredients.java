@@ -134,6 +134,13 @@ public class MissingIngredients<T, M> {
         }
 
         @Override
+        public int hashCode() {
+            int result = alternatives.hashCode();
+            result = 31 * result + Boolean.hashCode(inputReusable);
+            return result;
+        }
+
+        @Override
         public String toString() {
             return getAlternatives().toString() + "::" + isInputReusable();
         }
@@ -168,6 +175,13 @@ public class MissingIngredients<T, M> {
             return obj instanceof PrototypedWithRequested
                     && this.getRequestedPrototype().equals(((PrototypedWithRequested) obj).getRequestedPrototype())
                     && this.getQuantityMissing() == ((PrototypedWithRequested) obj).getQuantityMissing();
+        }
+
+        @Override
+        public int hashCode() {
+            int result = requestedPrototype.hashCode();
+            result = 31 * result + Long.hashCode(quantityMissing);
+            return result;
         }
 
         @Override
