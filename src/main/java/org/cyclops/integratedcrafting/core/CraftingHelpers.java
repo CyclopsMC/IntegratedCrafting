@@ -1266,6 +1266,7 @@ public class CraftingHelpers {
                     Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemories,
                     Map<IngredientComponent<?, ?>, IIngredientCollectionMutable<?, ?>> extractionMemoriesReusable,
                     boolean collectMissingIngredients, long recipeOutputQuantity) {
+        // Determine available and missing ingredients
         Map<IngredientComponent<?, ?>, List<?>> ingredientsAvailable = Maps.newIdentityHashMap();
         Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> ingredientsMissing = Maps.newIdentityHashMap();
         for (IngredientComponent<?, ?> ingredientComponent : recipe.getInputComponents()) {
@@ -1296,7 +1297,16 @@ public class CraftingHelpers {
                 }
             }
         }
-        return Pair.of(ingredientsAvailable, ingredientsMissing);
+
+        // Compress missing ingredients
+        // We do this to ensure that instances missing multiple times can be easily combined
+        // when triggering a crafting job for them.
+        Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> ingredientsMissingCompressed = Maps.newIdentityHashMap();
+        for (IngredientComponent<?, ?> ingredientComponent : ingredientsMissing.keySet()) {
+            ingredientsMissingCompressed.put(ingredientComponent, compressMissingIngredients(ingredientsMissing.get(ingredientComponent)));
+        }
+
+        return Pair.of(ingredientsAvailable, ingredientsMissingCompressed);
     }
 
     /**
@@ -1342,6 +1352,41 @@ public class CraftingHelpers {
         }
 
         return outputs;
+    }
+
+    /**
+     * Compress the given missing ingredients so that equal instances just have an incremented quantity.
+     *
+     * @param missingIngredients The missing ingredients.
+     * @param <T> The instance type.
+     * @param <M> The matching condition parameter.
+     * @return A new missing ingredients object.
+     */
+    public static <T, M> MissingIngredients<T, M> compressMissingIngredients(MissingIngredients<T, M> missingIngredients) {
+        // Index identical missing ingredients in a map, to group them by quantity
+        Map<MissingIngredients.Element<T, M>, Long> elementsCompressedMap = Maps.newLinkedHashMap(); // Must be a linked map to maintain our order!!!
+        for (MissingIngredients.Element<T, M> element : missingIngredients.getElements()) {
+            elementsCompressedMap.merge(element, 1L, Long::sum);
+        }
+
+        // Create a new missing ingredients list where we multiply the missing quantities
+        List<MissingIngredients.Element<T, M>> elementsCompressed = Lists.newArrayList();
+        for (Map.Entry<MissingIngredients.Element<T, M>, Long> entry : elementsCompressedMap.entrySet()) {
+            Long quantity = entry.getValue();
+            if (quantity == 1L || entry.getKey().isInputReusable()) {
+                elementsCompressed.add(entry.getKey());
+            } else {
+                MissingIngredients.Element<T, M> elementOld = entry.getKey();
+                MissingIngredients.Element<T, M> elementNewQuantity = new MissingIngredients.Element<>(
+                        elementOld.getAlternatives().stream()
+                                .map(alt -> new MissingIngredients.PrototypedWithRequested<>(alt.getRequestedPrototype(), alt.getQuantityMissing() * quantity))
+                                .toList(),
+                        elementOld.isInputReusable()
+                );
+                elementsCompressed.add(elementNewQuantity);
+            }
+        }
+        return new MissingIngredients<>(elementsCompressed);
     }
 
     /**
