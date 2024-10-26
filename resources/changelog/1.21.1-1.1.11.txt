@@ -1,0 +1,10 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.25.1 or higher.
+
+Fixes:
+* Allow multi-output recipes to be reused across jobs
+  Even if not all outputs of such recipes are used in one sub-job,
+  they can still be used by other sub-jobs.
+  Previously, such cases would trigger multiple invocations of these
+  recipes, while fewer would be sufficient.
+  Closes CyclopsMC/IntegratedTerminals#131
