@@ -2454,19 +2454,21 @@ public class TestCraftingHelpers {
                     simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
         } catch (UnknownCraftingRecipeException e) {
             Map<IngredientComponent<?, ?>, List<?>> storageMapValidJob = Maps.newIdentityHashMap();
-            storageMapValidJob.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA94B));
+            storageMapValidJob.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA92B));
             CraftingJob validJob = new CraftingJob(
                     0,
                     0,
                     recipeA,
-                    4,
+                    2,
                     new MixedIngredients(storageMapValidJob)
             );
+            Map<IngredientComponent<?, ?>, List<?>> storageMapCA91BJob = Maps.newIdentityHashMap();
+            storageMapCA91BJob.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA92B));
             assertThat(e, equalTo(
                     new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT), 2, Lists.newArrayList(
-                            new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 1, Lists.newArrayList(
+                            new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA03_, ComplexStack.Match.EXACT), 3, Lists.newArrayList(
                                     new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT), 1, Lists.newArrayList(), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
-                            ), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
+                            ), new MixedIngredients(storageMapCA91BJob), Lists.newArrayList())
                     ), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList(validJob))
             ));
             throw e;
@@ -2488,15 +2490,15 @@ public class TestCraftingHelpers {
         storage.insert(CA91B, false);
         storageGetter = (c) -> storage;
 
-        CraftingJob j4 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+        CraftingJob j2 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
                 simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
 
-        assertThat(j4.getId(), equalTo(4));
-        assertThat(j4.getChannel(), equalTo(0));
-        assertThat(j4.getAmount(), equalTo(1));
-        assertThat(j4.getRecipe(), equalTo(recipeBBatch));
-        assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(0));
+        assertThat(j2.getId(), equalTo(2));
+        assertThat(j2.getChannel(), equalTo(0));
+        assertThat(j2.getAmount(), equalTo(1));
+        assertThat(j2.getRecipe(), equalTo(recipeBBatch));
+        assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
 
@@ -2510,7 +2512,7 @@ public class TestCraftingHelpers {
                 CA95B
         )));
         assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
-        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j4)));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j2)));
     }
 
     @Test
@@ -2637,7 +2639,7 @@ public class TestCraftingHelpers {
 
             assertThat(e, equalTo(
                     new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT), 2, Lists.newArrayList(
-                            new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 1, Lists.newArrayList(
+                            new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT), 3, Lists.newArrayList(
                                     new UnknownCraftingRecipeException(new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA91B, ComplexStack.Match.EXACT), 1, Lists.newArrayList(), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
                             ), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList())
                     ), new MixedIngredients(Collections.emptyMap()), Lists.newArrayList(validJob))
@@ -2661,15 +2663,15 @@ public class TestCraftingHelpers {
         storage.insert(CA91B, false);
         storageGetter = (c) -> storage;
 
-        CraftingJob j3 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+        CraftingJob j1 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
                 simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
 
-        assertThat(j3.getId(), equalTo(3));
-        assertThat(j3.getChannel(), equalTo(0));
-        assertThat(j3.getAmount(), equalTo(1));
-        assertThat(j3.getRecipe(), equalTo(recipeBBatch2));
-        assertThat(j3.getIngredientsStorage().getComponents().size(), equalTo(0));
+        assertThat(j1.getId(), equalTo(1));
+        assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(1));
+        assertThat(j1.getRecipe(), equalTo(recipeBBatch2));
+        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
 
@@ -2683,7 +2685,7 @@ public class TestCraftingHelpers {
                 CA93B
         )));
         assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
-        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j3)));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j1)));
     }
 
     @Test
@@ -2701,15 +2703,15 @@ public class TestCraftingHelpers {
         storage.insert(CA91B, false);
         storageGetter = (c) -> storage;
 
-        CraftingJob j3 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+        CraftingJob j1 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
                 simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
 
-        assertThat(j3.getId(), equalTo(3));
-        assertThat(j3.getChannel(), equalTo(0));
-        assertThat(j3.getAmount(), equalTo(1));
-        assertThat(j3.getRecipe(), equalTo(recipeBBatch2));
-        assertThat(j3.getIngredientsStorage().getComponents().size(), equalTo(0));
+        assertThat(j1.getId(), equalTo(1));
+        assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(1));
+        assertThat(j1.getRecipe(), equalTo(recipeBBatch2));
+        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
 
@@ -2723,7 +2725,7 @@ public class TestCraftingHelpers {
                 CA93B
         )));
         assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
-        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j3)));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j1)));
     }
 
     @Test
@@ -2769,15 +2771,15 @@ public class TestCraftingHelpers {
         storage.insert(CA91B, false);
         storageGetter = (c) -> storage;
 
-        CraftingJob j4 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+        CraftingJob j1 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
                 simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
 
-        assertThat(j4.getId(), equalTo(4));
-        assertThat(j4.getChannel(), equalTo(0));
-        assertThat(j4.getAmount(), equalTo(1));
-        assertThat(j4.getRecipe(), equalTo(recipeBBatch3));
-        assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(0));
+        assertThat(j1.getId(), equalTo(1));
+        assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(1));
+        assertThat(j1.getRecipe(), equalTo(recipeBBatch3));
+        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
 
@@ -2791,7 +2793,7 @@ public class TestCraftingHelpers {
                 CA94B
         )));
         assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
-        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j4)));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j1)));
     }
 
     @Test
@@ -2807,15 +2809,15 @@ public class TestCraftingHelpers {
         storage.insert(CA91B, false);
         storageGetter = (c) -> storage;
 
-        CraftingJob j2 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+        CraftingJob j1 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
                 simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
 
-        assertThat(j2.getId(), equalTo(2));
-        assertThat(j2.getChannel(), equalTo(0));
-        assertThat(j2.getAmount(), equalTo(1));
-        assertThat(j2.getRecipe(), equalTo(recipeBBatch3));
-        assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(0));
+        assertThat(j1.getId(), equalTo(1));
+        assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(1));
+        assertThat(j1.getRecipe(), equalTo(recipeBBatch3));
+        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
 
@@ -2829,7 +2831,7 @@ public class TestCraftingHelpers {
                 CA92B
         )));
         assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
-        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j2)));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j1)));
     }
 
     @Test
@@ -2886,16 +2888,16 @@ public class TestCraftingHelpers {
         storage.insert(CA97B, false);
         storageGetter = (c) -> storage;
 
-        CraftingJob j7 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+        CraftingJob j1 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, CB08_, ComplexStack.Match.EXACT, true,
                 simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
 
-        assertThat(j7.getId(), equalTo(7));
-        assertThat(j7.getChannel(), equalTo(0));
-        assertThat(j7.getAmount(), equalTo(4));
-        assertThat(j7.getRecipe(), equalTo(recipeBBatch4));
-        assertThat(j7.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j7.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+        assertThat(j1.getId(), equalTo(1));
+        assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(4));
+        assertThat(j1.getRecipe(), equalTo(recipeBBatch4));
+        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA04_
         )));
 
@@ -2911,7 +2913,7 @@ public class TestCraftingHelpers {
                 CA97B
         )));
         assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
-        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j7)));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j1)));
     }
 
     @Test
@@ -2927,16 +2929,16 @@ public class TestCraftingHelpers {
         storage.insert(CA99B, false);
         storageGetter = (c) -> storage;
 
-        CraftingJob j8 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+        CraftingJob j2 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, CB010_, ComplexStack.Match.EXACT, true,
                 simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
 
-        assertThat(j8.getId(), equalTo(8));
-        assertThat(j8.getChannel(), equalTo(0));
-        assertThat(j8.getAmount(), equalTo(5));
-        assertThat(j8.getRecipe(), equalTo(recipeBBatch4));
-        assertThat(j8.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j8.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+        assertThat(j2.getId(), equalTo(2));
+        assertThat(j2.getChannel(), equalTo(0));
+        assertThat(j2.getAmount(), equalTo(5));
+        assertThat(j2.getRecipe(), equalTo(recipeBBatch4));
+        assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j2.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CA04_
         )));
 
@@ -2952,7 +2954,7 @@ public class TestCraftingHelpers {
                 CA99B
         )));
         assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
-        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j8)));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j2)));
     }
 
     @Test
@@ -2970,16 +2972,16 @@ public class TestCraftingHelpers {
 
         storageGetter = (c) -> storage;
 
-        CraftingJob j4 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+        CraftingJob j1 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, CB01_.withAmount(4), ComplexStack.Match.EXACT, true,
                 simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
 
-        assertThat(j4.getId(), equalTo(4));
-        assertThat(j4.getChannel(), equalTo(0));
-        assertThat(j4.getAmount(), equalTo(4));
-        assertThat(j4.getRecipe(), equalTo(recipeBBatch5));
-        assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j4.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+        assertThat(j1.getId(), equalTo(1));
+        assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(4));
+        assertThat(j1.getRecipe(), equalTo(recipeBBatch5));
+        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CC01_.withAmount(4)
         )));
 
@@ -2995,7 +2997,7 @@ public class TestCraftingHelpers {
                 CA91B.withAmount(16)
         )));
         assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
-        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j4)));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j1)));
     }
 
     @Test
@@ -3013,16 +3015,16 @@ public class TestCraftingHelpers {
         storage.insert(CE01_.withAmount(16), false);
         storageGetter = (c) -> storage;
 
-        CraftingJob j8 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+        CraftingJob j2 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, CB01_.withAmount(4), ComplexStack.Match.EXACT, true,
                 simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
 
-        assertThat(j8.getId(), equalTo(8));
-        assertThat(j8.getChannel(), equalTo(0));
-        assertThat(j8.getAmount(), equalTo(4));
-        assertThat(j8.getRecipe(), equalTo(recipeBBatch5));
-        assertThat(j8.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j8.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+        assertThat(j2.getId(), equalTo(2));
+        assertThat(j2.getChannel(), equalTo(0));
+        assertThat(j2.getAmount(), equalTo(4));
+        assertThat(j2.getRecipe(), equalTo(recipeBBatch5));
+        assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j2.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 CC01_.withAmount(4)
         )));
 
@@ -3036,7 +3038,7 @@ public class TestCraftingHelpers {
         assertThat(j1.getRecipe(), equalTo(recipeDA));
         assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(0));
         assertThat(craftingJobDependencyGraph.getDependencies(j1), equalTo(Lists.newArrayList(j0)));
-        assertThat(craftingJobDependencyGraph.getDependents(j1), equalTo(Lists.newArrayList(j8)));
+        assertThat(craftingJobDependencyGraph.getDependents(j1), equalTo(Lists.newArrayList(j2)));
 
         assertThat(j0.getChannel(), equalTo(0));
         assertThat(j0.getRecipe(), equalTo(recipeED));

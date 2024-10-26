@@ -115,28 +115,28 @@ public class TestCaseJobCalculationFluxedArmorPlating {
         storage.insert(C_GEM, false);
         storageGetter = (c) -> storage;
 
-        CraftingJob j16 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+        CraftingJob j4 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, C_PLATING, ComplexStack.Match.EXACT, true,
                 simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
 
-        assertThat(j16.getId(), equalTo(16));
-        assertThat(j16.getChannel(), equalTo(0));
-        assertThat(j16.getAmount(), equalTo(1));
-        assertThat(j16.getRecipe(), equalTo(recipePlating));
-        assertThat(j16.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j16.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+        assertThat(j4.getId(), equalTo(4));
+        assertThat(j4.getChannel(), equalTo(0));
+        assertThat(j4.getAmount(), equalTo(1));
+        assertThat(j4.getRecipe(), equalTo(recipePlating));
+        assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j4.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 C_GEM
         )));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(5));
-        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j16), equalTo(true));
-        assertThat(craftingJobDependencyGraph.getDependencies(j16).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j16).size(), equalTo(0));
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j4), equalTo(true));
+        assertThat(craftingJobDependencyGraph.getDependencies(j4).size(), equalTo(1));
+        assertThat(craftingJobDependencyGraph.getDependents(j4).size(), equalTo(0));
 
-        CraftingJob j3 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j16), null);
+        CraftingJob j3 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j4), null);
         assertThat(craftingJobDependencyGraph.getDependencies(j3).size(), equalTo(1));
         assertThat(craftingJobDependencyGraph.getDependents(j3).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j3).contains(j16), equalTo(true));
+        assertThat(craftingJobDependencyGraph.getDependents(j3).contains(j4), equalTo(true));
         assertThat(j3.getId(), equalTo(3));
         assertThat(j3.getAmount(), equalTo(4));
         assertThat(j3.getRecipe(), equalTo(recipePlate));
@@ -198,26 +198,26 @@ public class TestCaseJobCalculationFluxedArmorPlating {
                 C_GEM
         )));
         assertThat(calculation.getMissingDependencies(), nullValue());
-        CraftingJob j16 = calculation.getCraftingJob();
+        CraftingJob j4 = calculation.getCraftingJob();
 
-        assertThat(j16.getId(), equalTo(16));
-        assertThat(j16.getChannel(), equalTo(0));
-        assertThat(j16.getAmount(), equalTo(1));
-        assertThat(j16.getRecipe(), equalTo(recipePlating));
-        assertThat(j16.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j16.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+        assertThat(j4.getId(), equalTo(4));
+        assertThat(j4.getChannel(), equalTo(0));
+        assertThat(j4.getAmount(), equalTo(1));
+        assertThat(j4.getRecipe(), equalTo(recipePlating));
+        assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j4.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 C_GEM
         )));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(5));
-        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j16), equalTo(true));
-        assertThat(craftingJobDependencyGraph.getDependencies(j16).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j16).size(), equalTo(0));
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j4), equalTo(true));
+        assertThat(craftingJobDependencyGraph.getDependencies(j4).size(), equalTo(1));
+        assertThat(craftingJobDependencyGraph.getDependents(j4).size(), equalTo(0));
 
-        CraftingJob j3 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j16), null);
+        CraftingJob j3 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j4), null);
         assertThat(craftingJobDependencyGraph.getDependencies(j3).size(), equalTo(1));
         assertThat(craftingJobDependencyGraph.getDependents(j3).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j3).contains(j16), equalTo(true));
+        assertThat(craftingJobDependencyGraph.getDependents(j3).contains(j4), equalTo(true));
         assertThat(j3.getId(), equalTo(3));
         assertThat(j3.getAmount(), equalTo(4));
         assertThat(j3.getRecipe(), equalTo(recipePlate));
@@ -270,28 +270,28 @@ public class TestCaseJobCalculationFluxedArmorPlating {
         storage.insert(C_GEM.withAmount(4), false);
         storageGetter = (c) -> storage;
 
-        CraftingJob j16 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+        CraftingJob j4 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, C_PLATING.withAmount(4), ComplexStack.Match.EXACT, true,
                 simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
 
-        assertThat(j16.getId(), equalTo(16));
-        assertThat(j16.getChannel(), equalTo(0));
-        assertThat(j16.getAmount(), equalTo(4));
-        assertThat(j16.getRecipe(), equalTo(recipePlating));
-        assertThat(j16.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j16.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+        assertThat(j4.getId(), equalTo(4));
+        assertThat(j4.getChannel(), equalTo(0));
+        assertThat(j4.getAmount(), equalTo(4));
+        assertThat(j4.getRecipe(), equalTo(recipePlating));
+        assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j4.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
                 C_GEM.withAmount(4)
         )));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(5));
-        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j16), equalTo(true));
-        assertThat(craftingJobDependencyGraph.getDependencies(j16).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j16).size(), equalTo(0));
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j4), equalTo(true));
+        assertThat(craftingJobDependencyGraph.getDependencies(j4).size(), equalTo(1));
+        assertThat(craftingJobDependencyGraph.getDependents(j4).size(), equalTo(0));
 
-        CraftingJob j3 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j16), null);
+        CraftingJob j3 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j4), null);
         assertThat(craftingJobDependencyGraph.getDependencies(j3).size(), equalTo(1));
         assertThat(craftingJobDependencyGraph.getDependents(j3).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j3).contains(j16), equalTo(true));
+        assertThat(craftingJobDependencyGraph.getDependents(j3).contains(j4), equalTo(true));
         assertThat(j3.getId(), equalTo(3));
         assertThat(j3.getAmount(), equalTo(16));
         assertThat(j3.getRecipe(), equalTo(recipePlate));
