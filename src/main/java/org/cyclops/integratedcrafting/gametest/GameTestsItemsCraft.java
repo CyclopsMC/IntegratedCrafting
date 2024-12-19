@@ -7,28 +7,23 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.integratedcrafting.Reference;
-import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspectWriteBuilders;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
 import org.cyclops.integrateddynamics.api.part.PartPos;
-import org.cyclops.integrateddynamics.api.part.PartTarget;
-import org.cyclops.integrateddynamics.api.part.aspect.property.IAspectProperties;
 import org.cyclops.integrateddynamics.api.part.write.IPartStateWriter;
 import org.cyclops.integrateddynamics.core.block.IgnoredBlockStatus;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeItemStack;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeBoolean;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 
-import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.createBasicNetwork;
-import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.createVariableForRecipe;
-import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedDynamics.createVariableForValue;
-import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedDynamics.placeVariableInWriter;
+import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.*;
 
 @GameTestHolder(Reference.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -40,19 +35,17 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftChestOne(GameTestHelper helper) {
-        createBasicNetwork(helper, POS);
+        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
         chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
 
         // Add chest recipe to crafting interface
-        ItemStack variableChestRecipe = createVariableForRecipe(helper.getLevel(), ResourceLocation.fromNamespaceAndPath("minecraft", "chest"));
-        PartTypeInterfaceCrafting.State partStateCraftingInterface = (PartTypeInterfaceCrafting.State) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.WEST)).getState();
-        partStateCraftingInterface.getInventoryVariables().setItem(0, variableChestRecipe);
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "chest")));
 
         // Enable crafting aspect in crafting writer
-        placeVariableInWriter(helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH), CraftingAspects.Write.ITEMSTACK_CRAFT, createVariableForValue(helper.getLevel(), ValueTypes.OBJECT_ITEMSTACK, ValueObjectTypeItemStack.ValueItemStack.of(new ItemStack(Items.CHEST))));
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.CHEST));
 
         helper.succeedWhen(() -> {
             // Check if items have been crafted
@@ -62,7 +55,7 @@ public class GameTestsItemsCraft {
             helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, "Slot 1 amount is incorrect");
 
             // Check crafting interface state
-            helper.assertTrue(partStateCraftingInterface.isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
 
             // Check crafting writer state
             IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)).getState();
@@ -79,26 +72,20 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftChestAll(GameTestHelper helper) {
-        createBasicNetwork(helper, POS);
+        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
         chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
 
         // Add chest recipe to crafting interface
-        ItemStack variableChestRecipe = createVariableForRecipe(helper.getLevel(), ResourceLocation.fromNamespaceAndPath("minecraft", "chest"));
-        PartTypeInterfaceCrafting.State partStateCraftingInterface = (PartTypeInterfaceCrafting.State) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.WEST)).getState();
-        partStateCraftingInterface.getInventoryVariables().setItem(0, variableChestRecipe);
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "chest")));
 
         // Enable crafting aspect in crafting writer
-        PartPos posCraftingWriter = PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH);
-        placeVariableInWriter(helper.getLevel(), posCraftingWriter, CraftingAspects.Write.ITEMSTACK_CRAFT, createVariableForValue(helper.getLevel(), ValueTypes.OBJECT_ITEMSTACK, ValueObjectTypeItemStack.ValueItemStack.of(new ItemStack(Items.CHEST))));
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.CHEST));
 
         // Set aspect to ignore storage contents
-        PartHelpers.PartStateHolder partStateHolder = PartHelpers.getPart(posCraftingWriter);
-        IAspectProperties properties = CraftingAspects.Write.ITEMSTACK_CRAFT.getProperties(partStateHolder.getPart(), PartTarget.fromCenter(posCraftingWriter), partStateHolder.getState());
-        properties.setValue(CraftingAspectWriteBuilders.PROP_IGNORE_STORAGE, ValueTypeBoolean.ValueBoolean.of(true));
-        partStateHolder.getState().setAspectProperties(CraftingAspects.Write.ITEMSTACK_CRAFT, properties);
+        setWriterAspectProperty(positions.writer(), CraftingAspects.Write.ITEMSTACK_CRAFT, CraftingAspectWriteBuilders.PROP_IGNORE_STORAGE, ValueTypeBoolean.ValueBoolean.of(true));
 
         helper.succeedWhen(() -> {
             // Check if items have been crafted
@@ -108,7 +95,7 @@ public class GameTestsItemsCraft {
             helper.assertValueEqual(chestIn.getItem(1).getCount(), 7, "Slot 1 amount is incorrect");
 
             // Check crafting interface state
-            helper.assertTrue(partStateCraftingInterface.isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
 
             // Check crafting writer state
             IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)).getState();
@@ -120,6 +107,31 @@ public class GameTestsItemsCraft {
             );
             helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, "Active aspect is incorrect");
             helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), "Active aspect has errors");
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftIronIngot(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 1));
+
+        // Add iron ingot recipe to crafting interface
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_INGOT));
+
+        helper.succeedWhen(() -> {
+            // Check if items have been crafted
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, "Slot 0 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 0 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, "Slot 1 amount is incorrect");
+
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
         });
     }
 
