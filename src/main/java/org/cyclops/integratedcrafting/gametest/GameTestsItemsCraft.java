@@ -1,45 +1,32 @@
 package org.cyclops.integratedcrafting.gametest;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
-import org.cyclops.commoncapabilities.IngredientComponents;
-import org.cyclops.commoncapabilities.api.capability.itemhandler.ItemMatch;
-import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIngredientAlternatives;
-import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIngredientAlternativesList;
-import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
-import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
-import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspectWriteBuilders;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
-import org.cyclops.integrateddynamics.RegistryEntries;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
 import org.cyclops.integrateddynamics.api.part.aspect.property.IAspectProperties;
 import org.cyclops.integrateddynamics.api.part.write.IPartStateWriter;
 import org.cyclops.integrateddynamics.core.block.IgnoredBlockStatus;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeItemStack;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeBoolean;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 
-import java.util.List;
-import java.util.Map;
-
+import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.createBasicNetwork;
+import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.createVariableForRecipe;
 import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedDynamics.createVariableForValue;
 import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedDynamics.placeVariableInWriter;
 
@@ -53,64 +40,14 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftChestOne(GameTestHelper helper) {
-        // Place cable
-        helper.setBlock(POS, RegistryEntries.BLOCK_CABLE.value());
-
-        // Place crafting interface
-        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(POS), Direction.WEST, PartTypes.INTERFACE_CRAFTING, new ItemStack(PartTypes.INTERFACE_CRAFTING.getItem()));
-
-        // Place item interface
-        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(POS), Direction.EAST, org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_ITEM.getItem()));
-
-        // Place crafting writer
-        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH, PartTypes.CRAFTING_WRITER, new ItemStack(PartTypes.CRAFTING_WRITER.getItem()));
-
-        // Place crafting table before crafting interface
-        helper.setBlock(POS.west(), Blocks.CRAFTING_TABLE);
-
-        // Place chest before item interface
-        helper.setBlock(POS.east(), Blocks.CHEST);
+        createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
         chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
 
         // Add chest recipe to crafting interface
-        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> recipeIn = Maps.newIdentityHashMap();
-        recipeIn.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ItemStack.EMPTY, ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                ))
-        ));
-        Map<IngredientComponent<?, ?>, List<?>> recipeOut = Maps.newIdentityHashMap();
-        recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(new ItemStack(Items.CHEST)));
-        ItemStack variableChestRecipe = createVariableForValue(helper.getLevel(), ValueTypes.OBJECT_RECIPE, ValueObjectTypeRecipe.ValueRecipe.of(new RecipeDefinition(recipeIn, new MixedIngredients(recipeOut))));
+        ItemStack variableChestRecipe = createVariableForRecipe(helper.getLevel(), ResourceLocation.fromNamespaceAndPath("minecraft", "chest"));
         PartTypeInterfaceCrafting.State partStateCraftingInterface = (PartTypeInterfaceCrafting.State) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.WEST)).getState();
         partStateCraftingInterface.getInventoryVariables().setItem(0, variableChestRecipe);
 
@@ -142,64 +79,14 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftChestAll(GameTestHelper helper) {
-        // Place cable
-        helper.setBlock(POS, RegistryEntries.BLOCK_CABLE.value());
-
-        // Place crafting interface
-        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(POS), Direction.WEST, PartTypes.INTERFACE_CRAFTING, new ItemStack(PartTypes.INTERFACE_CRAFTING.getItem()));
-
-        // Place item interface
-        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(POS), Direction.EAST, org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_ITEM.getItem()));
-
-        // Place crafting writer
-        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH, PartTypes.CRAFTING_WRITER, new ItemStack(PartTypes.CRAFTING_WRITER.getItem()));
-
-        // Place crafting table before crafting interface
-        helper.setBlock(POS.west(), Blocks.CRAFTING_TABLE);
-
-        // Place chest before item interface
-        helper.setBlock(POS.east(), Blocks.CHEST);
+        createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
         chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
 
         // Add chest recipe to crafting interface
-        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> recipeIn = Maps.newIdentityHashMap();
-        recipeIn.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ItemStack.EMPTY, ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                )),
-                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(Items.OAK_PLANKS), ItemMatch.ITEM | ItemMatch.DATA)
-                ))
-        ));
-        Map<IngredientComponent<?, ?>, List<?>> recipeOut = Maps.newIdentityHashMap();
-        recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(new ItemStack(Items.CHEST)));
-        ItemStack variableChestRecipe = createVariableForValue(helper.getLevel(), ValueTypes.OBJECT_RECIPE, ValueObjectTypeRecipe.ValueRecipe.of(new RecipeDefinition(recipeIn, new MixedIngredients(recipeOut))));
+        ItemStack variableChestRecipe = createVariableForRecipe(helper.getLevel(), ResourceLocation.fromNamespaceAndPath("minecraft", "chest"));
         PartTypeInterfaceCrafting.State partStateCraftingInterface = (PartTypeInterfaceCrafting.State) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.WEST)).getState();
         partStateCraftingInterface.getInventoryVariables().setItem(0, variableChestRecipe);
 
