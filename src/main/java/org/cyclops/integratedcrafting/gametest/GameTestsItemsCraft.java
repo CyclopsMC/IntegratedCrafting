@@ -28,19 +28,23 @@ import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspectWriteBuilders;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
+import org.cyclops.integrateddynamics.RegistryEntries;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.write.IPartStateWriter;
 import org.cyclops.integrateddynamics.core.block.IgnoredBlockStatus;
+import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeItemStack;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeBoolean;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
+import org.cyclops.integratedtunnels.part.aspect.TunnelAspects;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.*;
 import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedDynamics.createVariableForValue;
+import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedDynamics.placeVariableInWriter;
 
 @GameTestHolder(Reference.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -348,6 +352,39 @@ public class GameTestsItemsCraft {
             // Check if items have been crafted
             helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CRAFTER, "Slot 0 item is incorrect");
             helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 0 amount is incorrect");
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftPlanksAndExtractFromStorage(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.OAK_LOG, 64));
+
+        // Add chest recipe to crafting interface
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "oak_planks")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.OAK_PLANKS));
+
+        // Set aspect to ignore storage contents
+        setWriterAspectProperty(positions.writer(), CraftingAspects.Write.ITEMSTACK_CRAFT, CraftingAspectWriteBuilders.PROP_IGNORE_STORAGE, ValueTypeBoolean.ValueBoolean.of(true));
+
+        // Extract all items from storage chest
+        helper.setBlock(positions.chest().south(), RegistryEntries.BLOCK_CABLE.value());
+        helper.setBlock(positions.chest().south().south(), Blocks.CHEST);
+        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(positions.chest().south()), Direction.SOUTH, org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_ITEM.getItem()));
+        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(positions.chest().south()), Direction.NORTH, org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM.getItem()));
+        placeVariableInWriter(helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(positions.chest().south()), Direction.NORTH), TunnelAspects.Write.Item.ITEMSTACK_IMPORT, createVariableForValue(helper.getLevel(), ValueTypes.OBJECT_ITEMSTACK, ValueObjectTypeItemStack.ValueItemStack.of(new ItemStack(Items.OAK_PLANKS))));
+
+        helper.succeedWhen(() -> {
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+
+            // Check if items have been crafted
+            helper.assertTrue(chestIn.getItem(0).isEmpty(), "Slot 0 item is incorrect");
         });
     }
 

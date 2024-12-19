@@ -114,7 +114,7 @@ public class GameTestHelpersIntegratedCrafting {
             posi = posi.south();
         }
 
-        return new NetworkPositions(PartPos.of(helper.getLevel(), helper.absolutePos(pos), Direction.NORTH), interfaces, interfaceStates, interfaceRecipeAdders);
+        return new NetworkPositions(pos.east(), PartPos.of(helper.getLevel(), helper.absolutePos(pos), Direction.NORTH), interfaces, interfaceStates, interfaceRecipeAdders);
     }
 
     public static ItemStack createVariableForRecipe(Level level, RecipeType<?> recipeType, ResourceLocation recipeName) {
@@ -195,6 +195,7 @@ public class GameTestHelpersIntegratedCrafting {
     }
 
     public static record NetworkPositions(
+            BlockPos chest,
             PartPos writer,
             List<PartPos> interfaces,
             List<PartTypeInterfaceCrafting.State> interfaceStates,
