@@ -10,6 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.FurnaceBlockEntity;
@@ -89,6 +90,8 @@ public class GameTestHelpersIntegratedCrafting {
             helper.setBlock(posi.west(), crafter);
 
             if (crafter == Blocks.FURNACE) {
+                helper.setBlock(posi.west(), crafter.defaultBlockState().setValue(AbstractFurnaceBlock.FACING, Direction.EAST));
+
                 // Add fuel
                 FurnaceBlockEntity furnace = helper.getBlockEntity(posi.west());
                 furnace.setItem(1, new ItemStack(Items.COAL, 64));
@@ -126,15 +129,37 @@ public class GameTestHelpersIntegratedCrafting {
         List<IPrototypedIngredientAlternatives<?, ?>> alternatives = Lists.newArrayList();
         Map<IngredientComponent<?, ?>, List<?>> recipeOut = Maps.newIdentityHashMap();
         if (recipeUnknown.value() instanceof CraftingRecipe recipeCrafting) {
-            for (Ingredient ingredient : recipeCrafting.getIngredients()) {
-                if (ingredient.isEmpty()) {
-                    alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                            new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ItemStack.EMPTY, ItemMatch.ITEM | ItemMatch.DATA)
-                    )));
-                } else {
-                    alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                            new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ingredient.getItems()[0], ItemMatch.ITEM | ItemMatch.DATA)
-                    )));
+            if (recipeCrafting.canCraftInDimensions(2, 2)) {
+                int i = 0;
+                for (Ingredient ingredient : recipeCrafting.getIngredients()) {
+                    if (ingredient.isEmpty()) {
+                        alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                                new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ItemStack.EMPTY, ItemMatch.ITEM | ItemMatch.DATA)
+                        )));
+                    } else {
+                        alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                                new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ingredient.getItems()[0], ItemMatch.ITEM | ItemMatch.DATA)
+                        )));
+                    }
+                    i++;
+
+                    if (i == 2) {
+                        alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                                new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ItemStack.EMPTY, ItemMatch.ITEM | ItemMatch.DATA)
+                        )));
+                    }
+                }
+            } else {
+                for (Ingredient ingredient : recipeCrafting.getIngredients()) {
+                    if (ingredient.isEmpty()) {
+                        alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                                new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ItemStack.EMPTY, ItemMatch.ITEM | ItemMatch.DATA)
+                        )));
+                    } else {
+                        alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                                new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ingredient.getItems()[0], ItemMatch.ITEM | ItemMatch.DATA)
+                        )));
+                    }
                 }
             }
             recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
@@ -162,6 +187,11 @@ public class GameTestHelpersIntegratedCrafting {
         IAspectProperties properties = aspect.getProperties(partStateHolder.getPart(), PartTarget.fromCenter(writerPos), partStateHolder.getState());
         properties.setValue(type, value);
         partStateHolder.getState().setAspectProperties(aspect, properties);
+    }
+
+    public static <T extends IValueType<V>, V extends IValue> void setCraftingInterfaceBlockingMode(PartPos writerPos, boolean blocking) {
+        PartHelpers.PartStateHolder partStateHolder = PartHelpers.getPart(writerPos);
+        ((PartTypeInterfaceCrafting.State) partStateHolder.getState()).getCraftingJobHandler().setBlockingJobsMode(blocking);
     }
 
     public static record NetworkPositions(

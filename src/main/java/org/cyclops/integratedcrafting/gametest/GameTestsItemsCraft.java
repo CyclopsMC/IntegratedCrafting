@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -118,7 +119,7 @@ public class GameTestsItemsCraft {
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
         chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 1));
 
-        // Add iron ingot recipe to crafting interface
+        // Add iron ingot recipe to furnace
         positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
 
         // Enable crafting aspect in crafting writer
@@ -132,6 +133,159 @@ public class GameTestsItemsCraft {
 
             // Check crafting interface state
             helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftChestFromLogs(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.OAK_LOG, 2));
+
+        // Add chest recipe to crafting interface
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "chest")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(1, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "oak_planks")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.CHEST));
+
+        helper.succeedWhen(() -> {
+            // Check if items have been crafted
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CHEST, "Slot 1 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 1 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, "Slot 1 amount is incorrect");
+
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(1), "Recipe in crafting interface is not valid");
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftIronIngotsParallel(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 5));
+
+        // Add iron ingot recipe to furnaces
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(2).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(3).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(4).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_INGOT, 5));
+
+        helper.succeedWhen(() -> {
+            // Check if items have been crafted
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, "Slot 0 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 5, "Slot 0 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, "Slot 1 amount is incorrect");
+
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(1).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(2).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(3).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(4).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+
+            helper.assertBlockProperty(POS.west(), AbstractFurnaceBlock.LIT, true);
+            helper.assertBlockProperty(POS.south().west(), AbstractFurnaceBlock.LIT, true);
+            helper.assertBlockProperty(POS.south().south().west(), AbstractFurnaceBlock.LIT, true);
+            helper.assertBlockProperty(POS.south().south().south().west(), AbstractFurnaceBlock.LIT, true);
+            helper.assertBlockProperty(POS.south().south().south().south().west(), AbstractFurnaceBlock.LIT, true);
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftIronIngotsParallelMultipleNonBlocking(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 10));
+
+        // Add iron ingot recipe to furnaces
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(2).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(3).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(4).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_INGOT, 10));
+
+        // Disable blocking mode
+        setCraftingInterfaceBlockingMode(positions.interfaces().get(0), false);
+        setCraftingInterfaceBlockingMode(positions.interfaces().get(1), false);
+        setCraftingInterfaceBlockingMode(positions.interfaces().get(2), false);
+        setCraftingInterfaceBlockingMode(positions.interfaces().get(3), false);
+        setCraftingInterfaceBlockingMode(positions.interfaces().get(4), false);
+
+        helper.succeedWhen(() -> {
+            // Check if items have been crafted
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, "Slot 0 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 10, "Slot 0 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, "Slot 1 amount is incorrect");
+
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(1).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(2).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(3).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(4).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+
+            helper.assertBlockProperty(POS.west(), AbstractFurnaceBlock.LIT, true);
+            helper.assertBlockProperty(POS.south().west(), AbstractFurnaceBlock.LIT, true);
+            helper.assertBlockProperty(POS.south().south().west(), AbstractFurnaceBlock.LIT, true);
+            helper.assertBlockProperty(POS.south().south().south().west(), AbstractFurnaceBlock.LIT, true);
+            helper.assertBlockProperty(POS.south().south().south().south().west(), AbstractFurnaceBlock.LIT, true);
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftCrafterComplex(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.OAK_LOG, 1));
+        chestIn.setItem(1, new ItemStack(Items.RAW_IRON, 5));
+        chestIn.setItem(2, new ItemStack(Items.REDSTONE_BLOCK, 2));
+        chestIn.setItem(3, new ItemStack(Items.COBBLESTONE, 7));
+
+        // Add chest recipe to crafting interface
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "oak_planks")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(1, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "crafting_table")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(2, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "redstone")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(3, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "crafter")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(4, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "dropper")));
+        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(2).accept(Triple.of(1, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(3).accept(Triple.of(2, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(4).accept(Triple.of(3, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(5).accept(Triple.of(4, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.CRAFTER));
+
+        helper.succeedWhen(() -> {
+            // Check if items have been crafted
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CRAFTER, "Slot 0 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 0 amount is incorrect");
+
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(1), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(2), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(3), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(4), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(1).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
         });
     }
 
