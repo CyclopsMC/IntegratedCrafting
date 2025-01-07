@@ -1,1 +1,24 @@
-{}
+{
+  "_comment": "------ Over de Dynamiek van Integratie inhoud ------",
+  "itemGroup.integratedcrafting": "Integrated Crafting",
+  "general.integratedcrafting.description": "Maak dingen in Integrated Dynamics netwerken.",
+  "gui.integratedcrafting.partsettings.blockingmode": "Blokkeermodus",
+  "gui.integratedcrafting.partinterface.slot.message.valid": "Recept is geldig voor het doelblok.",
+  "gui.integratedcrafting.partinterface.slot.message.invalid": "Recept wordt niet geaccepteerd door het doelblok.",
+  "gui.integratedcrafting.partinterface.slot.message.norecipe": "De variabele bevat geen recept.",
+  "advancement.integratedcrafting.craft_crafting_interface.desc": "Maak een Vervaardigingsinterface",
+  "advancement.integratedcrafting.craft_crafting_writer.desc": "Maak een Vervaardigingsschrijver",
+  "advancement.integratedcrafting.craft_planks.desc": "Gebruik een Vervaardigingsschrijver om een vervaardigingstaak te starten voor Eikenhouten planken",
+  "parttype.integratedcrafting.interface_crafting": "Vervaardigingsinterface",
+  "parttype.integratedcrafting.crafting_writer": "Vervaardigingsschrijver",
+  "info_book.integratedcrafting.section.main": "Vervaardigen",
+  "info_book.integratedcrafting.introduction": "Introductie",
+  "info_book.integratedcrafting.introduction.text1": "&lIntegrated Crafting&r is een uitbreiding op &lIntegrated Dynamics&r voor automatische vervaardiging binnen &lIntegrated Dynamics&r netwerken. Automatische vervaardiging kan uitgevoerd worden op iedere combinatie van &ovoorwerpen&r, &ovloeistoffen&r en &oenergie&r. De twee hoofdzaken die hiervoor vereist zijn, zijn de &lVervaardigingsinterface&r en de &lVervaardigingsschrijver&r.",
+  "info_book.integratedcrafting.introduction.text2": "De &lVervaardigingsinterface&r kan geplaatst worden naast iedere soort vervaardigingsmachine, en kan worden gebruikt om vervaardigingsopties aan het netwerk te bieden gebaseerd op &lVariabelekaarten&r die &8recepten&0 bevatten.",
+  "info_book.integratedcrafting.introduction.text3": "De &lVervaardigingsschrijver&r kan dan worden gebruikt om automatisch vervaardigingstaken te starten gebaseerd op recepten die worden verstrekt door alle &lVervaardigingsinterfaces&r in het netwerk.",
+  "info_book.integratedcrafting.introduction.text4": "De volgende secties leggen uit hoe dit automatische vervaardigingsproces werkt.",
+  "info_book.integratedcrafting.crafting_interface": "Vervaardigingsinterface",
+  "info_book.integratedcrafting.crafting_interface.introduction": "Introductie",
+  "info_book.integratedcrafting.crafting_writer": "Vervaardigingsschrijver",
+  "info_book.integratedcrafting.tutorials.introduction": "Introductie"
+}
