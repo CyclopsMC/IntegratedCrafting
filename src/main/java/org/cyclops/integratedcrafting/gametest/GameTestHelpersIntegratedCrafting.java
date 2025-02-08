@@ -18,6 +18,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.commoncapabilities.IngredientComponents;
 import org.cyclops.commoncapabilities.api.capability.itemhandler.ItemMatch;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIngredientAlternatives;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIngredientAlternativesItemStackTag;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIngredientAlternativesList;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
@@ -156,6 +157,19 @@ public class GameTestHelpersIntegratedCrafting {
                                 new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ItemStack.EMPTY, ItemMatch.ITEM | ItemMatch.DATA)
                         )));
                     } else {
+                        // First check if the ingredient is a tag.
+                        boolean wasTag = false;
+                        for (Ingredient.Value value : ingredient.getValues()) {
+                            if (value instanceof Ingredient.TagValue tagValue) {
+                                alternatives.add(new PrototypedIngredientAlternativesItemStackTag(Lists.newArrayList(tagValue.tag().location().toString()), ItemMatch.ITEM, 1));
+                                wasTag = true;
+                                break;
+                            }
+                        }
+                        if (wasTag) {
+                            continue;
+                        }
+
                         alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                                 new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ingredient.getItems()[0], ItemMatch.ITEM | ItemMatch.DATA)
                         )));

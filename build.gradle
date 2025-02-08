@@ -84,12 +84,20 @@ def getChangelog() {
 sourceSets {
     main
     test
+    integrationtest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
 }
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 configurations {
     modLib
     implementation.extendsFrom modLib
+
+    integrationtestImplementation.extendsFrom(implementation)
+    integrationtestRuntimeOnly.extendsFrom(runtimeOnly)
+    javadoc.classpath += sourceSets.integrationtest.output
 }
 
 test {
@@ -166,6 +174,7 @@ runs {
         systemProperty 'forge.logging.console.level', 'debug'
         systemProperty 'forge.logging.console.level', 'debug'
         modSource project.sourceSets.main
+        modSource project.sourceSets.integrationtest
 
         dependencies {
             runtime project.configurations.modLib

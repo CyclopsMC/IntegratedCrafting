@@ -26,6 +26,7 @@ import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
 import org.cyclops.integratedcrafting.proxy.ClientProxy;
 import org.cyclops.integratedcrafting.proxy.CommonProxy;
+import org.cyclops.integratedcrafting.recipe.type.RecipeSerializerDeadBushConfig;
 import org.cyclops.integrateddynamics.IntegratedDynamics;
 import org.cyclops.integrateddynamics.api.network.INetworkCraftingHandlerRegistry;
 import org.cyclops.integrateddynamics.core.event.IntegratedDynamicsSetupEvent;
@@ -108,6 +109,8 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
 
         configHandler.addConfigurable(new ContainerPartInterfaceCraftingConfig());
         configHandler.addConfigurable(new ContainerPartInterfaceCraftingSettingsConfig());
+
+        configHandler.addConfigurable(new RecipeSerializerDeadBushConfig()); // This one is only used in game tests.
     }
 
     /**

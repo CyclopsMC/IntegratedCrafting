@@ -388,4 +388,47 @@ public class GameTestsItemsCraft {
         });
     }
 
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftDeadBushTag(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.SHEARS, 1));
+        chestIn.setItem(1, new ItemStack(Items.SPRUCE_SAPLING, 10));
+
+        // Add chest recipe to crafting interface
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("integratedcrafting", "special/minecraft_dead_bush")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.DEAD_BUSH));
+
+        // Set aspect to ignore storage contents
+        setWriterAspectProperty(positions.writer(), CraftingAspects.Write.ITEMSTACK_CRAFT, CraftingAspectWriteBuilders.PROP_IGNORE_STORAGE, ValueTypeBoolean.ValueBoolean.of(true));
+
+        helper.succeedWhen(() -> {
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+
+            // Check crafting writer state
+            IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)).getState();
+            helper.assertFalse(partStateWriter.isDeactivated(), "Importer is deactivated");
+            helper.assertValueEqual(
+                    PartTypes.CRAFTING_WRITER.getBlockState(PartHelpers.getPartContainerChecked(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)), Direction.NORTH).getValue(IgnoredBlockStatus.STATUS),
+                    IgnoredBlockStatus.Status.ACTIVE,
+                    "Block status is incorrect"
+            );
+            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, "Active aspect is incorrect");
+            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), "Active aspect has errors");
+
+            // Check if items have been crafted
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.DEAD_BUSH, "Slot 0 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 10, "Slot 0 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.SHEARS, "Slot 1 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, "Slot 1 amount is incorrect");
+        });
+    }
+
+    // TODO: tag-based shears!
+
 }
