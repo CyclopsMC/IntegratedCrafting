@@ -464,6 +464,20 @@ public class CraftingHelpers {
                 throw e;
             }
         }
+        // Add remaining surplus as negatives to simulated extraction
+        for (IngredientComponent<?, ?> surplusComponent : dependenciesOutputSurplus.keySet()) {
+            IngredientCollectionPrototypeMap<?, ?> surplusInstances = dependenciesOutputSurplus.get(surplusComponent);
+            if (surplusInstances != null) {
+                for (Object instance : surplusInstances) {
+                    IngredientCollectionPrototypeMap<?, ?> simulatedExtractionMemoryInstances = simulatedExtractionMemory.get(surplusComponent);
+                    if (simulatedExtractionMemoryInstances == null) {
+                        simulatedExtractionMemoryInstances = new IngredientCollectionPrototypeMap<>(surplusComponent, true);
+                        simulatedExtractionMemory.put(surplusComponent, simulatedExtractionMemoryInstances);
+                    }
+                    ((IngredientCollectionPrototypeMap) simulatedExtractionMemoryInstances).remove(instance);
+                }
+            }
+        }
 
         // If at least one of our dependencies does not have a valid recipe or is not available,
         // go check the next recipe.
@@ -1087,7 +1101,9 @@ public class CraftingHelpers {
                                 missingAlternatives.add(new MissingIngredients.PrototypedWithRequested<>(inputPrototype, quantityMissingRelative));
                                 inputInstance = matcher.withQuantity(inputPrototype.getPrototype(), prototypeQuantity - quantityMissingRelative);
                                 simulatedExtractionMemoryAlternative.setQuantity(inputPrototype.getPrototype(), quantityMissingTotal);
-                                simulatedExtractionMemoryBuffer.add(matcher.withQuantity(inputPrototype.getPrototype(), quantityMissingRelative));
+                                // Original prototype quantity because we what can be extracted from storage and what could NOT be extracted from storage should be added to the simulation extraction memory.
+                                // The part that could NOT be extracted will be removed later when crafting jobs are calculated for the missing elements. (not doing so would lead to over-estimation of what is in storage)
+                                simulatedExtractionMemoryBuffer.add(matcher.withQuantity(inputPrototype.getPrototype(), prototypeQuantity));
                             }
                         } else {
                             // All of our quantity can be provided via our surplus in simulatedExtractionMemory
