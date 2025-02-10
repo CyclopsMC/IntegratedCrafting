@@ -1,0 +1,17 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.25.5 or higher.
+
+Fixes:
+* Fix over-estimation of storage contents when calculating jobs
+
+This could occur when an ingredient could be partially extracted from
+storage and partially had to be autocrafted via a sub-job.
+The simulated extraction memory was being set to an amount that was too
+low, which caused the algorithm to incorrectly think there was more to
+extract.
+The flaw in reasoning before this commit was that the simulation
+extraction memory would only increment. But this is false, since it will
+decrement when sub-jobs are calculated, and this decrement was not taken
+into account.
+
+Closes #125
