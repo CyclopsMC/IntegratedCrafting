@@ -150,10 +150,11 @@ public class CraftingJobHandler {
             CompoundTag entryTag = (CompoundTag) entry;
 
             List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> pendingIngredientInstanceEntries = Lists.newArrayList();
-            if (entryTag.contains("pendingIngredientInstances")) {
-                // TODO: for backwards-compatibility, remove this in the next major update
+            ListTag ingredientsEntries = entryTag.getList("pendingIngredientInstanceEntries", Tag.TAG_LIST);
+            for (Tag ingredientEntry : ingredientsEntries) {
+                ListTag pendingIngredientsList = (ListTag) ingredientEntry;
+
                 Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pendingIngredientInstances = Maps.newIdentityHashMap();
-                ListTag pendingIngredientsList = entryTag.getList("pendingIngredientInstances", Tag.TAG_COMPOUND);
                 for (Tag pendingIngredient : pendingIngredientsList) {
                     CompoundTag pendingIngredientTag = (CompoundTag) pendingIngredient;
                     String componentName = pendingIngredientTag.getString("ingredientComponent");
@@ -173,35 +174,8 @@ public class CraftingJobHandler {
 
                     pendingIngredientInstances.put(ingredientComponent, pendingIngredients);
                 }
+
                 pendingIngredientInstanceEntries.add(pendingIngredientInstances);
-            } else {
-                ListTag ingredientsEntries = entryTag.getList("pendingIngredientInstanceEntries", Tag.TAG_LIST);
-                for (Tag ingredientEntry : ingredientsEntries) {
-                    ListTag pendingIngredientsList = (ListTag) ingredientEntry;
-
-                    Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pendingIngredientInstances = Maps.newIdentityHashMap();
-                    for (Tag pendingIngredient : pendingIngredientsList) {
-                        CompoundTag pendingIngredientTag = (CompoundTag) pendingIngredient;
-                        String componentName = pendingIngredientTag.getString("ingredientComponent");
-                        IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.getValue(ResourceLocation.parse(componentName));
-                        if (ingredientComponent == null) {
-                            throw new IllegalArgumentException("Could not find the ingredient component type " + componentName);
-                        }
-                        IIngredientSerializer serializer = ingredientComponent.getSerializer();
-
-                        List<IPrototypedIngredient<?, ?>> pendingIngredients = Lists.newArrayList();
-                        for (Tag instanceTagUnsafe : pendingIngredientTag.getList("instances", Tag.TAG_COMPOUND)) {
-                            CompoundTag instanceTag = (CompoundTag) instanceTagUnsafe;
-                            Object instance = serializer.deserializeInstance(lookupProvider, instanceTag.get("prototype"));
-                            Object condition = serializer.deserializeCondition(instanceTag.get("condition"));
-                            pendingIngredients.add(new PrototypedIngredient(ingredientComponent, instance, condition));
-                        }
-
-                        pendingIngredientInstances.put(ingredientComponent, pendingIngredients);
-                    }
-
-                    pendingIngredientInstanceEntries.add(pendingIngredientInstances);
-                }
             }
 
             CraftingJob craftingJob = CraftingJob.deserialize(lookupProvider, entryTag.getCompound("craftingJob"));
