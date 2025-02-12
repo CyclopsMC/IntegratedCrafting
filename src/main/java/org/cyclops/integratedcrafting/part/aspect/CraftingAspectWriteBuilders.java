@@ -17,12 +17,7 @@ import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
 import org.cyclops.integrateddynamics.api.part.aspect.property.IAspectProperties;
 import org.cyclops.integrateddynamics.api.part.aspect.property.IAspectPropertyTypeInstance;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeFluidStack;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeItemStack;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeBoolean;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeInteger;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
+import org.cyclops.integrateddynamics.core.evaluate.variable.*;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 import org.cyclops.integrateddynamics.core.part.aspect.build.AspectBuilder;
 import org.cyclops.integrateddynamics.core.part.aspect.build.IAspectValuePropagator;
@@ -73,6 +68,9 @@ public class CraftingAspectWriteBuilders {
         PROPERTIES_CRAFTING.setValue(PROP_CRAFT_DELAY, ValueTypeInteger.ValueInteger.of(0));
     }
 
+    public static final AspectBuilder<ValueTypeLong.ValueLong, ValueTypeLong, Triple<PartTarget, IAspectProperties, ValueTypeLong.ValueLong>>
+            BUILDER_LONG_BASE = AspectWriteBuilders.getValue(AspectBuilder.forWriteType(ValueTypes.LONG));
+
     public static final AspectBuilder<ValueObjectTypeRecipe.ValueRecipe, ValueObjectTypeRecipe, Triple<PartTarget, IAspectProperties, IRecipeDefinition>>
             BUILDER_RECIPE = AspectWriteBuilders.BUILDER_RECIPE.byMod(IntegratedCrafting._instance)
             .appendKind("craft").handle(AspectWriteBuilders.PROP_GET_RECIPE);
@@ -82,9 +80,9 @@ public class CraftingAspectWriteBuilders {
     public static final AspectBuilder<ValueObjectTypeFluidStack.ValueFluidStack, ValueObjectTypeFluidStack, Triple<PartTarget, IAspectProperties, FluidStack>>
             BUILDER_FLUIDSTACK = AspectWriteBuilders.BUILDER_FLUIDSTACK.byMod(IntegratedCrafting._instance)
             .appendKind("craft").handle(AspectWriteBuilders.PROP_GET_FLUIDSTACK);
-    public static final AspectBuilder<ValueTypeInteger.ValueInteger, ValueTypeInteger, Triple<PartTarget, IAspectProperties, Integer>>
-            BUILDER_INTEGER = AspectWriteBuilders.BUILDER_INTEGER.byMod(IntegratedCrafting._instance)
-            .appendKind("craft").handle(AspectWriteBuilders.PROP_GET_INTEGER);
+    public static final AspectBuilder<ValueTypeLong.ValueLong, ValueTypeLong, Triple<PartTarget, IAspectProperties, Long>>
+            BUILDER_LONG = BUILDER_LONG_BASE.byMod(IntegratedCrafting._instance)
+            .appendKind("craft").handle(AspectWriteBuilders.PROP_GET_LONG);
 
     public static final IAspectValuePropagator<Triple<PartTarget, IAspectProperties, ItemStack>, CraftingJobData<ItemStack, Integer>>
             PROP_ITEMSTACK_CRAFTINGDATA = input -> {
@@ -104,14 +102,13 @@ public class CraftingAspectWriteBuilders {
         return new CraftingJobData<>(properties, ingredientComponent, instance, partTarget.getCenter());
     };
 
-    public static final IAspectValuePropagator<Triple<PartTarget, IAspectProperties, Integer>, CraftingJobData<Long, Boolean>>
+    public static final IAspectValuePropagator<Triple<PartTarget, IAspectProperties, Long>, CraftingJobData<Long, Boolean>>
             PROP_ENERGY_CRAFTINGDATA = input -> {
         PartTarget partTarget = input.getLeft();
         IAspectProperties properties = input.getMiddle();
-        Integer instance = input.getRight();
+        Long instance = input.getRight();
         IngredientComponent<Long, Boolean> ingredientComponent = IngredientComponent.ENERGY;
-        // TODO: in next breaking change, migrate all of this to long-based values
-        return new CraftingJobData<>(properties, ingredientComponent, (long) instance, partTarget.getCenter());
+        return new CraftingJobData<>(properties, ingredientComponent, instance, partTarget.getCenter());
     };
 
     public static final IAspectValuePropagator<Triple<PartTarget, IAspectProperties, IRecipeDefinition>, Void> PROP_CRAFT_RECIPE = input -> {

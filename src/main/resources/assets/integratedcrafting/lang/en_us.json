@@ -55,8 +55,8 @@
   "aspect.integratedcrafting.write.itemstack.craft.info": "Craft the given item",
   "aspect.integratedcrafting.write.fluidstack.craft": "Craft Fluid",
   "aspect.integratedcrafting.write.fluidstack.craft.info": "Craft the given fluid",
-  "aspect.integratedcrafting.write.integer.craft": "Craft Energy",
-  "aspect.integratedcrafting.write.integer.craft.info": "Craft the given energy amount",
+  "aspect.integratedcrafting.write.long.craft": "Craft Energy",
+  "aspect.integratedcrafting.write.long.craft.info": "Craft the given energy amount",
 
   "_comment": "------ On the Dynamics of Integration contents ------",
 

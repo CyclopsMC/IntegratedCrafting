@@ -13,13 +13,7 @@ import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integrateddynamics.api.part.aspect.IAspectRead;
 import org.cyclops.integrateddynamics.api.part.aspect.IAspectWrite;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeFluidStack;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeIngredients;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeItemStack;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeInteger;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeList;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
+import org.cyclops.integrateddynamics.core.evaluate.variable.*;
 import org.cyclops.integrateddynamics.part.aspect.read.AspectReadBuilders;
 
 import java.util.Iterator;
@@ -53,8 +47,8 @@ public class CraftingAspects {
                         .handle(CraftingAspectWriteBuilders.PROP_FLUIDSTACK_CRAFTINGDATA)
                         .handle(CraftingAspectWriteBuilders.PROP_CRAFT())
                         .buildWrite();
-        public static final IAspectWrite<ValueTypeInteger.ValueInteger, ValueTypeInteger> ENERGY_CRAFT =
-                CraftingAspectWriteBuilders.BUILDER_INTEGER
+        public static final IAspectWrite<ValueTypeLong.ValueLong, ValueTypeLong> ENERGY_CRAFT =
+                CraftingAspectWriteBuilders.BUILDER_LONG
                         .withProperties(CraftingAspectWriteBuilders.PROPERTIES_CRAFTING)
                         .handle(CraftingAspectWriteBuilders.PROP_ENERGY_CRAFTINGDATA)
                         .handle(CraftingAspectWriteBuilders.PROP_CRAFT())
