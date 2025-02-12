@@ -9,9 +9,9 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.registries.NewRegistryEvent;
 import org.apache.logging.log4j.Level;
-import org.cyclops.cyclopscore.config.ConfigHandler;
+import org.cyclops.cyclopscore.config.ConfigHandlerCommon;
 import org.cyclops.cyclopscore.infobook.IInfoBookRegistry;
-import org.cyclops.cyclopscore.init.ModBaseVersionable;
+import org.cyclops.cyclopscore.init.ModBaseNeoForge;
 import org.cyclops.cyclopscore.persist.world.GlobalCounters;
 import org.cyclops.cyclopscore.proxy.IClientProxy;
 import org.cyclops.cyclopscore.proxy.ICommonProxy;
@@ -37,7 +37,7 @@ import org.cyclops.integrateddynamics.infobook.OnTheDynamicsOfIntegrationBook;
  *
  */
 @Mod(Reference.MOD_ID)
-public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
+public class IntegratedCrafting extends ModBaseNeoForge<IntegratedCrafting> {
 
     public static IntegratedCrafting _instance;
 
@@ -101,7 +101,7 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
     }
 
     @Override
-    public void onConfigsRegister(ConfigHandler configHandler) {
+    public void onConfigsRegister(ConfigHandlerCommon configHandler) {
         super.onConfigsRegister(configHandler);
 
         configHandler.addConfigurable(new GeneralConfig());

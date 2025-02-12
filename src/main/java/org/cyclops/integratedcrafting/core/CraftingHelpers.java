@@ -10,29 +10,16 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIngredientAlternatives;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
-import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
-import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
-import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
-import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
-import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
+import org.cyclops.commoncapabilities.api.ingredient.*;
 import org.cyclops.commoncapabilities.api.ingredient.capability.ICapabilityGetter;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IngredientComponentStorageEmpty;
-import org.cyclops.cyclopscore.helper.BlockEntityHelpers;
-import org.cyclops.cyclopscore.ingredient.collection.IIngredientCollectionMutable;
-import org.cyclops.cyclopscore.ingredient.collection.IngredientArrayList;
-import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
-import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionQuantitativeGrouper;
-import org.cyclops.cyclopscore.ingredient.collection.IngredientHashSet;
+import org.cyclops.cyclopscore.datastructure.DimPos;
+import org.cyclops.cyclopscore.helper.IModHelpers;
+import org.cyclops.cyclopscore.ingredient.collection.*;
 import org.cyclops.integratedcrafting.Capabilities;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
-import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
-import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
-import org.cyclops.integratedcrafting.api.crafting.FailedCraftingRecipeException;
-import org.cyclops.integratedcrafting.api.crafting.RecursiveCraftingRecipeException;
-import org.cyclops.integratedcrafting.api.crafting.UnavailableCraftingInterfacesException;
-import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeException;
+import org.cyclops.integratedcrafting.api.crafting.*;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integrateddynamics.IntegratedDynamics;
@@ -46,15 +33,7 @@ import org.cyclops.integrateddynamics.core.network.IngredientChannelAdapter;
 import org.cyclops.integrateddynamics.core.network.IngredientChannelIndexed;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -1596,7 +1575,8 @@ public class CraftingHelpers {
 
         // First, check if we can find valid tiles for all ingredient components
         for (IngredientComponent<?, ?> ingredientComponent : ingredients.getComponents()) {
-            BlockEntity tile = BlockEntityHelpers.get(targetGetter.apply(ingredientComponent).getPos(), BlockEntity.class).orElse(null);
+            DimPos dimPos = targetGetter.apply(ingredientComponent).getPos();
+            BlockEntity tile = IModHelpers.get().getBlockEntityHelpers().get(dimPos.getLevel(true), dimPos.getBlockPos(), BlockEntity.class).orElse(null);
             if (tile != null) {
                 tileMap.put(ingredientComponent, tile);
             } else {

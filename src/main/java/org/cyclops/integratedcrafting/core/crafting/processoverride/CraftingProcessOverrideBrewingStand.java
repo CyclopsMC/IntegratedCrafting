@@ -7,7 +7,8 @@ import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.cyclopscore.helper.BlockEntityHelpers;
+import org.cyclops.cyclopscore.datastructure.DimPos;
+import org.cyclops.cyclopscore.helper.IModHelpers;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverride;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integrateddynamics.api.part.PartPos;
@@ -35,7 +36,8 @@ public class CraftingProcessOverrideBrewingStand implements ICraftingProcessOver
 
     @Nullable
     private Optional<BrewingStandBlockEntity> getTile(PartPos target) {
-        return BlockEntityHelpers.get(target.getPos(), BrewingStandBlockEntity.class);
+        DimPos dimPos = target.getPos();
+        return IModHelpers.get().getBlockEntityHelpers().get(dimPos.getLevel(true), dimPos.getBlockPos(), BrewingStandBlockEntity.class);
     }
 
     @Override

@@ -143,5 +143,8 @@
 			"type": "cube"
 		}
 	],
-	"display": {}
+	"display": {},
+	"textures": {
+		"particle": "integrateddynamics:block/cable"
+	}
 }

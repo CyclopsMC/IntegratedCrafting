@@ -1,7 +1,6 @@
 package org.cyclops.integratedcrafting.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -10,7 +9,7 @@ import org.cyclops.cyclopscore.client.gui.component.button.ButtonImage;
 import org.cyclops.cyclopscore.client.gui.container.ContainerScreenExtended;
 import org.cyclops.cyclopscore.client.gui.image.IImage;
 import org.cyclops.cyclopscore.client.gui.image.Images;
-import org.cyclops.cyclopscore.helper.GuiHelpers;
+import org.cyclops.cyclopscore.helper.IModHelpers;
 import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCrafting;
 import org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects;
@@ -59,7 +58,7 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
         RenderSystem.setShaderColor(1, 1, 1, 1);
         int y = topPos + 42;
         for (int i = 0; i < getMenu().getContainerInventory().getContainerSize(); i++) {
-            int x = leftPos + 10 + i * GuiHelpers.SLOT_SIZE;
+            int x = leftPos + 10 + i * IModHelpers.get().getGuiHelpers().getSlotSize();
             if (!getMenu().getContainerInventory().getItem(i).isEmpty()) {
                 IImage image = container.isRecipeSlotValid(i) ? Images.OK : Images.ERROR;
                 image.draw(guiGraphics, x, y);
@@ -70,14 +69,13 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         // super.drawGuiContainerForegroundLayer(matrixStack, mouseX, mouseY);
-        this.font.drawInBatch(this.title, (float)this.titleLabelX, (float)this.titleLabelY, 4210752, false,
-                guiGraphics.pose().last().pose(), guiGraphics.bufferSource(), Font.DisplayMode.NORMAL, 0, 15728880);
+        guiGraphics.drawString(font, this.title, this.titleLabelX, this.titleLabelY, 4210752, false);
 
         int y = 42;
         for (int i = 0; i < getMenu().getContainerInventory().getContainerSize(); i++) {
-            int x = 10 + i * GuiHelpers.SLOT_SIZE;
+            int x = 10 + i * IModHelpers.get().getGuiHelpers().getSlotSize();
             int slot = i;
-            GuiHelpers.renderTooltipOptional(this, guiGraphics.pose(), x, y, 14, 13, mouseX, mouseY,
+            IModHelpers.get().getGuiHelpers().renderTooltipOptional(this, guiGraphics.pose(), x, y, 14, 13, mouseX, mouseY,
                     () -> {
                         if (!getMenu().getItems().get(slot).isEmpty()) {
                             Component unlocalizedMessage = container.getRecipeSlotUnlocalizedMessage(slot);

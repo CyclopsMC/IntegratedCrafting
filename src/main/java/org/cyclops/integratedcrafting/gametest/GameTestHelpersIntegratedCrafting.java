@@ -4,11 +4,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.recipebook.PlaceRecipeHelper;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.item.crafting.display.RecipeDisplay;
+import net.minecraft.world.item.crafting.display.SlotDisplayContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.Block;
@@ -119,8 +124,11 @@ public class GameTestHelpersIntegratedCrafting {
 
     public static ItemStack createVariableForRecipe(Level level, RecipeType<?> recipeType, ResourceLocation recipeName) {
         RecipeHolder<?> recipeUnknown = null;
+        RecipeDisplay recipeDisplay = null;
         try {
-            recipeUnknown = (RecipeHolder<?>) IModHelpers.get().getCraftingHelpers().<RecipeInput, Recipe>getServerRecipe((RecipeType) recipeType, recipeName).orElseThrow(() -> new IllegalStateException("Recipe " + recipeName.toString() + " could not be found"));
+            ResourceKey<Recipe<?>> recipeKey = ResourceKey.create(Registries.RECIPE, recipeName);
+            recipeUnknown = (RecipeHolder<?>) IModHelpers.get().getCraftingHelpers().<RecipeInput, Recipe>getRecipe((RecipeType) recipeType, recipeKey).orElseThrow(() -> new IllegalStateException("Recipe " + recipeName.toString() + " could not be found"));
+            recipeDisplay = IModHelpers.get().getCraftingHelpers().getRecipeDisplays(recipeType, recipeKey).getFirst().display();
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -128,50 +136,33 @@ public class GameTestHelpersIntegratedCrafting {
         Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> recipeIn = Maps.newIdentityHashMap();
         List<IPrototypedIngredientAlternatives<?, ?>> alternatives = Lists.newArrayList();
         Map<IngredientComponent<?, ?>, List<?>> recipeOut = Maps.newIdentityHashMap();
+        ItemStack result = recipeDisplay.result().resolveForFirstStack(SlotDisplayContext.fromLevel(level));
         if (recipeUnknown.value() instanceof CraftingRecipe recipeCrafting) {
-            if (recipeCrafting.canCraftInDimensions(2, 2)) {
-                int i = 0;
-                for (Ingredient ingredient : recipeCrafting.getIngredients()) {
-                    if (ingredient.isEmpty()) {
-                        alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                                new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ItemStack.EMPTY, ItemMatch.ITEM | ItemMatch.DATA)
-                        )));
-                    } else {
-                        alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                                new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ingredient.getItems()[0], ItemMatch.ITEM | ItemMatch.DATA)
-                        )));
-                    }
-                    i++;
-
-                    if (i == 2) {
-                        alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                                new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ItemStack.EMPTY, ItemMatch.ITEM | ItemMatch.DATA)
-                        )));
-                    }
-                }
-            } else {
-                for (Ingredient ingredient : recipeCrafting.getIngredients()) {
-                    if (ingredient.isEmpty()) {
-                        alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                                new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ItemStack.EMPTY, ItemMatch.ITEM | ItemMatch.DATA)
-                        )));
-                    } else {
-                        alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                                new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ingredient.getItems()[0], ItemMatch.ITEM | ItemMatch.DATA)
-                        )));
-                    }
-                }
-            }
-            recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
-            recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(recipeCrafting.getResultItem(level.registryAccess())));
-        } else if (recipeUnknown.value() instanceof SmeltingRecipe recipeSmelting) {
-            for (Ingredient ingredient : recipeSmelting.getIngredients()) {
+            int width = 3;
+            int height = 3;
+            for (int i = 0; i < width * height; i++) {
                 alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ingredient.getItems()[0], ItemMatch.ITEM | ItemMatch.DATA)
+                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, ItemStack.EMPTY, ItemMatch.ITEM | ItemMatch.DATA)
+                )));
+            }
+            List<Ingredient> ingredients = recipeCrafting.placementInfo().ingredients();
+            PlaceRecipeHelper.placeRecipe(width, height, recipeCrafting, recipeCrafting.placementInfo().slotsToIngredientIndex(), (ingredientSlot, slot, x, y) -> {
+                ItemStack itemStack = ingredientSlot < 0 ? ItemStack.EMPTY : new ItemStack(ingredients.get(ingredientSlot).items().findFirst().get());
+                alternatives.set(slot, new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, itemStack, ItemMatch.ITEM | ItemMatch.DATA)
+                )));
+            });
+
+            recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
+            recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(result));
+        } else if (recipeUnknown.value() instanceof SmeltingRecipe recipeSmelting) {
+            for (Ingredient ingredient : recipeSmelting.placementInfo().ingredients()) {
+                alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(ingredient.items().findFirst().get()), ItemMatch.ITEM | ItemMatch.DATA)
                 )));
             }
             recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
-            recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(recipeSmelting.getResultItem(level.registryAccess())));
+            recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(result));
         } else {
             throw new IllegalStateException("Unknown recipe type " + recipeType);
         }

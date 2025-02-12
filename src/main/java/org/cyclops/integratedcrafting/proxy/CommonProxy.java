@@ -1,6 +1,6 @@
 package org.cyclops.integratedcrafting.proxy;
 
-import org.cyclops.cyclopscore.init.ModBase;
+import org.cyclops.cyclopscore.init.ModBaseNeoForge;
 import org.cyclops.cyclopscore.proxy.CommonProxyComponent;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 
@@ -12,7 +12,7 @@ import org.cyclops.integratedcrafting.IntegratedCrafting;
 public class CommonProxy extends CommonProxyComponent {
 
     @Override
-    public ModBase getMod() {
+    public ModBaseNeoForge<?> getMod() {
         return IntegratedCrafting._instance;
     }
 

@@ -16,19 +16,10 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
-import org.cyclops.commoncapabilities.api.ingredient.IIngredientSerializer;
-import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
-import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
-import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
-import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
+import org.cyclops.commoncapabilities.api.ingredient.*;
 import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
-import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
-import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
-import org.cyclops.integratedcrafting.api.crafting.CraftingJobStatus;
-import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverride;
-import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
+import org.cyclops.integratedcrafting.api.crafting.*;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integrateddynamics.api.ingredient.IIngredientComponentStorageObservable;
 import org.cyclops.integrateddynamics.api.network.INetwork;
@@ -166,7 +157,7 @@ public class CraftingJobHandler {
                 for (Tag pendingIngredient : pendingIngredientsList) {
                     CompoundTag pendingIngredientTag = (CompoundTag) pendingIngredient;
                     String componentName = pendingIngredientTag.getString("ingredientComponent");
-                    IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.get(ResourceLocation.parse(componentName));
+                    IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.getValue(ResourceLocation.parse(componentName));
                     if (ingredientComponent == null) {
                         throw new IllegalArgumentException("Could not find the ingredient component type " + componentName);
                     }
@@ -192,7 +183,7 @@ public class CraftingJobHandler {
                     for (Tag pendingIngredient : pendingIngredientsList) {
                         CompoundTag pendingIngredientTag = (CompoundTag) pendingIngredient;
                         String componentName = pendingIngredientTag.getString("ingredientComponent");
-                        IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.get(ResourceLocation.parse(componentName));
+                        IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.getValue(ResourceLocation.parse(componentName));
                         if (ingredientComponent == null) {
                             throw new IllegalArgumentException("Could not find the ingredient component type " + componentName);
                         }
@@ -242,7 +233,7 @@ public class CraftingJobHandler {
         this.ingredientComponentTargetOverrides.clear();
         CompoundTag targetOverrides = tag.getCompound("targetOverrides");
         for (String componentName : targetOverrides.getAllKeys()) {
-            IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.get(ResourceLocation.parse(componentName));
+            IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(ResourceLocation.parse(componentName));
             this.ingredientComponentTargetOverrides.put(component, Direction.values()[targetOverrides.getInt(componentName)]);
         }
 

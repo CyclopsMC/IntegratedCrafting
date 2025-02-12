@@ -1,22 +1,17 @@
 package org.cyclops.integratedcrafting.inventory.container;
 
-import net.minecraft.client.gui.screens.inventory.MenuAccess;
-import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.flag.FeatureFlags;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import org.cyclops.cyclopscore.client.gui.ScreenFactorySafe;
-import org.cyclops.cyclopscore.config.extendedconfig.GuiConfig;
+import org.cyclops.cyclopscore.config.extendedconfig.GuiConfigCommon;
+import org.cyclops.cyclopscore.config.extendedconfig.GuiConfigScreenFactoryProvider;
+import org.cyclops.cyclopscore.init.IModBase;
 import org.cyclops.cyclopscore.inventory.container.ContainerTypeData;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
-import org.cyclops.integratedcrafting.client.gui.ContainerScreenPartInterfaceCraftingSettings;
 
 /**
  * Config for {@link ContainerPartInterfaceCraftingSettings}.
  * @author rubensworks
  */
-public class ContainerPartInterfaceCraftingSettingsConfig extends GuiConfig<ContainerPartInterfaceCraftingSettings> {
+public class ContainerPartInterfaceCraftingSettingsConfig extends GuiConfigCommon<ContainerPartInterfaceCraftingSettings, IModBase> {
 
     public ContainerPartInterfaceCraftingSettingsConfig() {
         super(IntegratedCrafting._instance,
@@ -24,10 +19,8 @@ public class ContainerPartInterfaceCraftingSettingsConfig extends GuiConfig<Cont
                 eConfig -> new ContainerTypeData<>(ContainerPartInterfaceCraftingSettings::new, FeatureFlags.VANILLA_SET));
     }
 
-    @OnlyIn(Dist.CLIENT)
     @Override
-    public <U extends Screen & MenuAccess<ContainerPartInterfaceCraftingSettings>> MenuScreens.ScreenConstructor<ContainerPartInterfaceCraftingSettings, U> getScreenFactory() {
-        return new ScreenFactorySafe<>(ContainerScreenPartInterfaceCraftingSettings::new);
+    public GuiConfigScreenFactoryProvider<ContainerPartInterfaceCraftingSettings> getScreenFactoryProvider() {
+        return new ContainerPartInterfaceCraftingSettingsConfigScreenFactoryProvider();
     }
-
 }

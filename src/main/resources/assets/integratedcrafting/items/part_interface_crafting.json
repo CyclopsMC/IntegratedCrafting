@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "integratedcrafting:block/part_interface_crafting"
+  }
+}

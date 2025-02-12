@@ -1,7 +1,7 @@
 package org.cyclops.integratedcrafting.part;
 
 import com.google.common.collect.Lists;
-import org.cyclops.cyclopscore.init.ModBase;
+import org.cyclops.cyclopscore.init.ModBaseNeoForge;
 import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
@@ -37,7 +37,7 @@ public class PartTypeCraftingWriter extends PartTypeWriteBase<PartTypeCraftingWr
     }
 
     @Override
-    public ModBase getMod() {
+    public ModBaseNeoForge<?> getMod() {
         return IntegratedCrafting._instance;
     }
 

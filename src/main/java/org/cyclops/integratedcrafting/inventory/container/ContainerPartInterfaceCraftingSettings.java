@@ -3,6 +3,7 @@ package org.cyclops.integratedcrafting.inventory.container;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import net.minecraft.core.Direction;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
@@ -32,8 +33,8 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
     private final int lastDisableCraftingCheckValueId;
     private final int lastBlockingModeValueId;
 
-    public ContainerPartInterfaceCraftingSettings(int id, Inventory playerInventory, RegistryFriendlyByteBuf packetBuffer) {
-        this(id, playerInventory, new SimpleContainer(0), PartHelpers.readPartTarget(packetBuffer), Optional.empty(), PartHelpers.readPart(packetBuffer));
+    public ContainerPartInterfaceCraftingSettings(int id, Inventory playerInventory, FriendlyByteBuf packetBuffer) {
+        this(id, playerInventory, new SimpleContainer(0), PartHelpers.readPartTarget((RegistryFriendlyByteBuf) packetBuffer), Optional.empty(), PartHelpers.readPart(packetBuffer));
     }
 
     public ContainerPartInterfaceCraftingSettings(int id, Inventory playerInventory, Container inventory,
@@ -42,7 +43,7 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
         lastChannelInterfaceCraftingValueId = getNextValueId();
         targetSideOverrideValueIds = Maps.newIdentityHashMap();
         for (ResourceLocation key : Sets.newTreeSet(IngredientComponent.REGISTRY.keySet())) { // Consistently order keys
-            IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.get(key);
+            IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.getValue(key);
             targetSideOverrideValueIds.put(ingredientComponent, getNextValueId());
         }
         lastDisableCraftingCheckValueId = getNextValueId();

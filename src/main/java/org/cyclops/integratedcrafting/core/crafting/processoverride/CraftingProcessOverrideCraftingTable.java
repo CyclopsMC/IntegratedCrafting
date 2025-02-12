@@ -13,7 +13,7 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.event.EventHooks;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.cyclopscore.helper.CraftingHelpers;
+import org.cyclops.cyclopscore.helper.IModHelpers;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverride;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integrateddynamics.api.part.PartPos;
@@ -55,11 +55,11 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
         CraftingInput gridInput = gridFull.asCraftInput();
         Level level = target.getPos().getLevel(true);
 
-        return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, gridInput, level)
+        return IModHelpers.get().getCraftingHelpers().findRecipe(RecipeType.CRAFTING, gridInput, level)
                 .or(() -> {
                     try {
                         CraftingGrid gridSmall = new CraftingGrid(ingredients, 2, 2);
-                        return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, gridSmall.asCraftInput(), level);
+                        return IModHelpers.get().getCraftingHelpers().findRecipe(RecipeType.CRAFTING, gridSmall.asCraftInput(), level);
                     } catch (IllegalArgumentException e) {
                         // This can occur if the ingredients don't fit in a 2x2 grid.
                         return Optional.empty();

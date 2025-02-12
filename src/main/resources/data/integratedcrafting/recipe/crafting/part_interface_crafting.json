@@ -6,21 +6,11 @@
     "ICI"
   ],
   "key": {
-    "I": {
-      "tag": "c:ingots/iron"
-    },
-    "C": {
-      "item": "minecraft:crafting_table"
-    },
-    "V": {
-      "item": "integrateddynamics:variable_transformer_output"
-    },
-    "M": {
-      "item": "integrateddynamics:crystalized_menril_block"
-    },
-    "W": {
-      "item": "integrateddynamics:variable_transformer_input"
-    }
+    "I": "#c:ingots/iron",
+    "C": "minecraft:crafting_table",
+    "V": "integrateddynamics:variable_transformer_output",
+    "M": "integrateddynamics:crystalized_menril_block",
+    "W": "integrateddynamics:variable_transformer_input"
   },
   "result": {
     "id": "integratedcrafting:part_interface_crafting"

@@ -7,7 +7,7 @@ import net.minecraft.world.inventory.TransientCraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.cyclopscore.helper.ItemStackHelpers;
+import org.cyclops.cyclopscore.helper.IModHelpers;
 
 import java.util.List;
 
@@ -66,7 +66,7 @@ public class CraftingGrid extends TransientCraftingContainer {
         int hash = 11 + getContainerSize();
         for (int i = 0; i < getContainerSize(); i++) {
             hash = hash << 1;
-            hash |= ItemStackHelpers.getItemStackHashCode(getItem(i));
+            hash |= IModHelpers.get().getItemStackHelpers().getItemStackHashCode(getItem(i));
         }
         return hash;
     }

@@ -3,7 +3,6 @@ package org.cyclops.integratedcrafting.client.gui;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -15,8 +14,7 @@ import org.cyclops.cyclopscore.client.gui.component.button.ButtonCheckbox;
 import org.cyclops.cyclopscore.client.gui.component.input.IInputListener;
 import org.cyclops.cyclopscore.client.gui.component.input.WidgetArrowedListField;
 import org.cyclops.cyclopscore.client.gui.component.input.WidgetNumberField;
-import org.cyclops.cyclopscore.helper.Helpers;
-import org.cyclops.cyclopscore.helper.L10NHelpers;
+import org.cyclops.cyclopscore.helper.IModHelpers;
 import org.cyclops.cyclopscore.helper.ValueNotifierHelpers;
 import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettings;
@@ -101,7 +99,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
                 true, Lists.newArrayList(IngredientComponent.REGISTRY)) {
             @Override
             protected String activeElementToString(IngredientComponent<?, ?> element) {
-                return L10NHelpers.localize(element.getTranslationKey());
+                return IModHelpers.get().getL10NHelpers().localize(element.getTranslationKey());
             }
         };
         ingredientComponentSideSelector.setListener(this);
@@ -180,25 +178,21 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
         super.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
 
-        font.drawInBatch(L10NHelpers.localize("gui.integrateddynamics.partsettings.side"), leftPos + 8, topPos + 12, Helpers.RGBToInt(0, 0, 0), false,
-                guiGraphics.pose().last().pose(), guiGraphics.bufferSource(), Font.DisplayMode.NORMAL, 0, 15728880);
+        guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integrateddynamics.partsettings.side"), leftPos + 8, topPos + 12, IModHelpers.get().getBaseHelpers().RGBToInt(0, 0, 0), false);
         RenderSystem.setShaderColor(1, 1, 1, 1);
         ingredientComponentSideSelector.render(guiGraphics, mouseX, mouseY, partialTicks);
         dropdownFieldSide.render(guiGraphics, mouseX, mouseY, partialTicks);
 
-        font.drawInBatch(L10NHelpers.localize("gui.integratedcrafting.partsettings.channel.interface"),
-                leftPos + 8, topPos + 137, 0, false,
-                guiGraphics.pose().last().pose(), guiGraphics.bufferSource(), Font.DisplayMode.NORMAL, 0, 15728880);
+        guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integratedcrafting.partsettings.channel.interface"),
+                leftPos + 8, topPos + 137, 0, false);
         numberFieldChannelInterfaceCrafting.render(guiGraphics, mouseX, mouseY, partialTicks);
 
-        font.drawInBatch(L10NHelpers.localize("gui.integratedcrafting.partsettings.craftingcheckdisabled"),
-                leftPos + 8, topPos + 152, 0, false,
-                guiGraphics.pose().last().pose(), guiGraphics.bufferSource(), Font.DisplayMode.NORMAL, 0, 15728880);
+        guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integratedcrafting.partsettings.craftingcheckdisabled"),
+                leftPos + 8, topPos + 152, 0, false);
         checkboxFieldDisabledCraftingCheck.render(guiGraphics, mouseX, mouseY, partialTicks);
 
-        font.drawInBatch(L10NHelpers.localize("gui.integratedcrafting.partsettings.blockingmode"),
-                leftPos + 8, topPos + 162, 0, false,
-                guiGraphics.pose().last().pose(), guiGraphics.bufferSource(), Font.DisplayMode.NORMAL, 0, 15728880);
+        guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integratedcrafting.partsettings.blockingmode"),
+                leftPos + 8, topPos + 162, 0, false);
         checkboxFieldBlockingMode.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 

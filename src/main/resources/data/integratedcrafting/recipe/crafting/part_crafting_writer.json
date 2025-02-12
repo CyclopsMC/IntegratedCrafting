@@ -4,12 +4,8 @@
     "CVC"
   ],
   "key": {
-    "C": {
-      "item": "minecraft:crafting_table"
-    },
-    "V": {
-      "item": "integrateddynamics:variable_transformer_output"
-    }
+    "C": "minecraft:crafting_table",
+    "V": "integrateddynamics:variable_transformer_output"
   },
   "result": {
     "id": "integratedcrafting:part_crafting_writer"
