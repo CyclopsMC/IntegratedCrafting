@@ -111,11 +111,14 @@ public class CraftingJobDependencyGraph {
                 int dependent = removedIt.nextInt();
                 IntCollection dependentDependencies = dependencies.get(dependent);
                 dependentDependencies.rem(craftingJob.getId());
-                craftingJobs.get(dependent).getDependencyCraftingJobs().rem(craftingJob.getId());
-                if (dependentDependencies.isEmpty()) {
-                    dependencies.remove(dependent);
-                    if (!dependents.containsKey(dependent)) {
-                        craftingJobs.remove(dependent);
+                CraftingJob dependentJob = craftingJobs.get(dependent);
+                if (dependentJob != null) {
+                    dependentJob.getDependencyCraftingJobs().rem(craftingJob.getId());
+                    if (dependentDependencies.isEmpty()) {
+                        dependencies.remove(dependent);
+                        if (!dependents.containsKey(dependent)) {
+                            craftingJobs.remove(dependent);
+                        }
                     }
                 }
             }

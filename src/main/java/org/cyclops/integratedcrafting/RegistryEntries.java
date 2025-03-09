@@ -4,9 +4,11 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCrafting;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettings;
+import org.cyclops.integratedcrafting.recipe.type.RecipeDeadBush;
 import org.cyclops.integrateddynamics.item.ItemVariable;
 
 /**
@@ -20,5 +22,7 @@ public class RegistryEntries {
 
     public static final DeferredHolder<MenuType<?>, MenuType<ContainerPartInterfaceCrafting>> CONTAINER_INTERFACE_CRAFTING = DeferredHolder.create(Registries.MENU, ResourceLocation.parse("integratedcrafting:part_interface_crafting"));
     public static final DeferredHolder<MenuType<?>, MenuType<ContainerPartInterfaceCraftingSettings>> CONTAINER_INTERFACE_CRAFTING_SETTINGS = DeferredHolder.create(Registries.MENU, ResourceLocation.parse("integratedcrafting:part_interface_crafting_settings"));
+
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<RecipeDeadBush>> RECIPESERIALIZER_DEAD_BUSH = DeferredHolder.create(Registries.RECIPE_SERIALIZER, ResourceLocation.parse("integratedcrafting:crafting_special_dead_bush"));
 
 }

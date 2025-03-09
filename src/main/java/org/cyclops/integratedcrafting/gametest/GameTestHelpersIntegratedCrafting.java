@@ -12,8 +12,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
-import net.minecraft.world.item.crafting.display.RecipeDisplay;
-import net.minecraft.world.item.crafting.display.SlotDisplayContext;
+import net.minecraft.world.item.crafting.display.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.Block;
@@ -23,6 +22,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.commoncapabilities.IngredientComponents;
 import org.cyclops.commoncapabilities.api.capability.itemhandler.ItemMatch;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIngredientAlternatives;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIngredientAlternativesItemStackTag;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIngredientAlternativesList;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
@@ -147,10 +147,25 @@ public class GameTestHelpersIntegratedCrafting {
             }
             List<Ingredient> ingredients = recipeCrafting.placementInfo().ingredients();
             PlaceRecipeHelper.placeRecipe(width, height, recipeCrafting, recipeCrafting.placementInfo().slotsToIngredientIndex(), (ingredientSlot, slot, x, y) -> {
-                ItemStack itemStack = ingredientSlot < 0 ? ItemStack.EMPTY : new ItemStack(ingredients.get(ingredientSlot).items().findFirst().get());
-                alternatives.set(slot, new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, itemStack, ItemMatch.ITEM | ItemMatch.DATA)
-                )));
+                // First check if the ingredient is a tag.
+                String tag = null;
+                if (ingredientSlot >= 0 && slot >= 0) {
+                    RecipeDisplay display = recipeCrafting.display().get(0);
+                    if (display instanceof ShapelessCraftingRecipeDisplay displayCrafting && displayCrafting.ingredients().get(ingredientSlot) instanceof SlotDisplay.TagSlotDisplay slotTag) {
+                        tag = slotTag.tag().location().toString();
+                    } else if (display instanceof ShapedCraftingRecipeDisplay displayCrafting && slot < displayCrafting.ingredients().size() && displayCrafting.ingredients().get(slot) instanceof SlotDisplay.TagSlotDisplay slotTag) {
+                        tag = slotTag.tag().location().toString();
+                    }
+                }
+
+                if (tag != null) {
+                    alternatives.set(slot, new PrototypedIngredientAlternativesItemStackTag(Lists.newArrayList(tag), ItemMatch.ITEM, 1));
+                } else {
+                    ItemStack itemStack = ingredientSlot < 0 ? ItemStack.EMPTY : new ItemStack(ingredients.get(ingredientSlot).items().findFirst().get());
+                    alternatives.set(slot, new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                            new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, itemStack, ItemMatch.ITEM | ItemMatch.DATA)
+                    )));
+                }
             });
 
             recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
