@@ -19,7 +19,7 @@ public class GeneralConfig extends DummyConfigCommon<IModBase> {
     public static boolean versionChecker = true;
 
     @ConfigurablePropertyCommon(category = "machine", comment = "The minimal update frequency in ticks to use for crafting interfaces.", minimalValue = 1, configLocation = ModConfigLocation.SERVER)
-    public static int minCraftingInterfaceUpdateFreq = 5;
+    public static int minCraftingInterfaceUpdateFreq = 1;
 
     @ConfigurablePropertyCommon(category = "machine", comment = "If the crafting interface should validate recipes on insertion.", isCommandable = true, configLocation = ModConfigLocation.SERVER)
     public static boolean validateRecipesCraftingInterface = true;
