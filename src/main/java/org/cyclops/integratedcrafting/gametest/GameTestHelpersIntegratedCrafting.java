@@ -147,6 +147,7 @@ public class GameTestHelpersIntegratedCrafting {
             }
             List<Ingredient> ingredients = recipeCrafting.placementInfo().ingredients();
             PlaceRecipeHelper.placeRecipe(width, height, recipeCrafting, recipeCrafting.placementInfo().slotsToIngredientIndex(), (ingredientSlot, slot, x, y) -> {
+                // This is a bit hacky, see VanillaRecipeTypeRecipeHandler for a better implementation.
                 // First check if the ingredient is a tag.
                 String tag = null;
                 if (ingredientSlot >= 0 && slot >= 0) {
