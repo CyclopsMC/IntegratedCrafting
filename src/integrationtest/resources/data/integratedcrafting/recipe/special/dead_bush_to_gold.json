@@ -1,9 +1,7 @@
 {
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
-    {
-      "item": "minecraft:dead_bush"
-    }
+    "minecraft:dead_bush"
   ],
   "result": {
     "id": "minecraft:gold_ingot"
