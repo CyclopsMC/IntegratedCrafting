@@ -201,6 +201,11 @@ public class GameTestHelpersIntegratedCrafting {
         ((PartTypeInterfaceCrafting.State) partStateHolder.getState()).getCraftingJobHandler().setBlockingJobsMode(blocking);
     }
 
+    public static <T extends IValueType<V>, V extends IValue> void setCraftingInterfaceUpdateInterval(PartPos writerPos, int updateInterval) {
+        PartHelpers.PartStateHolder partStateHolder = PartHelpers.getPart(writerPos);
+        partStateHolder.getState().setUpdateInterval(updateInterval);
+    }
+
     public static record NetworkPositions(
             BlockPos chest,
             PartPos writer,
