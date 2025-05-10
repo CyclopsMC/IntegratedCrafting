@@ -547,7 +547,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
             Direction side = getTarget().getTarget().getSide();
             IRecipeHandler recipeHandler = IModHelpersNeoForge.get().getCapabilityHelpers().getCapability(dimPos.getLevel(true), dimPos.getBlockPos(), side, org.cyclops.commoncapabilities.api.capability.Capabilities.RecipeHandler.BLOCK).orElse(null);
             if (recipeHandler != null) {
-                IMixedIngredients simulatedOutput = recipeHandler.simulate(MixedIngredients.fromRecipeInput(recipe));
+                IMixedIngredients simulatedOutput = recipeHandler.simulate(recipe);
                 if (simulatedOutput != null && !simulatedOutput.isEmpty()) {
                     if (recipe.getOutput().containsAll(simulatedOutput)) {
                         return true;

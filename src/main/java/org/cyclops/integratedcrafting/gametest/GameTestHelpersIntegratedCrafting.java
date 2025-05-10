@@ -179,6 +179,26 @@ public class GameTestHelpersIntegratedCrafting {
             }
             recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
             recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(result));
+        } else if (recipeUnknown.value() instanceof SmithingTransformRecipe recipeSmithing) {
+            alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                    new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(recipeSmithing.template.get().items().findFirst().get()), ItemMatch.ITEM | ItemMatch.DATA)
+            )));
+            alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                    new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(recipeSmithing.base.get().items().findFirst().get()), ItemMatch.ITEM | ItemMatch.DATA)
+            )));
+            alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                    new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(recipeSmithing.addition.get().items().findFirst().get()), ItemMatch.ITEM | ItemMatch.DATA)
+            )));
+            recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
+            recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(result));
+        } else if (recipeUnknown.value() instanceof StonecutterRecipe recipeStoneCutter) {
+            for (Ingredient ingredient : recipeStoneCutter.placementInfo().ingredients()) {
+                alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(ingredient.items().findFirst().get()), ItemMatch.ITEM | ItemMatch.DATA)
+                )));
+            }
+            recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
+            recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(result));
         } else {
             throw new IllegalStateException("Unknown recipe type " + recipeType);
         }
