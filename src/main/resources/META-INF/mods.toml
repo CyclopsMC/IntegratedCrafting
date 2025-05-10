@@ -13,6 +13,8 @@ updateJSONURL="https://raw.githubusercontent.com/CyclopsMC/Versions/master/forge
 description='''
 Craft stuff in Integrated Dynamics networks.
 '''
+[[accessTransformers]]
+    file="META-INF/accesstransformer.cfg"
 [[dependencies.integratedcrafting]]
     modId="cyclopscore"
     mandatory=true
