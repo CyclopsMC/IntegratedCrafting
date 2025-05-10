@@ -186,6 +186,24 @@ public class GameTestHelpersIntegratedCrafting {
             }
             recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
             recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(recipeSmelting.getResultItem(level.registryAccess())));
+        } else if (recipeUnknown.value() instanceof SmithingTransformRecipe recipeSmithing) {
+            alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                    new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, recipeSmithing.template.getItems()[0], ItemMatch.ITEM | ItemMatch.DATA)
+            )));
+            alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                    new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, recipeSmithing.base.getItems()[0], ItemMatch.ITEM | ItemMatch.DATA)
+            )));
+            alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                    new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, recipeSmithing.addition.getItems()[0], ItemMatch.ITEM | ItemMatch.DATA)
+            )));
+            recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
+            recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(recipeSmithing.getResultItem(level.registryAccess())));
+        } else if (recipeUnknown.value() instanceof StonecutterRecipe recipeStoneCutter) {
+            alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                    new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, recipeStoneCutter.getIngredients().getFirst().getItems()[0], ItemMatch.ITEM | ItemMatch.DATA)
+            )));
+            recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
+            recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(recipeStoneCutter.getResultItem(level.registryAccess())));
         } else {
             throw new IllegalStateException("Unknown recipe type " + recipeType);
         }

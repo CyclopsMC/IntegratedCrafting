@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.CraftingTableBlock;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.event.EventHooks;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.helper.CraftingHelpers;
@@ -49,7 +50,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
 
     @Override
     public boolean craft(Function<IngredientComponent<?, ?>, PartPos> targetGetter,
-                         IMixedIngredients ingredients, ICraftingResultsSink resultsSink, boolean simulate) {
+                         IMixedIngredients ingredients, IRecipeDefinition recipe, ICraftingResultsSink resultsSink, boolean simulate) {
         PartPos target = targetGetter.apply(IngredientComponent.ITEMSTACK);
         CraftingGrid gridFull = new CraftingGrid(ingredients, 3, 3);
         CraftingInput gridInput = gridFull.asCraftInput();
@@ -66,8 +67,8 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
                     }
                 })
                 .map(recipeHolder -> {
-                    CraftingRecipe recipe = recipeHolder.value();
-                    ItemStack result = recipe.assemble(gridInput, level.registryAccess());
+                    CraftingRecipe craftingRecipe = recipeHolder.value();
+                    ItemStack result = craftingRecipe.assemble(gridInput, level.registryAccess());
 
                     if (result.isEmpty()) {
                         return false;
@@ -84,7 +85,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
                         resultsSink.addResult(IngredientComponent.ITEMSTACK, result);
 
                         // Insert the remaining items into the sink
-                        for (ItemStack remainingItem : recipe.getRemainingItems(gridInput)) {
+                        for (ItemStack remainingItem : craftingRecipe.getRemainingItems(gridInput)) {
                             if (!remainingItem.isEmpty()) {
                                 resultsSink.addResult(IngredientComponent.ITEMSTACK, remainingItem);
                             }

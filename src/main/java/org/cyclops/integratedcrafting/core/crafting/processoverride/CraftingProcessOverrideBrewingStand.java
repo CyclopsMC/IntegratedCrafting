@@ -5,6 +5,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.helper.BlockEntityHelpers;
@@ -40,7 +41,7 @@ public class CraftingProcessOverrideBrewingStand implements ICraftingProcessOver
 
     @Override
     public boolean craft(Function<IngredientComponent<?, ?>, PartPos> targetGetter,
-                         IMixedIngredients ingredients, ICraftingResultsSink resultsSink, boolean simulate) {
+                         IMixedIngredients ingredients, IRecipeDefinition recipe, ICraftingResultsSink resultsSink, boolean simulate) {
         // Validate the ingredients
         List<ItemStack> instances = ingredients.getInstances(IngredientComponent.ITEMSTACK);
         if (instances.size() != 4 || ingredients.getComponents().size() != 1) {
