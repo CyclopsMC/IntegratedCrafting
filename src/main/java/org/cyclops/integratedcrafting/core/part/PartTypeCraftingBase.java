@@ -56,6 +56,11 @@ public abstract class PartTypeCraftingBase<P extends IPartType<P, S>, S extends 
                 return new ContainerPartSettings(id, playerInventory, new SimpleContainer(0),
                         data.getRight(), Optional.of(data.getLeft()), data.getMiddle());
             }
+
+            @Override
+            public boolean shouldTriggerClientSideContainerClosingOnOpen() {
+                return false;
+            }
         });
     }
 

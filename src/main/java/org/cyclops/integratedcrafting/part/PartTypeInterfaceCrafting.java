@@ -116,6 +116,11 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 return new ContainerPartInterfaceCrafting(id, playerInventory, partState.getInventoryVariables(),
                         Optional.of(data.getRight()), Optional.of(data.getLeft()), (PartTypeInterfaceCrafting) data.getMiddle());
             }
+
+            @Override
+            public boolean shouldTriggerClientSideContainerClosingOnOpen() {
+                return false;
+            }
         });
     }
 
@@ -143,6 +148,11 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
                 Triple<IPartContainer, PartTypeBase, PartTarget> data = PartHelpers.getContainerPartConstructionData(pos);
                 return new ContainerPartInterfaceCraftingSettings(id, playerInventory, new SimpleContainer(0),
                         data.getRight(), Optional.of(data.getLeft()), data.getMiddle());
+            }
+
+            @Override
+            public boolean shouldTriggerClientSideContainerClosingOnOpen() {
+                return false;
             }
         });
     }
