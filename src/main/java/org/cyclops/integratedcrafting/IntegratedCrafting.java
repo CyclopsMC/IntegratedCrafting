@@ -1,12 +1,12 @@
 package org.cyclops.integratedcrafting;
 
+import com.google.common.collect.Lists;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.NewRegistryEvent;
 import org.apache.logging.log4j.Level;
@@ -33,6 +33,7 @@ import org.cyclops.integratedcrafting.proxy.CommonProxy;
 import org.cyclops.integrateddynamics.IntegratedDynamics;
 import org.cyclops.integrateddynamics.api.network.INetworkCraftingHandlerRegistry;
 import org.cyclops.integrateddynamics.infobook.OnTheDynamicsOfIntegrationBook;
+import org.cyclops.integrateddynamics.part.aspect.Aspects;
 
 /**
  * The main mod class of this mod.
@@ -56,7 +57,6 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
         registerWorldStorage(globalCounters = new GlobalCounters(this));
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onRegistriesCreate);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::afterSetup);
     }
 
     public void onRegistriesCreate(NewRegistryEvent event) {
@@ -69,9 +69,13 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
     @Override
     protected void setup(FMLCommonSetupEvent event) {
         super.setup(event);
-    }
 
-    protected void afterSetup(FMLLoadCompleteEvent event) {
+        Aspects.REGISTRY.register(org.cyclops.integrateddynamics.core.part.PartTypes.NETWORK_READER, Lists.newArrayList(
+                CraftingAspects.Read.Network.RECIPES,
+                CraftingAspects.Read.Network.CRAFTING_JOBS,
+                CraftingAspects.Read.Network.CRAFTING_INGREDIENTS
+        ));
+
         IntegratedDynamics._instance.getRegistryManager().getRegistry(INetworkCraftingHandlerRegistry.class)
                 .register(new NetworkCraftingHandlerCraftingNetwork());
 
