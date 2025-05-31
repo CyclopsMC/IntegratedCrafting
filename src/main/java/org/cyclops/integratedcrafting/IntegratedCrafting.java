@@ -1,5 +1,6 @@
 package org.cyclops.integratedcrafting;
 
+import com.google.common.collect.Lists;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
@@ -33,6 +34,7 @@ import org.cyclops.integrateddynamics.IntegratedDynamics;
 import org.cyclops.integrateddynamics.api.network.INetworkCraftingHandlerRegistry;
 import org.cyclops.integrateddynamics.core.event.IntegratedDynamicsSetupEvent;
 import org.cyclops.integrateddynamics.infobook.OnTheDynamicsOfIntegrationBook;
+import org.cyclops.integrateddynamics.part.aspect.Aspects;
 
 /**
  * The main mod class of this mod.
@@ -56,7 +58,6 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
         registerWorldStorage(globalCounters = new GlobalCounters(this));
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onRegistriesCreate);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onSetup);
     }
 
     public void onRegistriesCreate(NewRegistryEvent event) {
@@ -69,9 +70,13 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
     @Override
     protected void setup(FMLCommonSetupEvent event) {
         super.setup(event);
-    }
 
-    protected void onSetup(IntegratedDynamicsSetupEvent event) {
+        Aspects.REGISTRY.register(org.cyclops.integrateddynamics.core.part.PartTypes.NETWORK_READER, Lists.newArrayList(
+                CraftingAspects.Read.Network.RECIPES,
+                CraftingAspects.Read.Network.CRAFTING_JOBS,
+                CraftingAspects.Read.Network.CRAFTING_INGREDIENTS
+        ));
+
         IntegratedDynamics._instance.getRegistryManager().getRegistry(INetworkCraftingHandlerRegistry.class)
                 .register(new NetworkCraftingHandlerCraftingNetwork());
 
