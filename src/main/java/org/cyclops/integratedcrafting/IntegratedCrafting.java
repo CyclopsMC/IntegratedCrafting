@@ -32,7 +32,6 @@ import org.cyclops.integratedcrafting.proxy.ClientProxy;
 import org.cyclops.integratedcrafting.proxy.CommonProxy;
 import org.cyclops.integrateddynamics.IntegratedDynamics;
 import org.cyclops.integrateddynamics.api.network.INetworkCraftingHandlerRegistry;
-import org.cyclops.integrateddynamics.core.event.IntegratedDynamicsSetupEvent;
 import org.cyclops.integrateddynamics.infobook.OnTheDynamicsOfIntegrationBook;
 import org.cyclops.integrateddynamics.part.aspect.Aspects;
 
