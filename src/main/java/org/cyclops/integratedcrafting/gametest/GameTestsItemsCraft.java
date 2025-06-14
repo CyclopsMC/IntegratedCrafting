@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -541,6 +542,45 @@ public class GameTestsItemsCraft {
             helper.assertValueEqual(chestIn.getItem(4).getCount(), 64, "Slot 4 amount is incorrect");
             helper.assertValueEqual(chestIn.getItem(6).getItem(), Items.SHEARS, "Slot 6 item is incorrect");
             helper.assertValueEqual(chestIn.getItem(6).getCount(), 1, "Slot 6 amount is incorrect");
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftCraftingTablesWithExistingPlank(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.OAK_LOG, 2));
+        chestIn.setItem(1, new ItemStack(Items.OAK_PLANKS, 1));
+
+        // Add chest recipe to crafting interface
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "oak_planks")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(1, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "crafting_table")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.CRAFTING_TABLE, 2));
+
+        helper.succeedWhen(() -> {
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe 0 in crafting interface 0 is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(1), "Recipe 1 in crafting interface 0 is not valid");
+
+            // Check if items have been crafted
+            // Try-catch block checks for two acceptable variants
+            try {
+                helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CRAFTING_TABLE, "Slot 0 item is incorrect");
+                helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 0 amount is incorrect");
+                helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.OAK_PLANKS, "Slot 1 item is incorrect");
+                helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, "Slot 1 amount is incorrect");
+                helper.assertValueEqual(chestIn.getItem(2).getItem(), Items.CRAFTING_TABLE, "Slot 0 item is incorrect");
+                helper.assertValueEqual(chestIn.getItem(2).getCount(), 1, "Slot 0 amount is incorrect");
+            } catch (GameTestAssertException e) {
+                helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CRAFTING_TABLE, "Slot 0 item is incorrect");
+                helper.assertValueEqual(chestIn.getItem(0).getCount(), 2, "Slot 0 amount is incorrect");
+                helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.OAK_PLANKS, "Slot 1 item is incorrect");
+                helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, "Slot 1 amount is incorrect");
+            }
         });
     }
 
