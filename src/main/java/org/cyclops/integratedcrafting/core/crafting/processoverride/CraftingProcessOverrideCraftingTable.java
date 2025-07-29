@@ -16,6 +16,7 @@ import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.WeakHashMap;
 import java.util.function.Function;
@@ -51,8 +52,13 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
 
         return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, grid, target.getPos().getLevel(true))
                 .or(() -> {
-                    CraftingGrid gridSmall = new CraftingGrid(ingredients, 2, 2);
-                    return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, gridSmall, target.getPos().getLevel(true));
+                    try {
+                        CraftingGrid gridSmall = new CraftingGrid(ingredients, 2, 2);
+                        return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, gridSmall, target.getPos().getLevel(true));
+                    } catch (IllegalArgumentException e) {
+                        // This can occur if the ingredients don't fit in a 2x2 grid.
+                        return Optional.empty();
+                    }
                 })
                 .map(recipe -> {
                     ItemStack result = recipe.assemble(grid);
