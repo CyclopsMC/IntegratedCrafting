@@ -1,1 +1,142 @@
-{}
+{
+  "_comment": "General",
+  "itemGroup.integratedcrafting": "Integrated Crafting",
+  "general.integratedcrafting.description": "Crie coisas nas redes do Integrated Dynamics.",
+
+  "_comment": "Gui",
+  "gui.integratedcrafting.partsettings.channel.interface": "Canal de Criação",
+  "gui.integratedcrafting.partsettings.ingredient": "Tipo de Ingrediente",
+  "gui.integratedcrafting.partsettings.craftingcheckdisabled": "Desativar Verificação de Criação",
+  "gui.integratedcrafting.partsettings.blockingmode": "Modo de Bloqueio",
+
+  "gui.integratedcrafting.partinterface.slot.message.valid": "A receita é válida para o alvo.",
+  "gui.integratedcrafting.partinterface.slot.message.invalid": "A receita não é aceitável pelo alvo.",
+  "gui.integratedcrafting.partinterface.slot.message.norecipe": "A variável não contém uma receita.",
+
+  "_comment": "Advancements",
+  "advancement.integratedcrafting.craft_crafting_interface": "Interface de Criação²",
+  "advancement.integratedcrafting.craft_crafting_interface.desc": "Crie uma Interface de Criação",
+  "advancement.integratedcrafting.insert_recipe_planks": "Auto-Tábuas",
+  "advancement.integratedcrafting.insert_recipe_planks.desc": "Insira a receita criada manualmente para Tábuas de Carvalho em uma Interface de Criação",
+  "advancement.integratedcrafting.craft_crafting_writer": "Escritor de Criação²",
+  "advancement.integratedcrafting.craft_crafting_writer.desc": "Crie um Escritor de Criação",
+  "advancement.integratedcrafting.craft_planks": "Auto-Tábuas Eficaz",
+  "advancement.integratedcrafting.craft_planks.desc": "Use um Escritor de Criação para iniciar uma tarefa de criação de Tábuas de Carvalho",
+
+  "_comment": "Part types",
+  "parttype.integratedcrafting.interface_crafting": "Interface de Criação",
+  "parttype.integratedcrafting.interface_crafting.info": "Armazena variáveis de criação para criar na máquina alvo.",
+
+  "parttype.integratedcrafting.crafting_writer": "Escritor de Criação",
+  "parttype.integratedcrafting.crafting_writer.info": "Inicia tarefas de criação",
+
+  "_comment": "Aspect property types",
+  "aspect.aspecttypes.integratedcrafting.boolean.ignorestorage": "Ignorar conteúdo do armazenamento",
+  "aspect.aspecttypes.integratedcrafting.boolean.ignorecrafting": "Ignorar tarefas de criação",
+  "aspect.aspecttypes.integratedcrafting.boolean.craftmissing": "Criar ingredientes faltantes",
+  "aspect.aspecttypes.integratedcrafting.integer.craftamount": "Quantidade a criar",
+  "aspect.aspecttypes.integratedcrafting.integer.craftdelay": "Atraso de criação do conteúdo do armazém",
+  "aspect.aspecttypes.integratedcrafting.integer.craftdelay.info": "Apenas criar se o ingrediente estiver faltando no armazenamento por esta duração",
+
+  "_comment": "Aspects",
+
+  "_comment": "# Network",
+  "aspect.integratedcrafting.read.list.network.recipes": "Receitas",
+  "aspect.integratedcrafting.read.list.network.recipes.info": "Uma lista de todas as receitas disponíveis.",
+  "aspect.integratedcrafting.read.list.network.craftingjobs": "Tarefas de Criação Ativas",
+  "aspect.integratedcrafting.read.list.network.craftingjobs.info": "Uma lista de todas as tarefas de criação ativas como receitas.",
+  "aspect.integratedcrafting.read.list.network.craftingingredients": "Ingredientes de Criação",
+  "aspect.integratedcrafting.read.list.network.craftingingredients.info": "Uma lista de todos os ingredientes que estão sendo criados.",
+
+  "_comment": "# Crafting",
+  "aspect.integratedcrafting.write.recipe.craft": "Criar Receita",
+  "aspect.integratedcrafting.write.recipe.craft.info": "Cria a receita fornecida",
+  "aspect.integratedcrafting.write.itemstack.craft": "Criar Item",
+  "aspect.integratedcrafting.write.itemstack.craft.info": "Cria o item fornecido",
+  "aspect.integratedcrafting.write.fluidstack.craft": "Criar Fluido",
+  "aspect.integratedcrafting.write.fluidstack.craft.info": "Cria o fluido fornecido",
+  "aspect.integratedcrafting.write.integer.craft": "Criar Energia",
+  "aspect.integratedcrafting.write.integer.craft.info": "Cria a quantidade de energia fornecida",
+
+  "_comment": "------ On the Dynamics of Integration contents ------",
+
+  "info_book.integratedcrafting.section.main": "Criação",
+
+  "info_book.integratedcrafting.introduction": "Introdução",
+  "info_book.integratedcrafting.introduction.text1": "&lIntegrated Crafting&r é uma extensão para o &lIntegrated Dynamics&r para criação automática dentro das redes do &lIntegrated Dynamics&r. A criação automática pode ocorrer com qualquer combinação de &oitens&r, &ofluidos&r e &oenergia&r. As duas partes principais necessárias para isso são a &lInterface de Criação&r e o &lEscritor de Criação&r.",
+  "info_book.integratedcrafting.introduction.text2": "A &lInterface de Criação&r pode ser colocada ao lado de qualquer tipo de máquina de criação e pode ser usada para fornecer opções de criação para a rede com base em &lCartões de Variável&r contendo &8Receitas&0.",
+  "info_book.integratedcrafting.introduction.text3": "O &lEscritor de Criação&r pode então ser usado para iniciar automaticamente tarefas de criação com base nas receitas que são expostas por todas as &lInterfaces de Criação&r na rede.",
+  "info_book.integratedcrafting.introduction.text4": "As seções a seguir explicam como esse processo de criação automática funciona.",
+
+  "info_book.integratedcrafting.crafting_interface": "Interface de Criação",
+
+  "info_book.integratedcrafting.crafting_interface.introduction": "Introdução",
+  "info_book.integratedcrafting.crafting_interface.introduction.text1": "Nesta seção, abordaremos o básico, o processo de criação, a configuração e os recursos especiais da &lInterface de Criação&r.",
+
+  "info_book.integratedcrafting.crafting_interface.basics": "Básico",
+  "info_book.integratedcrafting.crafting_interface.basics.text1": "A &lInterface de Criação&r é usada para dizer à rede &oonde&r e &ocomo&r as coisas podem ser criadas.",
+  "info_book.integratedcrafting.crafting_interface.basics.text2": "Ao apontar uma &lInterface de Criação&r para uma máquina &o(como uma Bancada de Trabalho ou Fornalha)&r, esta interface será vinculada a esta máquina para lidar com receitas.",
+  "info_book.integratedcrafting.crafting_interface.basics.text3": "Ao abrir a GUI de uma &lInterface de Criação&r, você pode inserir &lCartões de Variável&r que contêm &8Receitas&0. Isso dirá à interface que a receita fornecida pode ser criada usando a máquina vinculada.",
+
+  "info_book.integratedcrafting.crafting_interface.crafting": "Processo de Criação",
+  "info_book.integratedcrafting.crafting_interface.crafting.text1": "Esta seção explicará como o processo de criação é tratado pelas &lInterfaces de Criação&r. Esta informação é essencial para tirar o máximo proveito deste mod e para depurar quaisquer problemas que você possa encontrar.",
+  "info_book.integratedcrafting.crafting_interface.crafting.text2": "Quando uma tarefa de criação é iniciada (por exemplo, com o &lEscritor de Criação&r), uma (ou mais) &lInterface(s) de Criação&r será(ão) usada(s) que tenha(m) uma receita correspondente à tarefa fornecida. A &lInterface de Criação&r é responsável por inserir todas as entradas da receita na máquina vinculada. Ela fará isso com base no conteúdo da rede de armazenamento, conforme fornecido pelas &linterfaces do Integrated Tunnels&r.",
+  "info_book.integratedcrafting.crafting_interface.crafting.text3": "Uma &lInterface de Criação&r, no entanto, &lnão&r importará os resultados da criação da máquina vinculada. O jogador é responsável por garantir que os resultados da criação voltem para a rede. A Bancada de Trabalho é uma exceção para isso, apenas uma &lInterface de Criação&r é necessária para criar com ela. A &lInterface de Criação&r rastreará as alterações na rede de armazenamento e só marcará a tarefa de criação como concluída quando as saídas esperadas estiverem presentes na rede de armazenamento. Isso pode ser alcançado colocando um &limportador do Integrated Tunnels&r ativo na máquina, ou deixando a máquina ejetar automaticamente para dentro da &lInterface de Criação&r. Tudo (itens, fluidos, energia) que é inserido na &lInterface de Criação&r será inserido na rede de armazenamento para o canal configurado.",
+  "info_book.integratedcrafting.crafting_interface.crafting.text4": "As figuras a seguir mostram exemplos de configurações mínimas válidas para criação automática com uma Bancada de Trabalho e uma Fornalha.",
+
+  "info_book.integratedcrafting.crafting_interface.configuration": "Configuração",
+  "info_book.integratedcrafting.crafting_interface.configuration.text1": "Como a maioria das partes do &lIntegrated Dynamics&r, você pode configurar coisas na &lInterface de Criação&r, como o canal, prioridade e taxa de ticks.",
+  "info_book.integratedcrafting.crafting_interface.configuration.text2": "Além disso, você pode alterar o lado alvo separadamente &opara cada tipo de ingrediente&r. Isso é útil se a máquina vinculada aceitar diferentes tipos de ingredientes em lados diferentes. Por exemplo, itens podem ser aceitos pelos lados, enquanto fluidos podem ser aceitos por cima.",
+
+  "info_book.integratedcrafting.crafting_interface.recipe_feedback": "Feedback da Receita",
+  "info_book.integratedcrafting.crafting_interface.recipe_feedback.text1": "Ao inserir &lCartões de Variável&r na &lInterface de Criação&r, você verá uma &2marca de seleção verde&0 ou uma &4cruz vermelha&0 para indicar se a receita dada é válida para a máquina vinculada. Você pode passar o mouse sobre esses símbolos para obter mais informações.",
+  "info_book.integratedcrafting.crafting_interface.recipe_feedback.text2": "Este é um sistema de feedback antecipado para casos em que você acidentalmente insere a receita errada em uma interface, por exemplo, se você inserir a receita de criação de um baú em uma &lInterface de Criação&r que está vinculada a uma fornalha.",
+  "info_book.integratedcrafting.crafting_interface.recipe_feedback.text3": "Se você vir uma &4cruz vermelha&0, isso significa que o &lCartão de Variável&r não expõe uma receita válida ou que a receita não pode ser criada na máquina vinculada.",
+  "info_book.integratedcrafting.crafting_interface.recipe_feedback.text4": "Uma &2marca de seleção verde&0 indica que o &lCartão de Variável&r contém uma receita válida, &oe&r que a máquina pode (provavelmente) lidar com a receita fornecida.",
+
+  "info_book.integratedcrafting.crafting_interface.distribution": "Tarefas de Criação Distribuídas",
+  "info_book.integratedcrafting.crafting_interface.distribution.text1": "Se você estiver trabalhando com máquinas lentas, ou se quiser melhorar a eficiência de certas tarefas de criação, você pode &odistribuir&r uma tarefa de criação por várias &lInterfaces de Criação&r. Por exemplo, este recurso permite que você distribua a criação de 40 lingotes de ferro uniformemente por 10 fornalhas.",
+  "info_book.integratedcrafting.crafting_interface.distribution.text2": "A única coisa necessária para que isso funcione é garantir que todas as máquinas sobre as quais você deseja distribuir tenham uma &lInterface de Criação&r que (pelo menos) exponha exatamente a mesma receita que você deseja distribuir. No caso do nosso exemplo anterior, você teria que garantir que todas as 10 fornalhas tenham uma &lInterface de Criação&r contendo (pelo menos) exatamente a mesma receita para fundir lingotes de ferro.",
+
+  "info_book.integratedcrafting.crafting_interface.blocking": "Modo de Bloqueio",
+  "info_book.integratedcrafting.crafting_interface.blocking.text1": "Por padrão, a &lInterface de Criação&r terá o &omodo de bloqueio&r ativado. Isso fará com que a máquina aceite apenas uma receita por vez. Ela só começará a próxima receita se a anterior tiver sido concluída.",
+  "info_book.integratedcrafting.crafting_interface.blocking.text2": "Para máquinas que podem processar várias entradas em paralelo, você pode desativar o &omodo de bloqueio&r através da GUI de configurações da &lInterface de Criação&r. Ao desativar o &omodo de bloqueio&r, o maior número possível de entradas será processado pela máquina se você tiver uma tarefa de criação de múltiplas quantidades.",
+
+  "info_book.integratedcrafting.crafting_interface.reusable": "Ingredientes Reutilizáveis",
+  "info_book.integratedcrafting.crafting_interface.reusable.text1": "Se você quiser configurar receitas que não consomem totalmente os itens de entrada, mas, por exemplo, consomem apenas parte da durabilidade desse item, você pode configurar esses ingredientes da receita como &oreutilizáveis&r. Isso pode ser feito durante a criação do &lCartão de Variável&r da receita, clicando com shift em um slot de entrada dentro do &lProgramador Lógico&r e ativando a caixa de seleção &oReutilizável&r.",
+
+  "info_book.integratedcrafting.crafting_interface.dynamic_recipes": "Receitas Dinâmicas",
+  "info_book.integratedcrafting.crafting_interface.dynamic_recipes.text1": "Seguindo a natureza dinâmica dos &lCartões de Variável&r do &lIntegrated Dynamics&r, as receitas que são expostas através das &lInterfaces de Criação&r também podem ser totalmente dinâmicas. Por exemplo, você pode expor uma receita que muda com base no fato de ser dia ou noite, ou na disponibilidade de um certo item na rede.",
+  "info_book.integratedcrafting.crafting_interface.dynamic_recipes.text2": "As &lInterfaces de Criação&r detectarão automaticamente quando uma receita for atualizada, e todas as novas tarefas de criação usarão imediatamente a nova receita. No entanto, todas as tarefas de criação em execução ainda usarão a receita antiga.",
+  "info_book.integratedcrafting.crafting_interface.dynamic_recipes.text3": "Observe que quanto mais sua receita mudar, mais lag pode ser produzido. Portanto, use este recurso com cautela.",
+
+  "info_book.integratedcrafting.crafting_interface.debugging_jobs": "Depurando Tarefas de Criação",
+  "info_book.integratedcrafting.crafting_interface.debugging_jobs.text1": "Ao configurar a criação automática, você pode encontrar situações em que sua tarefa de criação não funciona corretamente devido a uma configuração incorreta.",
+  "info_book.integratedcrafting.crafting_interface.debugging_jobs.text2": "Você pode depurar esses casos usando aspectos relacionados à criação do &lLeitor de Rede&r, como obter a lista de todas as receitas disponíveis na rede, obter todas as tarefas de criação em execução e obter todos os ingredientes de tarefas de criação ausentes. Visualizar essas listas em &lPainéis de Exibição&r pode ajudá-lo a identificar o problema que você está enfrentando.",
+  "info_book.integratedcrafting.crafting_interface.debugging_jobs.text3": "Observe que se você tiver o &lIntegrated Terminals&r instalado, poderá usar o &lTerminal de Tarefas de Criação&r para visualizar todas as tarefas de criação em execução, visualizar quaisquer ingredientes ausentes ou cancelar as tarefas.",
+
+  "info_book.integratedcrafting.crafting_writer": "Escritor de Criação",
+  "info_book.integratedcrafting.crafting_writer.text1": "O &lEscritor de Criação&r permite que você inicie automaticamente tarefas de criação com base em certas condições, usando as receitas expostas pelas &lInterfaces de Criação&r.",
+  "info_book.integratedcrafting.crafting_writer.text2": "Usando os seguintes aspectos, você pode iniciar tarefas de criação para a receita, item de saída, fluido de saída ou energia de saída fornecidos. Usando as configurações do aspecto, você pode configurar o canal de criação, se as tarefas de criação já em execução devem ou não bloquear novas tarefas, se as tarefas de criação para quaisquer entradas ausentes também devem ser iniciadas e se a presença de ingredientes na rede de armazenamento deve ou não bloquear novas tarefas de criação.",
+  "info_book.integratedcrafting.crafting_writer.text3": "Se você quiser inserir um &lCartão de Variável&r para dizer que &onada&r deve ser criado, basta inserir um valor vazio, como um &lCartão de Variável&r para o tipo de valor &8Item&0 sem um item real nele.",
+  "info_book.integratedcrafting.crafting_writer.text4": "Observe que se você tiver o &lIntegrated Terminals&r instalado, poderá iniciar tarefas de criação visualmente a partir do &lTerminal de Armazenamento&r.",
+
+  "info_book.integratedcrafting.section.tutorials": "Tutoriais de Criação",
+
+  "info_book.integratedcrafting.tutorials.introduction": "Introdução",
+  "info_book.integratedcrafting.tutorials.introduction.text1": "Esta seção contém vários tutoriais que ajudam você a aprender o &lIntegrated Crafting&r, o add-on do &lIntegrated Dynamics&r para criação automática dentro das redes do &lIntegrated Dynamics&r.",
+
+  "info_book.integratedcrafting.tutorials.autocrafting_setup": "Configurar Criação Automática",
+  "info_book.integratedcrafting.tutorials.autocrafting_setup.text1": "Neste primeiro tutorial do &lIntegrated Crafting&r, vamos cobrir a configuração básica da criação automática.",
+  "info_book.integratedcrafting.tutorials.autocrafting_setup.text2": "O primeiro requisito para a criação automática é a &lInterface de Criação&r, que é uma parte da rede que deve estar voltada para uma máquina, como uma Bancada de Trabalho ou Fornalha. Primeiro, crie tal &lInterface de Criação&r e faça-a ficar de frente para uma &lBancada de Trabalho&r.",
+  "info_book.integratedcrafting.tutorials.autocrafting_setup.text3": "Em seguida, vamos dizer à &lInterface de Criação&r como ela pode criar Tábuas de Carvalho. Faça isso abrindo seu &lProgramador Lógico&r e escreva um &lCartão de Variável&r que contém uma &lReceita&r com como entrada uma Tora de Carvalho e como saída 4 Tábuas de Carvalho &o(não altere as configurações padrão de correspondência de item)&r. &lEsta receita DEVE ser criada manualmente, e não preenchida automaticamente usando mods como o JEI.&r",
+  "info_book.integratedcrafting.tutorials.autocrafting_setup.text4": "Finalmente, vamos inserir sua receita recém-criada em sua &lInterface de Criação&r para finalizar este primeiro tutorial. Se uma &2marca de seleção verde&0 for mostrada, isso significa que sua receita é válida e que a receita está agora disponível para a rede para criação automática.",
+
+  "info_book.integratedcrafting.tutorials.autocrafting_trigger": "Acionar Criação Automática",
+  "info_book.integratedcrafting.tutorials.autocrafting_trigger.text1": "Neste segundo tutorial do &lIntegrated Crafting&r, vamos iniciar uma tarefa de criação de Tábuas de Carvalho usando o &lEscritor de Criação&r.",
+  "info_book.integratedcrafting.tutorials.autocrafting_trigger.text2": "Primeiro, vamos começar criando um &lEscritor de Criação&r. Isso permitirá que você inicie automaticamente tarefas de criação para uma determinada receita, item, fluido ou energia. Quando tiver isso, coloque o escritor em qualquer lugar na rede que tenha sua &lInterface de Criação&r do tutorial anterior.",
+  "info_book.integratedcrafting.tutorials.autocrafting_trigger.text3": "Antes de dizermos ao &lEscritor de Criação&r para criar Tábuas de Carvalho, primeiro precisamos inserir algumas Toras de Carvalho na rede. Para fazer isso, anexe algum armazenamento (como um Baú) à rede usando uma &lInterface de Item&r do &lIntegrated Tunnels&r e certifique-se de que o Baú contenha pelo menos uma Tora de Carvalho.",
+  "info_book.integratedcrafting.tutorials.autocrafting_trigger.text4": "Agora, dizemos ao &lEscritor de Criação&r para começar a criar Tábuas de Carvalho. Faça isso criando um &lCartão de Variável&r contendo Tábuas de Carvalho usando seu &lProgramador Lógico&r e insira-o no &lEscritor de Criação&r.",
+  "info_book.integratedcrafting.tutorials.autocrafting_trigger.text5": "Se você configurou tudo corretamente, poderá ver que uma Tora de Carvalho foi convertida em 4 Tábuas de Carvalho. Assim que você remover essas tábuas, 4 novas tábuas serão criadas se outras toras estiverem disponíveis. Você pode brincar com as configurações do aspecto do &lEscritor de Criação&r para, por exemplo, ignorar o conteúdo do armazenamento e criar o maior número possível de tábuas.",
+  "info_book.integratedcrafting.tutorials.autocrafting_trigger.text6": "A figura no final desta seção mostra um exemplo das partes necessárias de uma configuração para completar este tutorial."
+}
