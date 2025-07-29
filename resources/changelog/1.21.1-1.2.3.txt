@@ -1,0 +1,10 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.25.5 or higher.
+
+Additions:
+* Add translations through Crowdin (#148)
+* Add PT_BR localization (#147)
+
+Fixes:
+* Fix autocraft crash when recipe does not fit in 2x2, Closes #149
+* Fix some spelling and grammar typos in lang (#145)
