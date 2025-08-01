@@ -78,7 +78,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
                         Player player = getFakePlayer((ServerLevel) target.getPos().getLevel(true));
 
                         // Fire all required events
-                        result.onCraftedBy(target.getPos().getLevel(true), player, 1);
+                        result.onCraftedBy(player, 1);
                         EventHooks.firePlayerCraftingEvent(player, result, gridFull);
 
                         // Insert the result into the sink

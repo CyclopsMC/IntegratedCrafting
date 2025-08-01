@@ -57,7 +57,7 @@ public class ContainerPartInterfaceCrafting extends ContainerMultipart<PartTypeI
             this.readSlotErrorIds.add(getNextValueId());
         }
 
-        if (!player.getCommandSenderWorld().isClientSide()) {
+        if (!player.level().isClientSide()) {
             putButtonAction(ContainerMultipartAspects.BUTTON_SETTINGS, (s, containerExtended) -> {
                 PartHelpers.openContainerPartSettings((ServerPlayer) player, target.get().getCenter(), partType);
             });

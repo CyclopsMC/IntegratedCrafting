@@ -4,9 +4,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import it.unimi.dsi.fastutil.ints.*;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -18,6 +15,8 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.neoforge.common.NeoForge;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Level;
@@ -313,7 +312,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         private final SimpleInventory inventoryVariables;
         private final List<InventoryVariableEvaluator<ValueObjectTypeRecipe.ValueRecipe>> variableEvaluators;
         private final List<IngredientInstanceWrapper<?, ?>> inventoryOutputBuffer;
-        private final Int2ObjectMap<MutableComponent> recipeSlotMessages;
+        private final Int2ObjectMap<Component> recipeSlotMessages;
         private final Int2BooleanMap recipeSlotValidated;
         private final IntSet delayedRecipeReloads;
         private final Map<IVariable, Boolean> variableListeners;
@@ -357,68 +356,65 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Override
-        public void writeToNBT(ValueDeseralizationContext valueDeseralizationContext, CompoundTag tag) {
-            super.writeToNBT(valueDeseralizationContext, tag);
-            inventoryVariables.writeToNBT(valueDeseralizationContext.holderLookupProvider(), tag, "variables");
+        public void serialize(ValueOutput valueOutput) {
+            super.serialize(valueOutput);
+            inventoryVariables.writeToNBT(valueOutput, "variables");
 
-            ListTag instanceTags = new ListTag();
+            ValueOutput.ValueOutputList instanceTags = valueOutput.childrenList("inventoryOutputBuffer");
             for (IngredientInstanceWrapper instanceWrapper : inventoryOutputBuffer) {
-                CompoundTag instanceTag = new CompoundTag();
+                ValueOutput instanceTag = instanceTags.addChild();
                 instanceTag.putString("component", IngredientComponent.REGISTRY.getKey(instanceWrapper.getComponent()).toString());
-                instanceTag.put("instance", instanceWrapper.getComponent().getSerializer().serializeInstance(valueDeseralizationContext.holderLookupProvider(), instanceWrapper.getInstance()));
-                instanceTags.add(instanceTag);
+                instanceWrapper.getComponent().getSerializer().serializeInstance(instanceTag.child("instance"), instanceWrapper.getInstance());
             }
-            tag.put("inventoryOutputBuffer", instanceTags);
 
-            this.craftingJobHandler.writeToNBT(valueDeseralizationContext.holderLookupProvider(), tag);
-            tag.putInt("channelCrafting", channelCrafting);
+            this.craftingJobHandler.serialize(valueOutput.child("craftingJobHandler"));
+            valueOutput.putInt("channelCrafting", channelCrafting);
 
-            CompoundTag recipeSlotErrorsTag = new CompoundTag();
-            for (Int2ObjectMap.Entry<MutableComponent> entry : this.recipeSlotMessages.int2ObjectEntrySet()) {
-                NBTClassType.writeNbt(MutableComponent.class, String.valueOf(entry.getIntKey()), entry.getValue(), recipeSlotErrorsTag, valueDeseralizationContext.holderLookupProvider());
+            ValueOutput.ValueOutputList recipeSlotErrorsTag = valueOutput.childrenList("recipeSlotMessages");
+            for (Int2ObjectMap.Entry<Component> entry : this.recipeSlotMessages.int2ObjectEntrySet()) {
+                ValueOutput child = recipeSlotErrorsTag.addChild();
+                child.putInt("key", entry.getIntKey());
+                NBTClassType.writeNbt(Component.class, "value", entry.getValue(), child);
             }
-            tag.put("recipeSlotMessages", recipeSlotErrorsTag);
 
-            CompoundTag recipeSlotValidatedTag = new CompoundTag();
+            ValueOutput.ValueOutputList recipeSlotValidatedTag = valueOutput.childrenList("recipeSlotValidated");
             for (Int2BooleanMap.Entry entry : this.recipeSlotValidated.int2BooleanEntrySet()) {
-                recipeSlotValidatedTag.putBoolean(String.valueOf(entry.getIntKey()), entry.getBooleanValue());
+                ValueOutput entryTag = recipeSlotValidatedTag.addChild();
+                entryTag.putInt("key", entry.getIntKey());
+                entryTag.putBoolean("value", entry.getBooleanValue());
             }
-            tag.put("recipeSlotValidated", recipeSlotValidatedTag);
 
-            tag.putBoolean("disableCraftingCheck", disableCraftingCheck);
+            valueOutput.putBoolean("disableCraftingCheck", disableCraftingCheck);
         }
 
         @Override
-        public void readFromNBT(ValueDeseralizationContext valueDeseralizationContext, CompoundTag tag) {
-            super.readFromNBT(valueDeseralizationContext, tag);
-            inventoryVariables.readFromNBT(valueDeseralizationContext.holderLookupProvider(), tag, "variables");
+        public void deserialize(ValueInput valueInput) {
+            super.deserialize(valueInput);
+            inventoryVariables.readFromNBT(valueInput, "variables");
 
             this.inventoryOutputBuffer.clear();
-            for (Tag instanceTagRaw : tag.getList("inventoryOutputBuffer", Tag.TAG_COMPOUND)) {
-                CompoundTag instanceTag = (CompoundTag) instanceTagRaw;
-                String componentName = instanceTag.getString("component");
+            for (ValueInput instanceTag : valueInput.childrenList("inventoryOutputBuffer").orElseThrow()) {
+                String componentName = instanceTag.getString("component").orElseThrow();
                 IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(ResourceLocation.parse(componentName));
                 this.inventoryOutputBuffer.add(new IngredientInstanceWrapper(component,
-                        component.getSerializer().deserializeInstance(valueDeseralizationContext.holderLookupProvider(), instanceTag.get("instance"))));
+                        component.getSerializer().deserializeInstance(instanceTag.child("instance").orElseThrow())));
             }
 
-            this.craftingJobHandler.readFromNBT(valueDeseralizationContext.holderLookupProvider(), tag);
-            this.channelCrafting = tag.getInt("channelCrafting");
+            this.craftingJobHandler.deserialize(valueInput.child("craftingJobHandler").orElseThrow());
+            this.channelCrafting = valueInput.getInt("channelCrafting").orElseThrow();
 
             this.recipeSlotMessages.clear();
-            CompoundTag recipeSlotErrorsTag = tag.getCompound("recipeSlotMessages");
-            for (String slot : recipeSlotErrorsTag.getAllKeys()) {
-                MutableComponent unlocalizedString = NBTClassType.readNbt(MutableComponent.class, slot, recipeSlotErrorsTag, valueDeseralizationContext.holderLookupProvider());
-                this.recipeSlotMessages.put(Integer.parseInt(slot), unlocalizedString);
+            for (ValueInput slot : valueInput.childrenList("recipeSlotMessages").orElseThrow()) {
+                Component unlocalizedString = NBTClassType.readNbt(Component.class, "value", slot);
+                this.recipeSlotMessages.put(slot.getInt("key").orElseThrow(), unlocalizedString);
             }
 
             this.recipeSlotValidated.clear();
-            CompoundTag recipeSlotValidatedTag = tag.getCompound("recipeSlotValidated");
-            for (String slot : recipeSlotValidatedTag.getAllKeys()) {
-                this.recipeSlotValidated.put(Integer.parseInt(slot), recipeSlotValidatedTag.getBoolean(slot));
+            for (ValueInput slot : valueInput.childrenList("recipeSlotValidated").orElseThrow()) {
+                this.recipeSlotValidated.put((int) slot.getInt("key").orElseThrow(), slot.getBooleanOr("value", false));
             }
 
-            this.disableCraftingCheck = tag.getBoolean("disableCraftingCheck");
+            this.disableCraftingCheck = valueInput.getBooleanOr("disableCraftingCheck", false);
         }
 
         public void setChannelCrafting(int channelCrafting) {
@@ -759,7 +755,7 @@ public class PartTypeInterfaceCrafting extends PartTypeCraftingBase<PartTypeInte
         }
 
         @Nullable
-        public MutableComponent getRecipeSlotUnlocalizedMessage(int slot) {
+        public Component getRecipeSlotUnlocalizedMessage(int slot) {
             return this.recipeSlotMessages.get(slot);
         }
 

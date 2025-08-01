@@ -1,6 +1,5 @@
 package org.cyclops.integratedcrafting.client.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -55,7 +54,6 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
     protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
         super.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
 
-        RenderSystem.setShaderColor(1, 1, 1, 1);
         int y = topPos + 42;
         for (int i = 0; i < getMenu().getContainerInventory().getContainerSize(); i++) {
             int x = leftPos + 10 + i * IModHelpers.get().getGuiHelpers().getSlotSize();
@@ -75,7 +73,7 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
         for (int i = 0; i < getMenu().getContainerInventory().getContainerSize(); i++) {
             int x = 10 + i * IModHelpers.get().getGuiHelpers().getSlotSize();
             int slot = i;
-            IModHelpers.get().getGuiHelpers().renderTooltipOptional(this, guiGraphics.pose(), x, y, 14, 13, mouseX, mouseY,
+            IModHelpers.get().getGuiHelpers().renderTooltipOptional(this, guiGraphics, x, y, 14, 13, mouseX, mouseY,
                     () -> {
                         if (!getMenu().getItems().get(slot).isEmpty()) {
                             Component unlocalizedMessage = container.getRecipeSlotUnlocalizedMessage(slot);

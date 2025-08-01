@@ -2,11 +2,9 @@ package org.cyclops.integratedcrafting.core;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 
@@ -43,39 +41,42 @@ public class MissingIngredients<T, M> {
 
     /**
      * Deserialize ingredients to NBT.
+     *
+     * @param valueOutput
      * @param ingredients Ingredients.
-     * @return An NBT representation of the given ingredients.
      */
-    public static CompoundTag serialize(HolderLookup.Provider lookupProvider, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> ingredients) {
-        CompoundTag tag = new CompoundTag();
+    public static void serialize(ValueOutput valueOutput, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> ingredients) {
+        ValueOutput.ValueOutputList missingIngredientsTagList = valueOutput.childrenList("v");
         for (Map.Entry<IngredientComponent<?, ?>, MissingIngredients<?, ?>> entry : ingredients.entrySet()) {
-            ListTag missingIngredientsTag = new ListTag();
+            ValueOutput missingIngredientsTag = missingIngredientsTagList.addChild();
+            missingIngredientsTag.putString("component", entry.getKey().toString());
+            ValueOutput.ValueOutputList elements = missingIngredientsTag.childrenList("elements");
             for (Element<?, ?> element : entry.getValue().getElements()) {
-                ListTag elementsTag = new ListTag();
+                ValueOutput elementsTag = elements.addChild();
+                ValueOutput.ValueOutputList alternatives = elementsTag.childrenList("alternatives");
                 for (PrototypedWithRequested<?, ?> alternative : element.getAlternatives()) {
-                    CompoundTag alternativeTag = new CompoundTag();
-                    alternativeTag.put("requestedPrototype", IPrototypedIngredient.serialize(lookupProvider, alternative.getRequestedPrototype()));
+                    ValueOutput alternativeTag = alternatives.addChild();
+                    IPrototypedIngredient.serialize(alternativeTag.child("requestedPrototype"), alternative.getRequestedPrototype());
                     alternativeTag.putLong("quantityMissing", alternative.getQuantityMissing());
-                    alternativeTag.putBoolean("inputReusable", element.isInputReusable()); // Hack, should actually be one level higher, but this is for backwards-compat
-                    elementsTag.add(alternativeTag);
                 }
-                missingIngredientsTag.add(elementsTag);
+                elementsTag.putBoolean("inputReusable", element.isInputReusable());
             }
-            tag.put(entry.getKey().getName().toString(), missingIngredientsTag);
         }
-        return tag;
     }
 
     /**
      * Deserialize ingredients from NBT
-     * @param tag An NBT tag.
+     *
+     * @param valueInput An NBT tag.
      * @return A new mixed ingredients instance.
      * @throws IllegalArgumentException If the given tag is invalid or does not contain data on the given ingredients.
      */
-    public static Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> deserialize(HolderLookup.Provider lookupProvider, CompoundTag tag)
+    public static Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> deserialize(ValueInput valueInput)
             throws IllegalArgumentException {
         Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> map = Maps.newIdentityHashMap();
-        for (String componentName : tag.getAllKeys()) {
+        ValueInput.ValueInputList missingIngredientsTagList = valueInput.childrenList("v").orElseThrow();
+        for (ValueInput input : missingIngredientsTagList) {
+            String componentName = input.getString("component").orElseThrow();
             IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(ResourceLocation.parse(componentName));
             if (component == null) {
                 throw new IllegalArgumentException("Could not find the ingredient component type " + componentName);
@@ -83,18 +84,15 @@ public class MissingIngredients<T, M> {
 
             List<MissingIngredients.Element<?, ?>> elements = Lists.newArrayList();
 
-            ListTag missingIngredientsTag = tag.getList(componentName, Tag.TAG_LIST);
-            for (int i = 0; i < missingIngredientsTag.size(); i++) {
-                ListTag elementsTag = (ListTag) missingIngredientsTag.get(i);
+            ValueInput.ValueInputList missingIngredientsTag = input.childrenList("elements").orElseThrow();
+            for (ValueInput elementsTag : missingIngredientsTag) {
                 List<MissingIngredients.PrototypedWithRequested<?, ?>> alternatives = Lists.newArrayList();
-                boolean inputReusable = false;
-                for (int j = 0; j < elementsTag.size(); j++) {
-                    CompoundTag alternativeTag = elementsTag.getCompound(j);
-                    IPrototypedIngredient<?, ?> requestedPrototype = IPrototypedIngredient.deserialize(lookupProvider, alternativeTag.getCompound("requestedPrototype"));
-                    long quantityMissing = alternativeTag.getLong("quantityMissing");
-                    inputReusable = alternativeTag.getBoolean("inputReusable");
+                for (ValueInput alternativeTag : elementsTag.childrenList("alternatives").orElseThrow()) {
+                    IPrototypedIngredient<?, ?> requestedPrototype = IPrototypedIngredient.deserialize(alternativeTag.child("requestedPrototype").orElseThrow());
+                    long quantityMissing = alternativeTag.getLong("quantityMissing").orElseThrow();
                     alternatives.add(new PrototypedWithRequested<>(requestedPrototype, quantityMissing));
                 }
+                boolean inputReusable = elementsTag.getBooleanOr("inputReusable", false);
                 elements.add(new Element(alternatives, inputReusable));
             }
 

@@ -98,14 +98,14 @@ public class GameTestHelpersIntegratedCrafting {
                 helper.setBlock(posi.west(), crafter.defaultBlockState().setValue(AbstractFurnaceBlock.FACING, Direction.EAST));
 
                 // Add fuel
-                FurnaceBlockEntity furnace = helper.getBlockEntity(posi.west());
+                FurnaceBlockEntity furnace = helper.getBlockEntity(posi.west(), FurnaceBlockEntity.class);
                 furnace.setItem(1, new ItemStack(Items.COAL, 64));
 
                 // Extract result
                 helper.setBlock(posi.below(), RegistryEntries.BLOCK_CABLE.value());
                 helper.setBlock(posi.below().west(), RegistryEntries.BLOCK_CABLE.value());
                 PartHelpers.addPart(helper.getLevel(), helper.absolutePos(posi.below().west()), Direction.UP, org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM.getItem()));
-                placeVariableInWriter(helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(posi.below().west()), Direction.UP), TunnelAspects.Write.Item.BOOLEAN_IMPORT, new ItemStack(RegistryEntries.ITEM_VARIABLE));
+                placeVariableInWriter(helper, helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(posi.below().west()), Direction.UP), TunnelAspects.Write.Item.BOOLEAN_IMPORT, new ItemStack(RegistryEntries.ITEM_VARIABLE));
             }
 
             interfaces.add(PartPos.of(helper.getLevel(), helper.absolutePos(posi.above().west()), Direction.DOWN));
@@ -184,7 +184,7 @@ public class GameTestHelpersIntegratedCrafting {
                     new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(recipeSmithing.template.get().items().findFirst().get()), ItemMatch.ITEM | ItemMatch.DATA)
             )));
             alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
-                    new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(recipeSmithing.base.get().items().findFirst().get()), ItemMatch.ITEM | ItemMatch.DATA)
+                    new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(recipeSmithing.base.items().findFirst().get()), ItemMatch.ITEM | ItemMatch.DATA)
             )));
             alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
                     new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(recipeSmithing.addition.get().items().findFirst().get()), ItemMatch.ITEM | ItemMatch.DATA)
@@ -206,7 +206,7 @@ public class GameTestHelpersIntegratedCrafting {
     }
 
     public static void enableRecipeInWriter(GameTestHelper helper, PartPos writerPos, ItemStack itemStack) {
-        placeVariableInWriter(helper.getLevel(), writerPos, CraftingAspects.Write.ITEMSTACK_CRAFT, createVariableForValue(helper.getLevel(), ValueTypes.OBJECT_ITEMSTACK, ValueObjectTypeItemStack.ValueItemStack.of(itemStack)));
+        placeVariableInWriter(helper, helper.getLevel(), writerPos, CraftingAspects.Write.ITEMSTACK_CRAFT, createVariableForValue(helper.getLevel(), ValueTypes.OBJECT_ITEMSTACK, ValueObjectTypeItemStack.ValueItemStack.of(itemStack)));
     }
 
     public static <T extends IValueType<V>, V extends IValue> void setWriterAspectProperty(PartPos writerPos, IAspectWrite aspect, IAspectPropertyTypeInstance<T, V> type, V value) {

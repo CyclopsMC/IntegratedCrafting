@@ -1,16 +1,9 @@
 package org.cyclops.integratedcrafting.api.crafting;
 
 import com.google.common.collect.Maps;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntCollection;
-import it.unimi.dsi.fastutil.ints.IntIterator;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.IntArrayTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
+import it.unimi.dsi.fastutil.ints.*;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.integratedcrafting.core.CraftingHelpers;
 
@@ -243,68 +236,52 @@ public class CraftingJobDependencyGraph {
         }
     }
 
-    public static CompoundTag serialize(HolderLookup.Provider lookupProvider, CraftingJobDependencyGraph graph) {
-        CompoundTag tag = new CompoundTag();
-
-        ListTag craftingJobs = new ListTag();
+    public static void serialize(ValueOutput valueOutput, CraftingJobDependencyGraph graph) {
+        ValueOutput.ValueOutputList craftingJobs = valueOutput.childrenList("craftingJobs");
         for (CraftingJob craftingJob : graph.getCraftingJobs()) {
-            craftingJobs.add(CraftingJob.serialize(lookupProvider, craftingJob));
+            CraftingJob.serialize(craftingJobs.addChild(), craftingJob);
         }
-        tag.put("craftingJobs", craftingJobs);
 
-        CompoundTag dependencies = new CompoundTag();
+        ValueOutput.ValueOutputList dependencies = valueOutput.childrenList("dependencies");
         for (CraftingJob craftingJob : graph.getCraftingJobs()) {
             IntCollection intCollection = graph.dependencies.get(craftingJob.getId());
             if (intCollection != null) {
-                dependencies.put(Integer.toString(craftingJob.getId()), new IntArrayTag(intCollection.toIntArray()));
+                ValueOutput dependency = dependencies.addChild();
+                dependency.putInt("key", craftingJob.getId());
+                dependency.putIntArray("values", intCollection.toIntArray());
             }
         }
-        tag.put("dependencies", dependencies);
 
-        CompoundTag dependents = new CompoundTag();
+        ValueOutput.ValueOutputList dependents = valueOutput.childrenList("dependents");
         for (CraftingJob craftingJob : graph.getCraftingJobs()) {
             IntCollection intCollection = graph.dependents.get(craftingJob.getId());
             if (intCollection != null) {
-                dependents.put(Integer.toString(craftingJob.getId()), new IntArrayTag(intCollection.toIntArray()));
+                ValueOutput dependent = dependents.addChild();
+                dependent.putInt("key", craftingJob.getId());
+                dependent.putIntArray("values", intCollection.toIntArray());
             }
         }
-        tag.put("dependents", dependents);
-
-        return tag;
     }
 
-    public static CraftingJobDependencyGraph deserialize(HolderLookup.Provider lookupProvider, CompoundTag tag) {
-        if (!tag.contains("craftingJobs", Tag.TAG_LIST)) {
-            throw new IllegalArgumentException("Could not find a craftingJobs entry in the given tag");
-        }
-        if (!tag.contains("dependencies", Tag.TAG_COMPOUND)) {
-            throw new IllegalArgumentException("Could not find a dependencies entry in the given tag");
-        }
-        if (!tag.contains("dependents", Tag.TAG_COMPOUND)) {
-            throw new IllegalArgumentException("Could not find a dependents entry in the given tag");
-        }
-
+    public static CraftingJobDependencyGraph deserialize(ValueInput valueInput) {
         Int2ObjectMap<CraftingJob> craftingJobs = new Int2ObjectOpenHashMap<>();
-        ListTag craftingJobsTag = tag.getList("craftingJobs", Tag.TAG_COMPOUND);
-        for (int i = 0; i < craftingJobsTag.size(); i++) {
-            CraftingJob craftingJob = CraftingJob.deserialize(lookupProvider, craftingJobsTag.getCompound(i));
+        for (ValueInput input : valueInput.childrenList("craftingJobs").orElseThrow()) {
+            CraftingJob craftingJob = CraftingJob.deserialize(input);
             craftingJobs.put(craftingJob.getId(), craftingJob);
         }
 
         Int2ObjectMap<IntCollection> dependencies = new Int2ObjectOpenHashMap<>();
-        CompoundTag dependenciesTag = tag.getCompound("dependencies");
-        for (String key : dependenciesTag.getAllKeys()) {
-            int id = Integer.parseInt(key);
-            int[] value = dependenciesTag.getIntArray(key);
-            dependencies.put(id, new IntArrayList(value));
+        for (ValueInput input : valueInput.childrenList("dependencies").orElseThrow()) {
+            int key = input.getInt("key").orElseThrow();
+            int[] values = input.getIntArray("values").orElseThrow();
+            dependencies.put(key, new IntArrayList(values));
         }
 
         Int2ObjectMap<IntCollection> dependents = new Int2ObjectOpenHashMap<>();
-        CompoundTag dependentsTag = tag.getCompound("dependencies");
-        for (String key : dependentsTag.getAllKeys()) {
-            int id = Integer.parseInt(key);
-            int[] value = dependentsTag.getIntArray(key);
-            dependents.put(id, new IntArrayList(value));
+        for (ValueInput input : valueInput.childrenList("dependents").orElseThrow()) {
+            int key = input.getInt("key").orElseThrow();
+            int[] values = input.getIntArray("values").orElseThrow();
+            dependents.put(key, new IntArrayList(values));
         }
 
         return new CraftingJobDependencyGraph(craftingJobs, dependencies, dependents);

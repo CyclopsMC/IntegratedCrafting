@@ -230,7 +230,7 @@ public class CraftingHelpers {
      * @return An identifier generator for crafting jobs.
      */
     public static IIdentifierGenerator getGlobalCraftingJobIdentifier() {
-        return () -> IntegratedCrafting.globalCounters.getNext("craftingJob");
+        return () -> IntegratedCrafting.globalCounters.get().getNext("craftingJob");
     }
 
     /**

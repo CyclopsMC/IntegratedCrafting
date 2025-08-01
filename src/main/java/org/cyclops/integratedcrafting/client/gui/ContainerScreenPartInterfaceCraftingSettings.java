@@ -2,7 +2,6 @@ package org.cyclops.integratedcrafting.client.gui;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -179,7 +178,6 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         super.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
 
         guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integrateddynamics.partsettings.side"), leftPos + 8, topPos + 12, IModHelpers.get().getBaseHelpers().RGBToInt(0, 0, 0), false);
-        RenderSystem.setShaderColor(1, 1, 1, 1);
         ingredientComponentSideSelector.render(guiGraphics, mouseX, mouseY, partialTicks);
         dropdownFieldSide.render(guiGraphics, mouseX, mouseY, partialTicks);
 

@@ -9,11 +9,10 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ExtraCodecs;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
@@ -85,80 +84,66 @@ public class CraftingJobHandler {
         this.nonBlockingJobsRunningAmount = new Int2IntOpenHashMap();
     }
 
-    public void writeToNBT(HolderLookup.Provider lookupProvider, CompoundTag tag) {
-        tag.putBoolean("blockingJobsMode", this.blockingJobsMode);
+    public void serialize(ValueOutput valueOutput) {
+        valueOutput.putBoolean("blockingJobsMode", this.blockingJobsMode);
 
-        ListTag processingCraftingJobs = new ListTag();
+        ValueOutput.ValueOutputList processingCraftingJobs = valueOutput.childrenList("processingCraftingJobs");
         for (CraftingJob processingCraftingJob : this.processingCraftingJobs.values()) {
-            CompoundTag entriesTag = new CompoundTag();
-            entriesTag.put("craftingJob", CraftingJob.serialize(lookupProvider, processingCraftingJob));
+            ValueOutput entriesTag = processingCraftingJobs.addChild();
+            CraftingJob.serialize(entriesTag.child("craftingJob"), processingCraftingJob);
 
             List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> ingredientsEntries = this.processingCraftingJobsPendingIngredients.get(processingCraftingJob.getId());
-            ListTag pendingEntries = new ListTag();
+            ValueOutput.ValueOutputList pendingEntries = entriesTag.childrenList("pendingIngredientInstanceEntries");
             for (Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> ingredients : ingredientsEntries) {
-                ListTag pendingIngredientInstances = new ListTag();
+                ValueOutput pendingEntryTag = pendingEntries.addChild();
+                ValueOutput.ValueOutputList pendingIngredientInstances = pendingEntryTag.childrenList("v");
                 for (Map.Entry<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> ingredientComponentListEntry : ingredients.entrySet()) {
-                    CompoundTag ingredientInstance = new CompoundTag();
+                    ValueOutput ingredientInstance = pendingIngredientInstances.addChild();
 
                     IngredientComponent<?, ?> ingredientComponent = ingredientComponentListEntry.getKey();
                     ingredientInstance.putString("ingredientComponent", IngredientComponent.REGISTRY.getKey(ingredientComponent).toString());
 
-                    ListTag instances = new ListTag();
+                    ValueOutput.ValueOutputList instances = ingredientInstance.childrenList("instances");
                     IIngredientSerializer serializer = ingredientComponent.getSerializer();
                     for (IPrototypedIngredient<?, ?> prototypedIngredient : ingredientComponentListEntry.getValue()) {
-                        CompoundTag instance = new CompoundTag();
-                        instance.put("prototype", serializer.serializeInstance(lookupProvider, prototypedIngredient.getPrototype()));
-                        instance.put("condition", serializer.serializeCondition(prototypedIngredient.getCondition()));
-                        instances.add(instance);
+                        ValueOutput instance = instances.addChild();
+                        serializer.serializeInstance(instance.child("prototype"), prototypedIngredient.getPrototype());
+                        instance.store("condition", ExtraCodecs.NBT, serializer.serializeCondition(prototypedIngredient.getCondition()));
                     }
-                    ingredientInstance.put("instances", instances);
-
-                    pendingIngredientInstances.add(ingredientInstance);
                 }
-                pendingEntries.add(pendingIngredientInstances);
             }
-            entriesTag.put("pendingIngredientInstanceEntries", pendingEntries);
-            processingCraftingJobs.add(entriesTag);
         }
-        tag.put("processingCraftingJobs", processingCraftingJobs);
 
-        ListTag pendingCraftingJobs = new ListTag();
+        ValueOutput.ValueOutputList pendingCraftingJobs = valueOutput.childrenList("pendingCraftingJobs");
         for (CraftingJob craftingJob : this.pendingCraftingJobs.values()) {
-            pendingCraftingJobs.add(CraftingJob.serialize(lookupProvider, craftingJob));
+            CraftingJob.serialize(pendingCraftingJobs.addChild(), craftingJob);
         }
-        tag.put("pendingCraftingJobs", pendingCraftingJobs);
 
-        CompoundTag targetOverrides = new CompoundTag();
+        ValueOutput.ValueOutputList targetOverrides = valueOutput.childrenList("targetOverrides");
         for (Map.Entry<IngredientComponent<?, ?>, Direction> entry : this.ingredientComponentTargetOverrides.entrySet()) {
-            targetOverrides.putInt(entry.getKey().getName().toString(), entry.getValue().ordinal());
+            ValueOutput entryTag = targetOverrides.addChild();
+            entryTag.putString("key", entry.getKey().getName().toString());
+            entryTag.putInt("value", entry.getValue().ordinal());
         }
-        tag.put("targetOverrides", targetOverrides);
 
-        CompoundTag nonBlockingJobsRunningAmount = new CompoundTag();
+        ValueOutput.ValueOutputList nonBlockingJobsRunningAmount = valueOutput.childrenList("nonBlockingJobsRunningAmount");
         for (Int2IntMap.Entry entry : this.nonBlockingJobsRunningAmount.int2IntEntrySet()) {
-            nonBlockingJobsRunningAmount.putInt(String.valueOf(entry.getIntKey()), entry.getIntValue());
+            ValueOutput entryTag = nonBlockingJobsRunningAmount.addChild();
+            entryTag.putInt("key", entry.getIntKey());
+            entryTag.putInt("value", entry.getIntValue());
         }
-        tag.put("nonBlockingJobsRunningAmount", nonBlockingJobsRunningAmount);
     }
 
-    public void readFromNBT(HolderLookup.Provider lookupProvider, CompoundTag tag) {
-        if (tag.contains("blockingJobsMode")) {
-            this.blockingJobsMode = tag.getBoolean("blockingJobsMode");
-        }
-
-        ListTag processingCraftingJobs = tag.getList("processingCraftingJobs", Tag.TAG_COMPOUND);
-        for (Tag entry : processingCraftingJobs) {
-            CompoundTag entryTag = (CompoundTag) entry;
-
+    public void deserialize(ValueInput valueInput) {
+        ValueInput.ValueInputList processingCraftingJobs = valueInput.childrenList("processingCraftingJobs").orElseThrow();
+        for (ValueInput entryTag : processingCraftingJobs) {
             List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> pendingIngredientInstanceEntries = Lists.newArrayList();
-            ListTag ingredientsEntries = entryTag.getList("pendingIngredientInstanceEntries", Tag.TAG_LIST);
-            for (Tag ingredientEntry : ingredientsEntries) {
-                ListTag pendingIngredientsList = (ListTag) ingredientEntry;
-
+            ValueInput.ValueInputList ingredientsEntries = entryTag.childrenList("pendingIngredientInstanceEntries").orElseThrow();
+            for (ValueInput ingredientEntry : ingredientsEntries) {
+                ValueInput.ValueInputList pendingIngredientsList = ingredientEntry.childrenList("v").orElseThrow();
                 Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pendingIngredientInstances = Maps.newIdentityHashMap();
-                for (Tag pendingIngredient : pendingIngredientsList) {
-                    CompoundTag pendingIngredientTag = (CompoundTag) pendingIngredient;
-                    String componentName = pendingIngredientTag.getString("ingredientComponent");
+                for (ValueInput pendingIngredientTag : pendingIngredientsList) {
+                    String componentName = pendingIngredientTag.getString("ingredientComponent").orElseThrow();
                     IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.getValue(ResourceLocation.parse(componentName));
                     if (ingredientComponent == null) {
                         throw new IllegalArgumentException("Could not find the ingredient component type " + componentName);
@@ -166,10 +151,9 @@ public class CraftingJobHandler {
                     IIngredientSerializer serializer = ingredientComponent.getSerializer();
 
                     List<IPrototypedIngredient<?, ?>> pendingIngredients = Lists.newArrayList();
-                    for (Tag instanceTagUnsafe : pendingIngredientTag.getList("instances", Tag.TAG_COMPOUND)) {
-                        CompoundTag instanceTag = (CompoundTag) instanceTagUnsafe;
-                        Object instance = serializer.deserializeInstance(lookupProvider, instanceTag.get("prototype"));
-                        Object condition = serializer.deserializeCondition(instanceTag.get("condition"));
+                    for (ValueInput instanceTag : pendingIngredientTag.childrenList("instances").orElseThrow()) {
+                        Object instance = serializer.deserializeInstance(instanceTag.child("prototype").orElseThrow());
+                        Object condition = serializer.deserializeCondition(instanceTag.read("condition", ExtraCodecs.NBT).orElseThrow());
                         pendingIngredients.add(new PrototypedIngredient(ingredientComponent, instance, condition));
                     }
 
@@ -179,7 +163,7 @@ public class CraftingJobHandler {
                 pendingIngredientInstanceEntries.add(pendingIngredientInstances);
             }
 
-            CraftingJob craftingJob = CraftingJob.deserialize(lookupProvider, entryTag.getCompound("craftingJob"));
+            CraftingJob craftingJob = CraftingJob.deserialize(entryTag.child("craftingJob").orElseThrow());
 
             this.processingCraftingJobs.put(craftingJob.getId(), craftingJob);
             this.allCraftingJobs.put(craftingJob.getId(), craftingJob);
@@ -189,9 +173,8 @@ public class CraftingJobHandler {
 
         }
 
-        ListTag pendingCraftingJobs = tag.getList("pendingCraftingJobs", Tag.TAG_COMPOUND);
-        for (Tag craftingJob : pendingCraftingJobs) {
-            CraftingJob craftingJobInstance = CraftingJob.deserialize(lookupProvider, (CompoundTag) craftingJob);
+        for (ValueInput craftingJob : valueInput.childrenList("pendingCraftingJobs").orElseThrow()) {
+            CraftingJob craftingJobInstance = CraftingJob.deserialize(craftingJob);
             this.pendingCraftingJobs.put(craftingJobInstance.getId(), craftingJobInstance);
             this.allCraftingJobs.put(craftingJobInstance.getId(), craftingJobInstance);
         }
@@ -206,17 +189,15 @@ public class CraftingJobHandler {
         }
 
         this.ingredientComponentTargetOverrides.clear();
-        CompoundTag targetOverrides = tag.getCompound("targetOverrides");
-        for (String componentName : targetOverrides.getAllKeys()) {
-            IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(ResourceLocation.parse(componentName));
-            this.ingredientComponentTargetOverrides.put(component, Direction.values()[targetOverrides.getInt(componentName)]);
+        for (ValueInput targetOverride : valueInput.childrenList("targetOverrides").orElseThrow()) {
+            IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(ResourceLocation.parse(targetOverride.getString("key").orElseThrow()));
+            this.ingredientComponentTargetOverrides.put(component, Direction.values()[targetOverride.getInt("value").orElseThrow()]);
         }
 
         this.nonBlockingJobsRunningAmount.clear();
-        CompoundTag nonBlockingJobsRunningAmount = tag.getCompound("nonBlockingJobsRunningAmount");
-        for (String key : nonBlockingJobsRunningAmount.getAllKeys()) {
-            int craftingJobId = Integer.parseInt(key);
-            int amount = nonBlockingJobsRunningAmount.getInt(key);
+        for (ValueInput job : valueInput.childrenList("nonBlockingJobsRunningAmount").orElseThrow()) {
+            int craftingJobId = job.getInt("key").orElseThrow();
+            int amount = job.getInt("value").orElseThrow();
             this.nonBlockingJobsRunningAmount.put(craftingJobId, amount);
         }
     }

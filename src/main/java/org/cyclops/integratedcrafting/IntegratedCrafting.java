@@ -3,8 +3,6 @@ package org.cyclops.integratedcrafting;
 import com.google.common.collect.Lists;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -21,6 +19,9 @@ import org.cyclops.integratedcrafting.capability.network.CraftingNetworkCapabili
 import org.cyclops.integratedcrafting.capability.network.NetworkCraftingHandlerCraftingNetwork;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrideRegistry;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
+import org.cyclops.integratedcrafting.gametest.GameTestsItemsCraft;
+import org.cyclops.integratedcrafting.gametest.GameTestsItemsSmithing;
+import org.cyclops.integratedcrafting.gametest.GameTestsItemsStonecutting;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingConfig;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettingsConfig;
 import org.cyclops.integratedcrafting.part.PartTypes;
@@ -44,7 +45,7 @@ public class IntegratedCrafting extends ModBaseNeoForge<IntegratedCrafting> {
 
     public static IntegratedCrafting _instance;
 
-    public static GlobalCounters globalCounters = null;
+    public static GlobalCounters.Access globalCounters = null;
 
     public IntegratedCrafting(IEventBus modEventBus) {
         super(Reference.MOD_ID, (instance) -> _instance = instance, modEventBus);
@@ -53,7 +54,7 @@ public class IntegratedCrafting extends ModBaseNeoForge<IntegratedCrafting> {
         getRegistryManager().addRegistry(ICraftingProcessOverrideRegistry.class, CraftingProcessOverrideRegistry.getInstance());
 
         // Register world storages
-        registerWorldStorage(globalCounters = new GlobalCounters(this));
+        registerWorldStorage(globalCounters = new GlobalCounters.Access(this));
 
         modEventBus.addListener(this::onRegistriesCreate);
         modEventBus.addListener(this::onSetup);
@@ -93,7 +94,6 @@ public class IntegratedCrafting extends ModBaseNeoForge<IntegratedCrafting> {
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
     protected IClientProxy constructClientProxy() {
         return new ClientProxy();
     }
@@ -119,6 +119,15 @@ public class IntegratedCrafting extends ModBaseNeoForge<IntegratedCrafting> {
         configHandler.addConfigurable(new ContainerPartInterfaceCraftingSettingsConfig());
 
         configHandler.addConfigurable(new RecipeSerializerDeadBushConfig()); // This one is only used in game tests.
+    }
+
+    @Override
+    public Class<?>[] getGameTestClasses() {
+        return new Class<?>[]{
+                GameTestsItemsCraft.class,
+                GameTestsItemsSmithing.class,
+                GameTestsItemsStonecutting.class
+        };
     }
 
     /**

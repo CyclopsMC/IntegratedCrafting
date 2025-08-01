@@ -4,9 +4,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -14,8 +14,6 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.commoncapabilities.IngredientComponents;
 import org.cyclops.commoncapabilities.api.capability.itemhandler.ItemMatch;
@@ -26,6 +24,7 @@ import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinit
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
+import org.cyclops.cyclopscore.gametest.GameTest;
 import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspectWriteBuilders;
@@ -48,11 +47,9 @@ import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedC
 import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedDynamics.createVariableForValue;
 import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedDynamics.placeVariableInWriter;
 
-@GameTestHolder(Reference.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class GameTestsItemsCraft {
 
-    public static final String TEMPLATE_EMPTY = "empty10";
+    public static final String TEMPLATE_EMPTY = Reference.MOD_ID + ":empty10";
     public static final int TIMEOUT = 2000;
     public static final BlockPos POS = BlockPos.ZERO.offset(2, 0, 2);
 
@@ -61,7 +58,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
 
         // Add chest recipe to crafting interface
@@ -72,24 +69,24 @@ public class GameTestsItemsCraft {
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface is not valid"));
 
             // Check crafting writer state
             IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)).getState();
-            helper.assertFalse(partStateWriter.isDeactivated(), "Importer is deactivated");
+            helper.assertFalse(partStateWriter.isDeactivated(), Component.literal("Importer is deactivated"));
             helper.assertValueEqual(
                     PartTypes.CRAFTING_WRITER.getBlockState(PartHelpers.getPartContainerChecked(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)), Direction.NORTH).getValue(IgnoredBlockStatus.STATUS),
                     IgnoredBlockStatus.Status.ACTIVE,
-                    "Block status is incorrect"
+                    Component.literal("Block status is incorrect")
             );
-            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, "Active aspect is incorrect");
-            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), "Active aspect has errors");
+            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, Component.literal("Active aspect is incorrect"));
+            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), Component.literal("Active aspect has errors"));
 
             // Check if items have been crafted
-            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.OAK_PLANKS, "Slot 0 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(0).getCount(), 56, "Slot 0 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.CHEST, "Slot 1 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, "Slot 1 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.OAK_PLANKS, Component.literal("Slot 0 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 56, Component.literal("Slot 0 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.CHEST, Component.literal("Slot 1 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, Component.literal("Slot 1 amount is incorrect"));
         });
     }
 
@@ -98,7 +95,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
 
         // Add chest recipe to crafting interface
@@ -112,24 +109,24 @@ public class GameTestsItemsCraft {
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface is not valid"));
 
             // Check crafting writer state
             IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)).getState();
-            helper.assertFalse(partStateWriter.isDeactivated(), "Importer is deactivated");
+            helper.assertFalse(partStateWriter.isDeactivated(), Component.literal("Importer is deactivated"));
             helper.assertValueEqual(
                     PartTypes.CRAFTING_WRITER.getBlockState(PartHelpers.getPartContainerChecked(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)), Direction.NORTH).getValue(IgnoredBlockStatus.STATUS),
                     IgnoredBlockStatus.Status.ACTIVE,
-                    "Block status is incorrect"
+                    Component.literal("Block status is incorrect")
             );
-            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, "Active aspect is incorrect");
-            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), "Active aspect has errors");
+            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, Component.literal("Active aspect is incorrect"));
+            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), Component.literal("Active aspect has errors"));
 
             // Check if items have been crafted
-            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CHEST, "Slot 0 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 0 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.CHEST, "Slot 1 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getCount(), 7, "Slot 1 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CHEST, Component.literal("Slot 0 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, Component.literal("Slot 0 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.CHEST, Component.literal("Slot 1 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 7, Component.literal("Slot 1 amount is incorrect"));
         });
     }
 
@@ -138,7 +135,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
 
         // Insert items in interface chest
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 1));
 
         // Add iron ingot recipe to furnace
@@ -149,12 +146,12 @@ public class GameTestsItemsCraft {
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface is not valid"));
 
             // Check if items have been crafted
-            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, "Slot 0 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 0 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, "Slot 1 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, Component.literal("Slot 0 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, Component.literal("Slot 0 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, Component.literal("Slot 1 amount is incorrect"));
         });
     }
 
@@ -163,7 +160,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
 
         // Insert items in interface chest
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 1));
 
         // Add iron ingot recipe with spaces to furnace
@@ -195,12 +192,12 @@ public class GameTestsItemsCraft {
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface is not valid"));
 
             // Check if items have been crafted
-            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, "Slot 0 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 0 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, "Slot 1 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, Component.literal("Slot 0 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, Component.literal("Slot 0 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, Component.literal("Slot 1 amount is incorrect"));
         });
     }
 
@@ -209,7 +206,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.OAK_LOG, 2));
 
         // Add chest recipe to crafting interface
@@ -221,13 +218,13 @@ public class GameTestsItemsCraft {
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe 0 in crafting interface is not valid");
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(1), "Recipe 1 in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), Component.literal("Recipe 0 in crafting interface is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(1), Component.literal("Recipe 1 in crafting interface is not valid"));
 
             // Check if items have been crafted
-            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CHEST, "Slot 1 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 1 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, "Slot 1 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CHEST, Component.literal("Slot 1 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, Component.literal("Slot 1 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, Component.literal("Slot 1 amount is incorrect"));
         });
     }
 
@@ -236,7 +233,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE);
 
         // Insert items in interface chest
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 5));
 
         // Add iron ingot recipe to furnaces
@@ -251,16 +248,16 @@ public class GameTestsItemsCraft {
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface 0 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(1).isRecipeSlotValid(0), "Recipe in crafting interface 1 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(2).isRecipeSlotValid(0), "Recipe in crafting interface 2 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(3).isRecipeSlotValid(0), "Recipe in crafting interface 3 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(4).isRecipeSlotValid(0), "Recipe in crafting interface 4 is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface 0 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(1).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface 1 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(2).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface 2 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(3).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface 3 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(4).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface 4 is not valid"));
 
             // Check if items have been crafted
-            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, "Slot 0 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(0).getCount(), 5, "Slot 0 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, "Slot 1 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, Component.literal("Slot 0 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 5, Component.literal("Slot 0 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, Component.literal("Slot 1 amount is incorrect"));
 
             helper.assertBlockProperty(POS.west(), AbstractFurnaceBlock.LIT, true);
             helper.assertBlockProperty(POS.south().west(), AbstractFurnaceBlock.LIT, true);
@@ -275,7 +272,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE);
 
         // Insert items in interface chest
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 10));
 
         // Add iron ingot recipe to furnaces
@@ -297,16 +294,16 @@ public class GameTestsItemsCraft {
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface 0 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(1).isRecipeSlotValid(0), "Recipe in crafting interface 1 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(2).isRecipeSlotValid(0), "Recipe in crafting interface 2 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(3).isRecipeSlotValid(0), "Recipe in crafting interface 3 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(4).isRecipeSlotValid(0), "Recipe in crafting interface 4 is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface 0 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(1).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface 1 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(2).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface 2 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(3).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface 3 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(4).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface 4 is not valid"));
 
             // Check if items have been crafted
-            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, "Slot 0 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(0).getCount(), 10, "Slot 0 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, "Slot 1 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, Component.literal("Slot 0 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 10, Component.literal("Slot 0 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, Component.literal("Slot 1 amount is incorrect"));
 
             helper.assertBlockProperty(POS.west(), AbstractFurnaceBlock.LIT, true);
             helper.assertBlockProperty(POS.south().west(), AbstractFurnaceBlock.LIT, true);
@@ -321,7 +318,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE);
 
         // Insert items in interface chest
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.OAK_LOG, 1));
         chestIn.setItem(1, new ItemStack(Items.RAW_IRON, 5));
         chestIn.setItem(2, new ItemStack(Items.REDSTONE_BLOCK, 2));
@@ -344,16 +341,16 @@ public class GameTestsItemsCraft {
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe 0 in crafting interface 0 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(1), "Recipe 1 in crafting interface 0 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(2), "Recipe 2 in crafting interface 0 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(3), "Recipe 3 in crafting interface 0 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(4), "Recipe 4 in crafting interface 0 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(1).isRecipeSlotValid(0), "Recipe 0 in crafting interface 1 is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), Component.literal("Recipe 0 in crafting interface 0 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(1), Component.literal("Recipe 1 in crafting interface 0 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(2), Component.literal("Recipe 2 in crafting interface 0 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(3), Component.literal("Recipe 3 in crafting interface 0 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(4), Component.literal("Recipe 4 in crafting interface 0 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(1).isRecipeSlotValid(0), Component.literal("Recipe 0 in crafting interface 1 is not valid"));
 
             // Check if items have been crafted
-            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CRAFTER, "Slot 0 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 0 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CRAFTER, Component.literal("Slot 0 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, Component.literal("Slot 0 amount is incorrect"));
         });
     }
 
@@ -362,7 +359,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.OAK_LOG, 64));
 
         // Add chest recipe to crafting interface
@@ -379,14 +376,14 @@ public class GameTestsItemsCraft {
         helper.setBlock(positions.chest().south().south(), Blocks.CHEST);
         PartHelpers.addPart(helper.getLevel(), helper.absolutePos(positions.chest().south()), Direction.SOUTH, org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_ITEM.getItem()));
         PartHelpers.addPart(helper.getLevel(), helper.absolutePos(positions.chest().south()), Direction.NORTH, org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM.getItem()));
-        placeVariableInWriter(helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(positions.chest().south()), Direction.NORTH), TunnelAspects.Write.Item.ITEMSTACK_IMPORT, createVariableForValue(helper.getLevel(), ValueTypes.OBJECT_ITEMSTACK, ValueObjectTypeItemStack.ValueItemStack.of(new ItemStack(Items.OAK_PLANKS))));
+        placeVariableInWriter(helper, helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(positions.chest().south()), Direction.NORTH), TunnelAspects.Write.Item.ITEMSTACK_IMPORT, createVariableForValue(helper.getLevel(), ValueTypes.OBJECT_ITEMSTACK, ValueObjectTypeItemStack.ValueItemStack.of(new ItemStack(Items.OAK_PLANKS))));
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface is not valid"));
 
             // Check if items have been crafted
-            helper.assertTrue(chestIn.getItem(0).isEmpty(), "Slot 0 item is incorrect");
+            helper.assertTrue(chestIn.getItem(0).isEmpty(), Component.literal("Slot 0 item is incorrect"));
         });
     }
 
@@ -395,7 +392,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.SHEARS, 1));
         chestIn.setItem(1, new ItemStack(Items.SPRUCE_SAPLING, 10));
 
@@ -410,24 +407,24 @@ public class GameTestsItemsCraft {
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface is not valid"));
 
             // Check crafting writer state
             IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)).getState();
-            helper.assertFalse(partStateWriter.isDeactivated(), "Importer is deactivated");
+            helper.assertFalse(partStateWriter.isDeactivated(), Component.literal("Importer is deactivated"));
             helper.assertValueEqual(
                     PartTypes.CRAFTING_WRITER.getBlockState(PartHelpers.getPartContainerChecked(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)), Direction.NORTH).getValue(IgnoredBlockStatus.STATUS),
                     IgnoredBlockStatus.Status.ACTIVE,
-                    "Block status is incorrect"
+                    Component.literal("Block status is incorrect")
             );
-            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, "Active aspect is incorrect");
-            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), "Active aspect has errors");
+            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, Component.literal("Active aspect is incorrect"));
+            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), Component.literal("Active aspect has errors"));
 
             // Check if items have been crafted
-            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.DEAD_BUSH, "Slot 0 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(0).getCount(), 10, "Slot 0 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.SHEARS, "Slot 1 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, "Slot 1 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.DEAD_BUSH, Component.literal("Slot 0 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 10, Component.literal("Slot 0 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.SHEARS, Component.literal("Slot 1 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, Component.literal("Slot 1 amount is incorrect"));
         });
     }
 
@@ -436,7 +433,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.SHEARS, 1));
         chestIn.setItem(1, new ItemStack(Items.SPRUCE_SAPLING, 10));
 
@@ -448,24 +445,24 @@ public class GameTestsItemsCraft {
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface is not valid"));
 
             // Check crafting writer state
             IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)).getState();
-            helper.assertFalse(partStateWriter.isDeactivated(), "Importer is deactivated");
+            helper.assertFalse(partStateWriter.isDeactivated(), Component.literal("Importer is deactivated"));
             helper.assertValueEqual(
                     PartTypes.CRAFTING_WRITER.getBlockState(PartHelpers.getPartContainerChecked(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)), Direction.NORTH).getValue(IgnoredBlockStatus.STATUS),
                     IgnoredBlockStatus.Status.ACTIVE,
-                    "Block status is incorrect"
+                    Component.literal("Block status is incorrect")
             );
-            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, "Active aspect is incorrect");
-            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), "Active aspect has errors");
+            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, Component.literal("Active aspect is incorrect"));
+            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), Component.literal("Active aspect has errors"));
 
             // Check if items have been crafted
-            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.DEAD_BUSH, "Slot 0 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(0).getCount(), 10, "Slot 0 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.SHEARS, "Slot 1 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, "Slot 1 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.DEAD_BUSH, Component.literal("Slot 0 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 10, Component.literal("Slot 0 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.SHEARS, Component.literal("Slot 1 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, Component.literal("Slot 1 amount is incorrect"));
         });
     }
 
@@ -491,7 +488,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE, Blocks.CRAFTING_TABLE);
 
         // Insert items in interface chest
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.SHEARS, 1));
         chestIn.setItem(1, new ItemStack(Items.SHEARS, 1));
         chestIn.setItem(2, new ItemStack(Items.SPRUCE_SAPLING, 64));
@@ -515,33 +512,33 @@ public class GameTestsItemsCraft {
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
-            helper.assertTrue(positions.interfaceStates().get(1).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(1).isRecipeSlotValid(0), Component.literal("Recipe in crafting interface is not valid"));
 
             // Check crafting writer state
             IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)).getState();
-            helper.assertFalse(partStateWriter.isDeactivated(), "Importer is deactivated");
+            helper.assertFalse(partStateWriter.isDeactivated(), Component.literal("Importer is deactivated"));
             helper.assertValueEqual(
                     PartTypes.CRAFTING_WRITER.getBlockState(PartHelpers.getPartContainerChecked(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)), Direction.NORTH).getValue(IgnoredBlockStatus.STATUS),
                     IgnoredBlockStatus.Status.ACTIVE,
-                    "Block status is incorrect"
+                    Component.literal("Block status is incorrect")
             );
-            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, "Active aspect is incorrect");
-            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), "Active aspect has errors");
+            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, Component.literal("Active aspect is incorrect"));
+            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), Component.literal("Active aspect has errors"));
 
             // Check if items have been crafted
-            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.GOLD_INGOT, "Slot 0 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(0).getCount(), 64, "Slot 0 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.GOLD_INGOT, "Slot 1 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(1).getCount(), 64, "Slot 1 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(2).getItem(), Items.GOLD_INGOT, "Slot 2 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(2).getCount(), 64, "Slot 2 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(3).getItem(), Items.GOLD_INGOT, "Slot 3 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(3).getCount(), 64, "Slot 3 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(4).getItem(), Items.GOLD_INGOT, "Slot 4 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(4).getCount(), 64, "Slot 4 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(6).getItem(), Items.SHEARS, "Slot 6 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(6).getCount(), 1, "Slot 6 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.GOLD_INGOT, Component.literal("Slot 0 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 64, Component.literal("Slot 0 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.GOLD_INGOT, Component.literal("Slot 1 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 64, Component.literal("Slot 1 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(2).getItem(), Items.GOLD_INGOT, Component.literal("Slot 2 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(2).getCount(), 64, Component.literal("Slot 2 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(3).getItem(), Items.GOLD_INGOT, Component.literal("Slot 3 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(3).getCount(), 64, Component.literal("Slot 3 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(4).getItem(), Items.GOLD_INGOT, Component.literal("Slot 4 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(4).getCount(), 64, Component.literal("Slot 4 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(6).getItem(), Items.SHEARS, Component.literal("Slot 6 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(6).getCount(), 1, Component.literal("Slot 6 amount is incorrect"));
         });
     }
 
@@ -550,7 +547,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE);
 
         // Insert items in interface chest
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.OAK_LOG, 2));
         chestIn.setItem(1, new ItemStack(Items.OAK_PLANKS, 1));
 
@@ -563,23 +560,23 @@ public class GameTestsItemsCraft {
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe 0 in crafting interface 0 is not valid");
-            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(1), "Recipe 1 in crafting interface 0 is not valid");
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), Component.literal("Recipe 0 in crafting interface 0 is not valid"));
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(1), Component.literal("Recipe 1 in crafting interface 0 is not valid"));
 
             // Check if items have been crafted
             // Try-catch block checks for two acceptable variants
             try {
-                helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CRAFTING_TABLE, "Slot 0 item is incorrect");
-                helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 0 amount is incorrect");
-                helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.OAK_PLANKS, "Slot 1 item is incorrect");
-                helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, "Slot 1 amount is incorrect");
-                helper.assertValueEqual(chestIn.getItem(2).getItem(), Items.CRAFTING_TABLE, "Slot 0 item is incorrect");
-                helper.assertValueEqual(chestIn.getItem(2).getCount(), 1, "Slot 0 amount is incorrect");
+                helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CRAFTING_TABLE, Component.literal("Slot 0 item is incorrect"));
+                helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, Component.literal("Slot 0 amount is incorrect"));
+                helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.OAK_PLANKS, Component.literal("Slot 1 item is incorrect"));
+                helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, Component.literal("Slot 1 amount is incorrect"));
+                helper.assertValueEqual(chestIn.getItem(2).getItem(), Items.CRAFTING_TABLE, Component.literal("Slot 0 item is incorrect"));
+                helper.assertValueEqual(chestIn.getItem(2).getCount(), 1, Component.literal("Slot 0 amount is incorrect"));
             } catch (GameTestAssertException e) {
-                helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CRAFTING_TABLE, "Slot 0 item is incorrect");
-                helper.assertValueEqual(chestIn.getItem(0).getCount(), 2, "Slot 0 amount is incorrect");
-                helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.OAK_PLANKS, "Slot 1 item is incorrect");
-                helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, "Slot 1 amount is incorrect");
+                helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CRAFTING_TABLE, Component.literal("Slot 0 item is incorrect"));
+                helper.assertValueEqual(chestIn.getItem(0).getCount(), 2, Component.literal("Slot 0 amount is incorrect"));
+                helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.OAK_PLANKS, Component.literal("Slot 1 item is incorrect"));
+                helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, Component.literal("Slot 1 amount is incorrect"));
             }
         });
     }

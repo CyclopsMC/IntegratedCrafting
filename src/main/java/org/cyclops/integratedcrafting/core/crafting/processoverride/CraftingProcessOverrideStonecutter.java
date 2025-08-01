@@ -70,7 +70,7 @@ public class CraftingProcessOverrideStonecutter implements ICraftingProcessOverr
                         Player player = CraftingProcessOverrideCraftingTable.getFakePlayer((ServerLevel) target.getPos().getLevel(true));
 
                         // Fire all required events
-                        result.onCraftedBy(target.getPos().getLevel(true), player, 1);
+                        result.onCraftedBy(player, 1);
 
                         // Insert the result into the sink
                         resultsSink.addResult(IngredientComponent.ITEMSTACK, result);
