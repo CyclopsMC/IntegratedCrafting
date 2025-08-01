@@ -3,6 +3,7 @@ package org.cyclops.integratedcrafting.client.gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.entity.player.Inventory;
 import org.cyclops.cyclopscore.client.gui.component.button.ButtonImage;
 import org.cyclops.cyclopscore.client.gui.container.ContainerScreenExtended;
@@ -67,7 +68,7 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         // super.drawGuiContainerForegroundLayer(matrixStack, mouseX, mouseY);
-        guiGraphics.drawString(font, this.title, this.titleLabelX, this.titleLabelY, 4210752, false);
+        guiGraphics.drawString(font, this.title, this.titleLabelX, this.titleLabelY, ARGB.opaque(4210752), false);
 
         int y = 42;
         for (int i = 0; i < getMenu().getContainerInventory().getContainerSize(); i++) {

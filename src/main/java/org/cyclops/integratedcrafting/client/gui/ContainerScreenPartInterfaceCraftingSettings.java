@@ -7,6 +7,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.entity.player.Inventory;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.client.gui.component.button.ButtonCheckbox;
@@ -177,20 +178,20 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
         super.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
 
-        guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integrateddynamics.partsettings.side"), leftPos + 8, topPos + 12, IModHelpers.get().getBaseHelpers().RGBToInt(0, 0, 0), false);
+        guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integrateddynamics.partsettings.side"), leftPos + 8, topPos + 12, IModHelpers.get().getBaseHelpers().RGBAToInt(0, 0, 0, 255), false);
         ingredientComponentSideSelector.render(guiGraphics, mouseX, mouseY, partialTicks);
         dropdownFieldSide.render(guiGraphics, mouseX, mouseY, partialTicks);
 
         guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integratedcrafting.partsettings.channel.interface"),
-                leftPos + 8, topPos + 137, 0, false);
+                leftPos + 8, topPos + 137, ARGB.opaque(0), false);
         numberFieldChannelInterfaceCrafting.render(guiGraphics, mouseX, mouseY, partialTicks);
 
         guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integratedcrafting.partsettings.craftingcheckdisabled"),
-                leftPos + 8, topPos + 152, 0, false);
+                leftPos + 8, topPos + 152, ARGB.opaque(0), false);
         checkboxFieldDisabledCraftingCheck.render(guiGraphics, mouseX, mouseY, partialTicks);
 
         guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integratedcrafting.partsettings.blockingmode"),
-                leftPos + 8, topPos + 162, 0, false);
+                leftPos + 8, topPos + 162, ARGB.opaque(0), false);
         checkboxFieldBlockingMode.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
