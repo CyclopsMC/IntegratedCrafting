@@ -69,7 +69,7 @@ public class RecipeIndexDefault implements IRecipeIndexModifiable {
         for (T instance : prioritizedRecipe.getOutput().getInstances(index.getComponent())) {
             Set<IRecipeDefinition> set = index.get(instance);
             if (set == null) {
-                set = Sets.newHashSet();
+                set = Sets.newLinkedHashSet(); // Keeps insertion priority
                 index.put(instance, set);
             }
             set.add(prioritizedRecipe);

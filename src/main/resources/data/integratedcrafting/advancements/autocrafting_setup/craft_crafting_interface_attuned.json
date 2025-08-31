@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "item": "integratedcrafting:part_interface_crafting_attuned"
+    },
+    "title": {
+      "translate": "advancement.integratedcrafting.craft_crafting_interface_attuned"
+    },
+    "description": {
+      "translate": "advancement.integratedcrafting.craft_crafting_interface_attuned.desc"
+    }
+  },
+  "parent": "integratedcrafting:root",
+  "criteria": {
+    "criteria_0": {
+      "trigger": "cyclopscore:item_crafted",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "integratedcrafting:part_interface_crafting_attuned"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

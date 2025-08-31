@@ -17,7 +17,9 @@
             <paragraph>info_book.integratedcrafting.crafting_interface.basics.text1</paragraph>
             <paragraph>info_book.integratedcrafting.crafting_interface.basics.text2</paragraph>
             <paragraph>info_book.integratedcrafting.crafting_interface.basics.text3</paragraph>
+            <paragraph>info_book.integratedcrafting.crafting_interface.basics.text4</paragraph>
             <appendix type="minecraft:crafting">integratedcrafting:crafting/part_interface_crafting</appendix>
+            <appendix type="minecraft:crafting">integratedcrafting:crafting/part_interface_crafting_attuned</appendix>
         </section>
 
         <section name="info_book.integratedcrafting.crafting_interface.crafting">
