@@ -11,28 +11,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIngredientAlternatives;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
-import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
-import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
-import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
-import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
-import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
+import org.cyclops.commoncapabilities.api.ingredient.*;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IngredientComponentStorageEmpty;
 import org.cyclops.cyclopscore.helper.BlockEntityHelpers;
-import org.cyclops.cyclopscore.ingredient.collection.IIngredientCollectionMutable;
-import org.cyclops.cyclopscore.ingredient.collection.IngredientArrayList;
-import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
-import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionQuantitativeGrouper;
-import org.cyclops.cyclopscore.ingredient.collection.IngredientHashSet;
+import org.cyclops.cyclopscore.ingredient.collection.*;
 import org.cyclops.integratedcrafting.Capabilities;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
-import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
-import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
-import org.cyclops.integratedcrafting.api.crafting.FailedCraftingRecipeException;
-import org.cyclops.integratedcrafting.api.crafting.RecursiveCraftingRecipeException;
-import org.cyclops.integratedcrafting.api.crafting.UnavailableCraftingInterfacesException;
-import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeException;
+import org.cyclops.integratedcrafting.api.crafting.*;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
@@ -47,14 +33,7 @@ import org.cyclops.integrateddynamics.core.network.IngredientChannelAdapter;
 import org.cyclops.integrateddynamics.core.network.IngredientChannelIndexed;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -331,6 +310,7 @@ public class CraftingHelpers {
         List<UnknownCraftingRecipeException> firstMissingDependencies = Lists.newArrayList();
         Map<IngredientComponent<?, ?>, List<?>> firstIngredientsStorage = Collections.emptyMap();
         List<CraftingJob> firstPartialCraftingJobs = Lists.newArrayList();
+        RecursiveCraftingRecipeException firstRecursiveException = null;
         while (recipes.hasNext()) {
             IRecipeDefinition recipe = recipes.next();
 
@@ -340,19 +320,30 @@ public class CraftingHelpers {
             int amount = (int) Math.ceil(((float) instanceQuantity) / (float) recipeOutputQuantity);
 
             // Calculate jobs for the given recipe
-            PartialCraftingJobCalculation result = calculateCraftingJobs(recipeIndex, channel,
-                    storageGetter, recipe, amount, craftMissing,
-                    simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobsGraph, parentDependencies,
-                    collectMissingRecipes && firstMissingDependencies.isEmpty());
-            if (result.getCraftingJob() == null) {
-                firstMissingDependencies = result.getMissingDependencies();
-                firstIngredientsStorage = result.getIngredientsStorage();
-                if (result.getPartialCraftingJobs() != null) {
-                    firstPartialCraftingJobs = result.getPartialCraftingJobs();
+            try {
+                PartialCraftingJobCalculation result = calculateCraftingJobs(recipeIndex, channel,
+                        storageGetter, recipe, amount, craftMissing,
+                        simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobsGraph, parentDependencies,
+                        collectMissingRecipes && firstMissingDependencies.isEmpty());
+                if (result.getCraftingJob() == null) {
+                    firstMissingDependencies = result.getMissingDependencies();
+                    firstIngredientsStorage = result.getIngredientsStorage();
+                    if (result.getPartialCraftingJobs() != null) {
+                        firstPartialCraftingJobs = result.getPartialCraftingJobs();
+                    }
+                } else {
+                    return result.getCraftingJob();
                 }
-            } else {
-                return result.getCraftingJob();
+            } catch (RecursiveCraftingRecipeException e) {
+                if (firstRecursiveException == null) {
+                    firstRecursiveException = e;
+                }
+                continue;
             }
+        }
+
+        if (firstRecursiveException != null) {
+            throw firstRecursiveException;
         }
 
         // No valid recipes were available, so we error or collect the missing instance.
@@ -592,7 +583,14 @@ public class CraftingHelpers {
                 // Try to craft the given prototype
                 try {
                     Set<IPrototypedIngredient> childDependencies = Sets.newHashSet(parentDependencies);
-                    if (!childDependencies.add(prototype)) {
+                    IPrototypedIngredient<T, M> dependencyPrototype = prototype;
+                    if (dependencyMatcher.getQuantity(dependencyPrototype.getPrototype()) != 1) {
+                        // Ensure 1-quantity is stored, for proper comparisons in future calls.
+                        dependencyPrototype = new PrototypedIngredient<>(dependencyComponent,
+                                dependencyMatcher.withQuantity(prototype.getPrototype(), 1),
+                                prototype.getCondition());
+                    }
+                    if (!childDependencies.add(dependencyPrototype)) {
                         throw new RecursiveCraftingRecipeException(prototype);
                     }
 

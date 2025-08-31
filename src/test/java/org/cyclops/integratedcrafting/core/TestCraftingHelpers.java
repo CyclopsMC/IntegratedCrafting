@@ -1260,6 +1260,7 @@ public class TestCraftingHelpers {
     private IRecipeDefinition recipeBBatch4;
     private IRecipeDefinition recipeBBatch5;
     private IRecipeDefinition recipeBRecursive;
+    private IRecipeDefinition recipeBRecursiveDifferentAmounts;
     private IRecipeDefinition recipeA;
     private IRecipeDefinition recipeAReusable;
     private IRecipeDefinition recipeAMultiple;
@@ -1270,6 +1271,7 @@ public class TestCraftingHelpers {
     private IRecipeDefinition recipeDA;
     private IRecipeDefinition recipeED;
     private IRecipeDefinition recipeA9;
+    private IRecipeDefinition recipeA9_5;
     private IRecipeDefinition recipeC;
     private IRecipeDefinition recipeD;
     private Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetterEmpty;
@@ -1396,6 +1398,16 @@ public class TestCraftingHelpers {
         Map<IngredientComponent<?, ?>, List<?>> mapBRecursiveOutput = Maps.newIdentityHashMap();
         mapBRecursiveOutput.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB02_));
         recipeBRecursive = new RecipeDefinition(mapBRecursive, new MixedIngredients(mapBRecursiveOutput));
+
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapBRecursiveDifferentAmounts = Maps.newIdentityHashMap();
+        mapBRecursiveDifferentAmounts.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB01_, ComplexStack.Match.EXACT)
+                ))
+        ));
+        Map<IngredientComponent<?, ?>, List<?>> mapBRecursiveOutputDifferentAmounts = Maps.newIdentityHashMap();
+        mapBRecursiveOutputDifferentAmounts.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CB03_));
+        recipeBRecursiveDifferentAmounts = new RecipeDefinition(mapBRecursiveDifferentAmounts, new MixedIngredients(mapBRecursiveOutputDifferentAmounts));
 
         Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapBBatch = Maps.newIdentityHashMap();
         mapBBatch.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
@@ -1609,6 +1621,16 @@ public class TestCraftingHelpers {
         Map<IngredientComponent<?, ?>, List<?>> mapA9Output = Maps.newIdentityHashMap();
         mapA9Output.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA91B));
         recipeA9 = new RecipeDefinition(mapA9, new MixedIngredients(mapA9Output));
+
+        Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapA9_5 = Maps.newIdentityHashMap();
+        mapA9_5.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                        new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB01_, ComplexStack.Match.EXACT)
+                ))
+        ));
+        Map<IngredientComponent<?, ?>, List<?>> mapA9Output_5 = Maps.newIdentityHashMap();
+        mapA9Output_5.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(CA95B));
+        recipeA9_5 = new RecipeDefinition(mapA9, new MixedIngredients(mapA9Output_5));
 
         Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> mapAB = Maps.newIdentityHashMap();
         mapAB.put(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
@@ -2103,6 +2125,89 @@ public class TestCraftingHelpers {
         }
     }
 
+    @Test
+    public void testCalculateCraftingJobsRecursiveWithAlternative() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
+        RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
+        recipeIndex.addRecipe(recipeBRecursive);
+        recipeIndex.addRecipe(recipeB);
+
+        // Single crafting recipe with one available dependent
+        IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+        storage.insert(CA01_, false);
+        storageGetter = (c) -> storage;
+
+        // A recipe with infinite recursion, but can be handled, as we have an alternative
+
+        CraftingJob j1 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+                IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
+                simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
+
+        assertThat(j1.getId(), equalTo(1));
+        assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(1));
+        assertThat(j1.getRecipe(), equalTo(recipeBRecursive));
+        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(0));
+
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j1), equalTo(true));
+        assertThat(craftingJobDependencyGraph.getDependencies(j1).size(), equalTo(1));
+        assertThat(craftingJobDependencyGraph.getDependents(j1).size(), equalTo(0));
+
+        CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
+
+        assertThat(j0.getChannel(), equalTo(0));
+        assertThat(j0.getRecipe(), equalTo(recipeB));
+        assertThat(j0.getAmount(), equalTo(1));
+        assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                CA01_
+        )));
+        assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j1)));
+    }
+
+    @Test
+    public void testCalculateCraftingJobsRecursiveWithAlternativeDifferentAmounts() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
+        RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
+        recipeIndex.addRecipe(recipeBRecursive);
+        recipeIndex.addRecipe(recipeBRecursiveDifferentAmounts);
+        recipeIndex.addRecipe(recipeB);
+
+        // Single crafting recipe with one available dependent
+        IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+        storage.insert(CA01_, false);
+        storageGetter = (c) -> storage;
+
+        // A recipe with infinite recursion, but can be handled, as we have an alternative
+
+        CraftingJob j1 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+                IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
+                simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
+
+        assertThat(j1.getId(), equalTo(1));
+        assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(1));
+        assertThat(j1.getRecipe(), equalTo(recipeBRecursive));
+        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(0));
+
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j1), equalTo(true));
+        assertThat(craftingJobDependencyGraph.getDependencies(j1).size(), equalTo(1));
+        assertThat(craftingJobDependencyGraph.getDependents(j1).size(), equalTo(0));
+
+        CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
+
+        assertThat(j0.getChannel(), equalTo(0));
+        assertThat(j0.getRecipe(), equalTo(recipeB));
+        assertThat(j0.getAmount(), equalTo(1));
+        assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                CA01_
+        )));
+        assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j1)));
+    }
+
     @Test(expected = RecursiveCraftingRecipeException.class)
     public void testCalculateCraftingJobsRecursiveDeep() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
@@ -2126,6 +2231,92 @@ public class TestCraftingHelpers {
             assertThat(e, equalTo(eExpected));
             throw e;
         }
+    }
+
+    @Test
+    public void testCalculateCraftingJobsRecursiveDeepWithAlternative() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
+        RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
+        recipeIndex.addRecipe(recipeB);
+        recipeIndex.addRecipe(recipeA);
+        recipeIndex.addRecipe(recipeA9);
+        recipeIndex.addRecipe(recipeDA); // Alternative to recipeA, crafts CA01_ with CD01_
+
+        // A recipe with infinite recursion, but can be handled, as we have an alternative
+
+        // Single crafting recipe with one available dependent
+        IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+        storage.insert(CD01_, false);
+        storageGetter = (c) -> storage;
+
+        CraftingJob j1 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+                IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
+                simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
+
+        assertThat(j1.getId(), equalTo(1));
+        assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(1));
+        assertThat(j1.getRecipe(), equalTo(recipeB));
+        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(0));
+
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j1), equalTo(true));
+        assertThat(craftingJobDependencyGraph.getDependencies(j1).size(), equalTo(1));
+        assertThat(craftingJobDependencyGraph.getDependents(j1).size(), equalTo(0));
+
+        CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
+
+        assertThat(j0.getChannel(), equalTo(0));
+        assertThat(j0.getRecipe(), equalTo(recipeDA));
+        assertThat(j0.getAmount(), equalTo(1));
+        assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                CD01_
+        )));
+        assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j1)));
+    }
+
+    @Test
+    public void testCalculateCraftingJobsRecursiveDeepWithAlternativeDifferentAmounts() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
+        RecipeIndexDefault recipeIndex = new RecipeIndexDefault();
+        recipeIndex.addRecipe(recipeA9_5); // Outputs multiple outputs
+        recipeIndex.addRecipe(recipeB);
+        recipeIndex.addRecipe(recipeA);
+        recipeIndex.addRecipe(recipeDA); // Alternative to recipeA, crafts CA01_ with CD01_
+
+        // A recipe with infinite recursion, but can be handled, as we have an alternative
+
+        // Single crafting recipe with one available dependent
+        IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+        storage.insert(CD01_, false);
+        storageGetter = (c) -> storage;
+
+        CraftingJob j1 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+                IngredientComponentStubs.COMPLEX, CB02_, ComplexStack.Match.EXACT, true,
+                simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, false);
+
+        assertThat(j1.getId(), equalTo(1));
+        assertThat(j1.getChannel(), equalTo(0));
+        assertThat(j1.getAmount(), equalTo(1));
+        assertThat(j1.getRecipe(), equalTo(recipeB));
+        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(0));
+
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
+        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j1), equalTo(true));
+        assertThat(craftingJobDependencyGraph.getDependencies(j1).size(), equalTo(1));
+        assertThat(craftingJobDependencyGraph.getDependents(j1).size(), equalTo(0));
+
+        CraftingJob j0 = craftingJobDependencyGraph.getCraftingJobs().stream().filter(j -> j.getId() == 0).findFirst().get();
+
+        assertThat(j0.getChannel(), equalTo(0));
+        assertThat(j0.getRecipe(), equalTo(recipeDA));
+        assertThat(j0.getAmount(), equalTo(1));
+        assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
+        assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                CD01_
+        )));
+        assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
+        assertThat(craftingJobDependencyGraph.getDependents(j0), equalTo(Lists.newArrayList(j1)));
     }
 
     @Test
