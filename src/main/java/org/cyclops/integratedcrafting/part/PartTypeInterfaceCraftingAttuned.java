@@ -139,7 +139,11 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
         super.onBlockNeighborChange(network, partNetwork, target, state, world, neighbourBlock, neighbourBlockPos);
 
         addTargetToNetwork(network, target, state, false);
+
+        // Only trigger block update if really necessary.
+        state.isDirtyAndReset();
         if (hadValidTarget != state.hasValidTarget()) {
+            state.markDirty();
             BlockHelpers.markForUpdate(target.getCenter().getPos().getLevel(true), target.getCenter().getPos().getBlockPos());
         }
     }
