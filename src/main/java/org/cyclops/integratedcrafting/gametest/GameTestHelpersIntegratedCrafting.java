@@ -25,6 +25,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.cyclopscore.helper.IModHelpers;
+import org.cyclops.integratedcrafting.core.part.PartTypeInterfaceCraftingBase;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
@@ -54,11 +55,21 @@ import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedD
  */
 public class GameTestHelpersIntegratedCrafting {
 
-    public static NetworkPositions createBasicNetwork(GameTestHelper helper, BlockPos pos) {
-        return createBasicNetwork(helper, pos, Blocks.CRAFTING_TABLE);
+    public static INetworkPositions<PartTypeInterfaceCrafting.State> createBasicNetwork(GameTestHelper helper, BlockPos pos) {
+        return createBasicNetwork(helper, pos, false);
     }
 
-    public static NetworkPositions createBasicNetwork(GameTestHelper helper, BlockPos pos, Block... crafters) {
+    public static <T extends PartTypeInterfaceCraftingBase.State<?, ?>> INetworkPositions<T> createBasicNetwork(GameTestHelper helper, BlockPos pos, boolean attuned) {
+        return createBasicNetwork(helper, pos, attuned, Blocks.CRAFTING_TABLE);
+    }
+
+    public static INetworkPositions<PartTypeInterfaceCrafting.State> createBasicNetwork(GameTestHelper helper, BlockPos pos, Block... crafters) {
+        return createBasicNetwork(helper, pos, false, crafters);
+    }
+
+    public static <T extends PartTypeInterfaceCraftingBase.State<?, ?>> INetworkPositions<T> createBasicNetwork(GameTestHelper helper, BlockPos pos, boolean attuned, Block... crafters) {
+        PartTypeInterfaceCraftingBase<? extends PartTypeInterfaceCraftingBase<?, ?>, ? extends PartTypeInterfaceCraftingBase.State<? extends PartTypeInterfaceCraftingBase<?, ?>, ? extends PartTypeInterfaceCraftingBase.State<?, ?>>> partInterface = attuned ? PartTypes.INTERFACE_CRAFTING_ATTUNED : PartTypes.INTERFACE_CRAFTING;
+
         // Place cable
         helper.setBlock(pos, RegistryEntries.BLOCK_CABLE.value());
 
@@ -73,7 +84,7 @@ public class GameTestHelpersIntegratedCrafting {
 
         BlockPos posi = pos;
         List<PartPos> interfaces = Lists.newArrayList();
-        List<PartTypeInterfaceCrafting.State> interfaceStates = Lists.newArrayList();
+        List<T> interfaceStates = Lists.newArrayList();
         List<Consumer<Triple<Integer, RecipeType<?>, ResourceLocation>>> interfaceRecipeAdders = Lists.newArrayList();
         for (Block crafter : crafters) {
             if (!pos.equals(posi)) {
@@ -84,8 +95,8 @@ public class GameTestHelpersIntegratedCrafting {
             helper.setBlock(posi.above(), RegistryEntries.BLOCK_CABLE.value());
             helper.setBlock(posi.above().west(), RegistryEntries.BLOCK_CABLE.value());
 
-            // Place crafter
-            PartHelpers.addPart(helper.getLevel(), helper.absolutePos(posi.above().west()), Direction.DOWN, PartTypes.INTERFACE_CRAFTING, new ItemStack(PartTypes.INTERFACE_CRAFTING.getItem()));
+            // Place crafter interface
+            PartHelpers.addPart(helper.getLevel(), helper.absolutePos(posi.above().west()), Direction.DOWN, partInterface, new ItemStack(partInterface.getItem()));
 
             // Place crafter before crafting interface
             helper.setBlock(posi.west(), crafter);
@@ -105,11 +116,13 @@ public class GameTestHelpersIntegratedCrafting {
             }
 
             interfaces.add(PartPos.of(helper.getLevel(), helper.absolutePos(posi.above().west()), Direction.DOWN));
-            PartTypeInterfaceCrafting.State partStateCraftingInterface = (PartTypeInterfaceCrafting.State) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(posi.above().west()), Direction.DOWN)).getState();
+            T partStateCraftingInterface = (T) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(posi.above().west()), Direction.DOWN)).getState();
             interfaceStates.add(partStateCraftingInterface);
             interfaceRecipeAdders.add((pair) -> {
                 ItemStack variableRecipe = createVariableForRecipe(helper.getLevel(), pair.getMiddle(), pair.getRight());
-                partStateCraftingInterface.getInventoryVariables().setItem(pair.getLeft(), variableRecipe);
+                if (partStateCraftingInterface instanceof PartTypeInterfaceCrafting.State partStateCraftingInterfaceRegular) {
+                    partStateCraftingInterfaceRegular.getInventoryVariables().setItem(pair.getLeft(), variableRecipe);
+                }
             });
 
             posi = posi.south();
@@ -231,12 +244,20 @@ public class GameTestHelpersIntegratedCrafting {
         partStateHolder.getState().setUpdateInterval(updateInterval);
     }
 
-    public static record NetworkPositions(
+    public static record NetworkPositions<T extends PartTypeInterfaceCraftingBase.State<?, ?>> (
             BlockPos chest,
             PartPos writer,
             List<PartPos> interfaces,
-            List<PartTypeInterfaceCrafting.State> interfaceStates,
+            List<T> interfaceStates,
             List<Consumer<Triple<Integer, RecipeType<?>, ResourceLocation>>> interfaceRecipeAdders
-    ){}
+    ) implements INetworkPositions<T> {}
+
+    public static interface INetworkPositions<T extends PartTypeInterfaceCraftingBase.State<?, ?>> {
+        public BlockPos chest();
+        public PartPos writer();
+        public List<PartPos> interfaces();
+        public List<T> interfaceStates();
+        public List<Consumer<Triple<Integer, RecipeType<?>, ResourceLocation>>> interfaceRecipeAdders();
+    }
 
 }

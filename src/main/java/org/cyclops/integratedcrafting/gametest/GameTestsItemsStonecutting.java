@@ -14,6 +14,7 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.integratedcrafting.Reference;
+import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
 import org.cyclops.integrateddynamics.api.part.PartPos;
@@ -33,7 +34,7 @@ public class GameTestsItemsStonecutting {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsStonecuttingCopperGrate(GameTestHelper helper) {
-        NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.STONECUTTER);
+        INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.STONECUTTER);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
