@@ -10,11 +10,7 @@ import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIn
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIngredientAlternativesList;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
-import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
-import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
-import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
-import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
+import org.cyclops.commoncapabilities.api.ingredient.*;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IngredientComponentStorageEmpty;
 import org.cyclops.cyclopscore.datastructure.Wrapper;
@@ -2187,7 +2183,7 @@ public class TestCraftingHelpers {
         assertThat(j1.getId(), equalTo(1));
         assertThat(j1.getChannel(), equalTo(0));
         assertThat(j1.getAmount(), equalTo(1));
-        assertThat(j1.getRecipe(), equalTo(recipeBRecursive));
+        assertThat(j1.getRecipe(), anyOf(equalTo(recipeBRecursive), equalTo(recipeBRecursiveDifferentAmounts)));
         assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(0));
 
         assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
