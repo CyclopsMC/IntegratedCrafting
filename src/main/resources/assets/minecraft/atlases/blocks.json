@@ -8,7 +8,9 @@
   { "type": "minecraft:single", "resource": "integratedcrafting:aspect/read/list/network/craftingjobs" },
   { "type": "minecraft:single", "resource": "integratedcrafting:part/crafting_writer_front_error" },
   { "type": "minecraft:single", "resource": "integratedcrafting:part/crafting_writer_front_active" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:part/interface_crafting_attuned_error" },
   { "type": "minecraft:single", "resource": "integratedcrafting:part/crafting_writer_front_inactive" },
   { "type": "minecraft:single", "resource": "integratedcrafting:part/interface_crafting" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:part/interface_crafting_attuned" },
   { "type": "minecraft:single", "resource": "integratedcrafting:part/crafting_writer_back" }
 ]}

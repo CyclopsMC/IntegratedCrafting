@@ -32,6 +32,8 @@ public class GeneralConfig extends DummyConfig {
     public static int craftingWriterBaseConsumption = 1;
     @ConfigurableProperty(category = "general", comment = "The base energy usage for the crafting interface per crafting job being processed.", minimalValue = 0, configLocation = ModConfig.Type.SERVER)
     public static int interfaceCraftingBaseConsumption = 5;
+    @ConfigurableProperty(category = "general", comment = "The base energy usage for the attuned crafting interface per crafting job being processed.", minimalValue = 0, configLocation = ModConfig.Type.SERVER)
+    public static int interfaceCraftingAttunedBaseConsumption = 10;
 
     @ConfigurableProperty(category = "machine", comment = "Enabling this option will log all recipe validation failures in crafting interfaces into the server logs", isCommandable = true, configLocation = ModConfig.Type.SERVER)
     public static boolean logRecipeValidationFailures = true;

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " E ",
+    "ICI",
+    " E "
+  ],
+  "key": {
+    "I": {
+      "item": "integratedcrafting:part_interface_crafting"
+    },
+    "C": {
+      "item": "integrateddynamics:crystalized_chorus_block"
+    },
+    "E": {
+      "tag": "forge:gems/emerald"
+    }
+  },
+  "result": {
+    "item": "integratedcrafting:part_interface_crafting_attuned"
+  }
+}
