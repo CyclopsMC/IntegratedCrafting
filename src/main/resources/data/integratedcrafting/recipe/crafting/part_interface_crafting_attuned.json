@@ -13,10 +13,10 @@
       "item": "integrateddynamics:crystalized_chorus_block"
     },
     "E": {
-      "tag": "forge:gems/emerald"
+      "tag": "c:gems/emerald"
     }
   },
   "result": {
-    "item": "integratedcrafting:part_interface_crafting_attuned"
+    "id": "integratedcrafting:part_interface_crafting_attuned"
   }
 }
