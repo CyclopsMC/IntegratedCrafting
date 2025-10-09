@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.cyclopscore.gametest.GameTest;
 import org.cyclops.integratedcrafting.Reference;
+import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
 import org.cyclops.integrateddynamics.api.part.PartPos;
@@ -30,7 +31,7 @@ public class GameTestsItemsSmithing {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsSmithBoots(GameTestHelper helper) {
-        NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.SMITHING_TABLE);
+        INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.SMITHING_TABLE);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);

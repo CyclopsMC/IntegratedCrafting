@@ -26,6 +26,8 @@ import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.cyclopscore.gametest.GameTest;
 import org.cyclops.integratedcrafting.Reference;
+import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
+import org.cyclops.integratedcrafting.part.PartTypeInterfaceCraftingAttuned;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspectWriteBuilders;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
@@ -55,7 +57,7 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftChestOne(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
@@ -92,7 +94,7 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftChestAll(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
@@ -132,7 +134,7 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftIronIngot(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
@@ -157,7 +159,7 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftIronIngotRecipeWithEmptySpaces(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
@@ -203,7 +205,7 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftChestFromLogs(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
@@ -230,7 +232,7 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftIronIngotsParallel(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE);
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
@@ -269,7 +271,7 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftIronIngotsParallelMultipleNonBlocking(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE);
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
@@ -315,7 +317,7 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftCrafterComplex(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE);
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
@@ -356,7 +358,7 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftPlanksAndExtractFromStorage(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
@@ -389,7 +391,7 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftDeadBushTag(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
@@ -430,7 +432,7 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftDeadBushTagReusable(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS);
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
@@ -466,7 +468,7 @@ public class GameTestsItemsCraft {
         });
     }
 
-    protected static void createDeadBushTagReusableRecipe(GameTestHelper helper, GameTestHelpersIntegratedCrafting.NetworkPositions positions) {
+    protected static void createDeadBushTagReusableRecipe(GameTestHelper helper, GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions) {
         // Add dead bush recipe with reusable shears to crafting interface
         Map<IngredientComponent<?, ?>, List<IPrototypedIngredientAlternatives<?, ?>>> recipeIn = Maps.newIdentityHashMap();
         List<IPrototypedIngredientAlternatives<?, ?>> alternatives = Lists.newArrayList();
@@ -485,7 +487,7 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftDeadBushTagReusableAsDependency(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE, Blocks.CRAFTING_TABLE);
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE, Blocks.CRAFTING_TABLE);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
@@ -544,7 +546,7 @@ public class GameTestsItemsCraft {
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftCraftingTablesWithExistingPlank(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.NetworkPositions positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE);
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE);
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
@@ -578,6 +580,44 @@ public class GameTestsItemsCraft {
                 helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.OAK_PLANKS, Component.literal("Slot 1 item is incorrect"));
                 helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, Component.literal("Slot 1 amount is incorrect"));
             }
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftAttunedIronShovel(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingAttuned.State> positions = createBasicNetwork(helper, POS, true, Blocks.CRAFTING_TABLE, Blocks.FURNACE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
+        chestIn.setItem(0, new ItemStack(Items.IRON_ORE, 64));
+        chestIn.setItem(1, new ItemStack(Items.OAK_LOG, 64));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_SHOVEL));
+
+        helper.succeedWhen(() -> {
+            // Check crafting writer state
+            IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)).getState();
+            helper.assertFalse(partStateWriter.isDeactivated(), Component.literal("Importer is deactivated"));
+            helper.assertValueEqual(
+                    PartTypes.CRAFTING_WRITER.getBlockState(PartHelpers.getPartContainerChecked(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)), Direction.NORTH).getValue(IgnoredBlockStatus.STATUS),
+                    IgnoredBlockStatus.Status.ACTIVE,
+                    Component.literal("Block status is incorrect")
+            );
+            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, Component.literal("Active aspect is incorrect"));
+            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), Component.literal("Active aspect has errors"));
+
+            // Check if items have been crafted
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_ORE, Component.literal("Slot 0 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 63, Component.literal("Slot 0 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.OAK_LOG, Component.literal("Slot 1 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 63, Component.literal("Slot 1 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(2).getItem(), Items.OAK_PLANKS, Component.literal("Slot 2 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(2).getCount(), 2, Component.literal("Slot 2 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(3).getItem(), Items.STICK, Component.literal("Slot 3 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(3).getCount(), 2, Component.literal("Slot 3 amount is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(4).getItem(), Items.IRON_SHOVEL, Component.literal("Slot 4 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(4).getCount(), 1, Component.literal("Slot 4 amount is incorrect"));
         });
     }
 

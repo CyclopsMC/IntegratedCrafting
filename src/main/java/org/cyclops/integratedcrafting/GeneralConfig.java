@@ -12,12 +12,6 @@ import org.cyclops.cyclopscore.init.IModBase;
  */
 public class GeneralConfig extends DummyConfigCommon<IModBase> {
 
-    @ConfigurablePropertyCommon(category = "core", comment = "If an anonymous mod startup analytics request may be sent to our analytics service.")
-    public static boolean analytics = true;
-
-    @ConfigurablePropertyCommon(category = "core", comment = "If the version checker should be enabled.")
-    public static boolean versionChecker = true;
-
     @ConfigurablePropertyCommon(category = "machine", comment = "The minimal update frequency in ticks to use for crafting interfaces.", minimalValue = 1, configLocation = ModConfigLocation.SERVER)
     public static int minCraftingInterfaceUpdateFreq = 1;
 
@@ -31,6 +25,8 @@ public class GeneralConfig extends DummyConfigCommon<IModBase> {
     public static int craftingWriterBaseConsumption = 1;
     @ConfigurablePropertyCommon(category = "general", comment = "The base energy usage for the crafting interface per crafting job being processed.", minimalValue = 0, configLocation = ModConfigLocation.SERVER)
     public static int interfaceCraftingBaseConsumption = 5;
+    @ConfigurablePropertyCommon(category = "general", comment = "The base energy usage for the attuned crafting interface per crafting job being processed.", minimalValue = 0, configLocation = ModConfigLocation.SERVER)
+    public static int interfaceCraftingAttunedBaseConsumption = 10;
 
     @ConfigurablePropertyCommon(category = "machine", comment = "Enabling this option will log all recipe validation failures in crafting interfaces into the server logs", isCommandable = true, configLocation = ModConfigLocation.SERVER)
     public static boolean logRecipeValidationFailures = true;

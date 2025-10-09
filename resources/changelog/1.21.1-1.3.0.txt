@@ -1,0 +1,8 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.26.2 or higher.
+
+Additions:
+* Add Attuned Crafting Interface: Handles crafting for all recipes exposed by the target machine.
+
+Fixes:
+* Fix recursive recipes failing complete plan calculation
