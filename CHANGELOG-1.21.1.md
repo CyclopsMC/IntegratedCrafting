@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.3.1"></a>
+## [1.21.1-1.3.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.3.0...1.21.1-1.3.1) - 2025-10-11 13:24:42
+
+
+### Fixed
+* Fix missing infobook index tag for attuned crafting interface
+
 <a name="1.21.1-1.3.0"></a>
-## [1.21.1-1.3.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.2.3...1.21.1-1.3.0) - 2025-10-07 17:32:46
+## [1.21.1-1.3.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.2.3...1.21.1-1.3.0) - 2025-10-07 17:32:46 +0200
 
 
 ### Added
