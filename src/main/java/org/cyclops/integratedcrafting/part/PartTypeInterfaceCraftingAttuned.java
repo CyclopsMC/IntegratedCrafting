@@ -133,18 +133,24 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
 
     @Override
     public void onBlockNeighborChange(INetwork network, IPartNetwork partNetwork, PartTarget target, State state, BlockGetter world, Block neighbourBlock, BlockPos neighbourBlockPos) {
-        boolean hadValidTarget = state.hasValidTarget();
-        removeTargetFromNetwork(network, target.getTarget(), state);
+        boolean isNeighbourTarget = neighbourBlockPos.equals(target.getTarget().getPos().getBlockPos());
+        boolean hadValidTarget = false;
+        if (isNeighbourTarget) {
+            hadValidTarget = state.hasValidTarget();
+            removeTargetFromNetwork(network, target.getTarget(), state);
+        }
 
         super.onBlockNeighborChange(network, partNetwork, target, state, world, neighbourBlock, neighbourBlockPos);
 
-        addTargetToNetwork(network, target, state, false);
+        if (isNeighbourTarget) {
+            addTargetToNetwork(network, target, state, false);
 
-        // Only trigger block update if really necessary.
-        state.isDirtyAndReset();
-        if (hadValidTarget != state.hasValidTarget()) {
-            state.markDirty();
-            BlockHelpers.markForUpdate(target.getCenter().getPos().getLevel(true), target.getCenter().getPos().getBlockPos());
+            // Only trigger block update if really necessary.
+            state.isDirtyAndReset();
+            if (hadValidTarget != state.hasValidTarget()) {
+                state.markDirty();
+                BlockHelpers.markForUpdate(target.getCenter().getPos().getLevel(true), target.getCenter().getPos().getBlockPos());
+            }
         }
     }
 
