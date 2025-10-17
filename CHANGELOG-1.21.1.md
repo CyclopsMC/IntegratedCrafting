@@ -1,8 +1,29 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.3.2"></a>
+## [1.21.1-1.3.2](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.3.1...1.21.1-1.3.2) - 2025-10-17 15:17:42
+
+
+### Added
+* Add translations through Crowdin (#155)
+
+### Changed
+* Avoid unnecessary recipe re-indexing for attuned crafting interfaces
+  Related to CyclopsMC/IntegratedCrafting#156
+
+### Fixed
+* Fix grammar in infobook (#154)
+
+<a name="1.21.1-1.3.1"></a>
+## [1.21.1-1.3.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.3.0...1.21.1-1.3.1) - 2025-10-11 13:24:42 +0200
+
+
+### Fixed
+* Fix missing infobook index tag for attuned crafting interface
+
 <a name="1.21.1-1.3.0"></a>
-## [1.21.1-1.3.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.2.3...1.21.1-1.3.0) - 2025-10-07 17:32:46
+## [1.21.1-1.3.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.2.3...1.21.1-1.3.0) - 2025-10-07 17:32:46 +0200
 
 
 ### Added

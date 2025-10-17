@@ -132,20 +132,27 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
     }
 
     @Override
-    public void onBlockNeighborChange(INetwork network, IPartNetwork partNetwork, PartTarget target, State state,
-                                      BlockGetter world) {
-        boolean hadValidTarget = state.hasValidTarget();
-        removeTargetFromNetwork(network, target.getTarget(), state);
+    public void onBlockNeighborChange(INetwork network, IPartNetwork partNetwork, PartTarget target, State state, BlockGetter world, @Nullable Direction side) {
+        boolean isNeighbourTarget = side == null || target.getCenter().getPos().getBlockPos().relative(side).equals(target.getTarget().getPos().getBlockPos());
+        System.out.println(side);
+        System.out.println("IS NEIGJBOYR TARGET? " + isNeighbourTarget);
+        boolean hadValidTarget = false;
+        if (isNeighbourTarget) {
+            hadValidTarget = state.hasValidTarget();
+            removeTargetFromNetwork(network, target.getTarget(), state);
+        }
 
-        super.onBlockNeighborChange(network, partNetwork, target, state, world);
+        super.onBlockNeighborChange(network, partNetwork, target, state, world, side);
 
-        addTargetToNetwork(network, target, state, false);
+        if (isNeighbourTarget) {
+            addTargetToNetwork(network, target, state, false);
 
-        // Only trigger block update if really necessary.
-        state.isDirtyAndReset();
-        if (hadValidTarget != state.hasValidTarget()) {
-            state.markDirty();
-            IModHelpers.get().getBlockHelpers().markForUpdate(target.getCenter().getPos().getLevel(true), target.getCenter().getPos().getBlockPos());
+            // Only trigger block update if really necessary.
+            state.isDirtyAndReset();
+            if (hadValidTarget != state.hasValidTarget()) {
+                state.markDirty();
+                IModHelpers.get().getBlockHelpers().markForUpdate(target.getCenter().getPos().getLevel(true), target.getCenter().getPos().getBlockPos());
+            }
         }
     }
 
