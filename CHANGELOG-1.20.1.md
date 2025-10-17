@@ -1,8 +1,19 @@
 # Changelog for Minecraft 1.20.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.20.1-1.3.1"></a>
+## [1.20.1-1.3.1](/compare/1.20.1-1.3.0...1.20.1-1.3.1) - 2025-10-17 15:12:49
+
+
+### Changed
+* Avoid unnecessary recipe re-indexing for attuned crafting interfaces
+  Related to CyclopsMC/IntegratedCrafting#156
+
+### Fixed
+* Fix grammar in infobook (#154)
+
 <a name="1.20.1-1.3.0"></a>
-## [1.20.1-1.3.0](/compare/1.20.1-1.2.3...1.20.1-1.3.0) - 2025-10-07 17:32:11
+## [1.20.1-1.3.0](/compare/1.20.1-1.2.3...1.20.1-1.3.0) - 2025-10-07 17:32:11 +0200
 
 
 ### Added
