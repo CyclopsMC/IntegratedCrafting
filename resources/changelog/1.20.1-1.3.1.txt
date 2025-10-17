@@ -1,0 +1,9 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.18.4 or higher.
+
+Changes:
+* Avoid unnecessary recipe re-indexing for attuned crafting interfaces
+  Related to CyclopsMC/IntegratedCrafting#156
+
+Fixes:
+* Fix grammar in infobook (#154)
