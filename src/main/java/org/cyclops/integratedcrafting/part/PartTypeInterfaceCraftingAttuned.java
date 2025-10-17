@@ -134,8 +134,6 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
     @Override
     public void onBlockNeighborChange(INetwork network, IPartNetwork partNetwork, PartTarget target, State state, BlockGetter world, @Nullable Direction side) {
         boolean isNeighbourTarget = side == null || target.getCenter().getPos().getBlockPos().relative(side).equals(target.getTarget().getPos().getBlockPos());
-        System.out.println(side);
-        System.out.println("IS NEIGJBOYR TARGET? " + isNeighbourTarget);
         boolean hadValidTarget = false;
         if (isNeighbourTarget) {
             hadValidTarget = state.hasValidTarget();
