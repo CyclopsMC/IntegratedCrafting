@@ -449,8 +449,8 @@ public class CraftingJobHandler {
             for (Int2IntMap.Entry entry : this.nonBlockingJobsRunningAmount.int2IntEntrySet()) {
                 int craftingJobId = entry.getIntKey();
                 int runningAmount = entry.getIntValue();
-                CraftingJob craftingJob = this.allCraftingJobs.get(craftingJobId);
-                if (runningAmount > 0 && runningAmount < craftingJob.getAmount()) {
+                CraftingJob craftingJob = this.allCraftingJobs.get(craftingJobId); // Could be null, but not sure why: CyclopsMC/IntegratedCrafting#161
+                if (runningAmount > 0 && craftingJob != null && runningAmount < craftingJob.getAmount()) {
                     insertLoopNonBlocking(network, channel, targetPos, craftingJob);
                 }
             }
