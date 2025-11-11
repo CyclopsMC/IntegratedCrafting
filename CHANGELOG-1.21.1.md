@@ -1,8 +1,16 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.3.3"></a>
+## [1.21.1-1.3.3](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.3.2...1.21.1-1.3.3) - 2025-11-11 15:35:08
+
+
+### Fixed
+* Fix incompatibility with Visual Workbench, Closes #163
+* Fix crash when crafting job is null, Closes #161
+
 <a name="1.21.1-1.3.2"></a>
-## [1.21.1-1.3.2](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.3.1...1.21.1-1.3.2) - 2025-10-17 15:17:42
+## [1.21.1-1.3.2](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.3.1...1.21.1-1.3.2) - 2025-10-17 15:17:42 +0200
 
 
 ### Added

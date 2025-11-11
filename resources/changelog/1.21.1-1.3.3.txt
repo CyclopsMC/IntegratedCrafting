@@ -1,0 +1,6 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.26.2 or higher.
+
+Fixes:
+* Fix incompatibility with Visual Workbench, Closes #163
+* Fix crash when crafting job is null, Closes #161
