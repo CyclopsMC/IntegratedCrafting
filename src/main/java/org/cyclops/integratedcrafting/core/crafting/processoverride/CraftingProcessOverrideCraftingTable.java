@@ -8,7 +8,7 @@ import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.CraftingTableBlock;
+import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.event.EventHooks;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
@@ -45,7 +45,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
 
     @Override
     public boolean isApplicable(PartPos target) {
-        return target.getPos().getLevel(true).getBlockState(target.getPos().getBlockPos()).getBlock() instanceof CraftingTableBlock;
+        return target.getPos().getLevel(true).getBlockState(target.getPos().getBlockPos()).is(Tags.Blocks.PLAYER_WORKSTATIONS_CRAFTING_TABLES);
     }
 
     @Override
