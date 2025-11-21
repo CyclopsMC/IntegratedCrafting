@@ -11,6 +11,7 @@ import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponen
 import org.cyclops.cyclopscore.datastructure.Wrapper;
 import org.cyclops.cyclopscore.ingredient.collection.IIngredientCollectionMutable;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
+import org.cyclops.cyclopscore.ingredient.collection.IngredientHashSet;
 import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageCollectionWrapper;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
@@ -160,11 +161,11 @@ public class TestCaseJobCalculationBronzeDrillHead {
         assertThat(craftingJobDependencyGraph.getDependents(jobMain).size(), equalTo(0));
 
         IMixedIngredients fullStorage = RecipeHelpers.collectIngredientStoragesDependencies(craftingJobDependencyGraph, jobMain);
-        assertThat(fullStorage.getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+        assertThat(new IngredientHashSet<>(IngredientComponentStubs.COMPLEX, fullStorage.getInstances(IngredientComponentStubs.COMPLEX)), equalTo(new IngredientHashSet<>(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
                 C_TIN_DUST.withAmount(2),
                 C_COPPER_DUST.withAmount(6),
                 C_DUST.withAmount(10) // This is 10 instead of 8, because we have a surplus of 2 that is used by other sub-jobs.
-        )));
+        ))));
     }
 
 
