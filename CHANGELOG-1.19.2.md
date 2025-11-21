@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.19.2
 All notable changes to this project will be documented in this file.
 
+<a name="1.19.2-1.1.14"></a>
+## [1.19.2-1.1.14](/compare/1.19.2-1.1.13...1.19.2-1.1.14) - 2025-11-21 19:50:26
+
+
+### Changed
+* Use classified ingredient maps to optimize recipe index, Closes #160
+
 <a name="1.19.2-1.1.13"></a>
-## [1.19.2-1.1.13](/compare/1.19.2-1.1.12...1.19.2-1.1.13) - 2025-11-11 15:33:33
+## [1.19.2-1.1.13](/compare/1.19.2-1.1.12...1.19.2-1.1.13) - 2025-11-12 05:58:04 +0100
 
 
 ### Fixed
