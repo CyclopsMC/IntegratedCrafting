@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.20.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.20.1-1.3.3"></a>
+## [1.20.1-1.3.3](/compare/1.20.1-1.3.2...1.20.1-1.3.3) - 2025-11-21 19:51:37
+
+
+### Changed
+* Use classified ingredient maps to optimize recipe index, Closes #160
+
 <a name="1.20.1-1.3.2"></a>
-## [1.20.1-1.3.2](/compare/1.20.1-1.3.1...1.20.1-1.3.2) - 2025-11-11 15:34:25
+## [1.20.1-1.3.2](/compare/1.20.1-1.3.1...1.20.1-1.3.2) - 2025-11-11 15:34:25 +0100
 
 
 ### Fixed

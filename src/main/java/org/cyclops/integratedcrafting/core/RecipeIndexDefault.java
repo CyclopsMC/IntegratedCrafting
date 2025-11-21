@@ -9,6 +9,7 @@ import org.cyclops.cyclopscore.datastructure.DistinctIterator;
 import org.cyclops.cyclopscore.datastructure.MultitransformIterator;
 import org.cyclops.cyclopscore.ingredient.collection.IIngredientMapMutable;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientHashMap;
+import org.cyclops.cyclopscore.ingredient.collection.IngredientMapSingleClassified;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndexModifiable;
 
@@ -50,7 +51,11 @@ public class RecipeIndexDefault implements IRecipeIndexModifiable {
 
     @Nullable
     protected <T, M> IIngredientMapMutable<T, M, Set<IRecipeDefinition>> initializeIndex(IngredientComponent<T, M> recipeComponent) {
-        return new IngredientHashMap<>(recipeComponent);
+        // TODO: Consider moving/copying this logic to IngredientCollectionHelpers in next/major
+        if (recipeComponent.getCategoryTypes().size() == 1) {
+            return new IngredientHashMap<>(recipeComponent);
+        }
+        return new IngredientMapSingleClassified<>(recipeComponent, () -> new IngredientHashMap<>(recipeComponent), recipeComponent.getCategoryTypes().get(0));
     }
 
     @Override
