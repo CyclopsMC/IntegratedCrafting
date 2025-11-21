@@ -1,0 +1,8 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.26.2 or higher.
+
+Additions:
+* Add translations through Crowdin (#159)
+
+Changes:
+* Use classified ingredient maps to optimize recipe index, Closes #160
