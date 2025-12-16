@@ -3,6 +3,9 @@ package org.cyclops.integratedcrafting.client.gui;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -133,45 +136,45 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     }
 
     @Override
-    public boolean charTyped(char typedChar, int keyCode) {
-        if (!this.numberFieldChannelInterfaceCrafting.charTyped(typedChar, keyCode)
-                && !this.dropdownFieldSide.charTyped(typedChar, keyCode)) {
-            return super.charTyped(typedChar, keyCode);
+    public boolean charTyped(CharacterEvent evt) {
+        if (!this.numberFieldChannelInterfaceCrafting.charTyped(evt)
+                && !this.dropdownFieldSide.charTyped(evt)) {
+            return super.charTyped(evt);
         }
         return true;
     }
 
     @Override
-    public boolean keyPressed(int typedChar, int keyCode, int modifiers) {
-        if (typedChar != GLFW.GLFW_KEY_ESCAPE) {
-            if (this.numberFieldChannelInterfaceCrafting.keyPressed(typedChar, keyCode, modifiers)) {
+    public boolean keyPressed(KeyEvent evt) {
+        if (evt.key() != GLFW.GLFW_KEY_ESCAPE) {
+            if (this.numberFieldChannelInterfaceCrafting.keyPressed(evt)) {
                 return true;
             }
-            if (this.dropdownFieldSide.keyPressed(typedChar, keyCode, modifiers)) {
+            if (this.dropdownFieldSide.keyPressed(evt)) {
                 return true;
             }
         }
-        return super.keyPressed(typedChar, keyCode, modifiers);
+        return super.keyPressed(evt);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
-        if (this.ingredientComponentSideSelector.mouseClicked(mouseX, mouseY, mouseButton)) {
+    public boolean mouseClicked(MouseButtonEvent mouse, boolean isDoubleClick) {
+        if (this.ingredientComponentSideSelector.mouseClicked(mouse, isDoubleClick)) {
             return true;
         }
-        if (this.dropdownFieldSide.mouseClicked(mouseX, mouseY, mouseButton)) {
+        if (this.dropdownFieldSide.mouseClicked(mouse, isDoubleClick)) {
             return true;
         }
-        if (this.numberFieldChannelInterfaceCrafting.mouseClicked(mouseX, mouseY, mouseButton)) {
+        if (this.numberFieldChannelInterfaceCrafting.mouseClicked(mouse, isDoubleClick)) {
             return true;
         }
-        if (this.checkboxFieldDisabledCraftingCheck.mouseClicked(mouseX, mouseY, mouseButton)) {
+        if (this.checkboxFieldDisabledCraftingCheck.mouseClicked(mouse, isDoubleClick)) {
             return true;
         }
-        if (this.checkboxFieldBlockingMode.mouseClicked(mouseX, mouseY, mouseButton)) {
+        if (this.checkboxFieldBlockingMode.mouseClicked(mouse, isDoubleClick)) {
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, mouseButton);
+        return super.mouseClicked(mouse, isDoubleClick);
     }
 
     @Override

@@ -18,15 +18,15 @@ import org.cyclops.integratedcrafting.api.crafting.RecursiveCraftingRecipeExcept
 import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeException;
 import org.cyclops.integratedcrafting.ingredient.ComplexStack;
 import org.cyclops.integratedcrafting.ingredient.IngredientComponentStubs;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * This corresponds to the crafting recipe of the redstone comparator with a single redstone block.
@@ -54,7 +54,7 @@ public class TestCaseJobCalculationRedstoneComparator {
     private CraftingJobDependencyGraph craftingJobDependencyGraph;
     private Set<IPrototypedIngredient> parentDependencies;
 
-    @Before
+    @BeforeEach
     public void beforeEach() {
         recipeIndex = new RecipeIndexDefault();
 

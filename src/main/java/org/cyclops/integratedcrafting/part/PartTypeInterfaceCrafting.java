@@ -396,7 +396,7 @@ public class PartTypeInterfaceCrafting extends PartTypeInterfaceCraftingBase<Par
             }
 
             // Recalculate recipes
-            if (getTarget() != null && !getTarget().getCenter().getPos().getLevel(true).isClientSide) {
+            if (getTarget() != null && !getTarget().getCenter().getPos().getLevel(true).isClientSide()) {
                 reloadRecipes(false);
             }
 

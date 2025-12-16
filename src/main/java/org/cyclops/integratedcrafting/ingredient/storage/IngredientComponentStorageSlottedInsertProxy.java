@@ -1,6 +1,7 @@
 package org.cyclops.integratedcrafting.ingredient.storage;
 
 import com.google.common.collect.Iterators;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorageSlotted;
@@ -40,12 +41,12 @@ public class IngredientComponentStorageSlottedInsertProxy<T, M> implements IIngr
     }
 
     @Override
-    public T insert(int slot, @Nonnull T instance, boolean simulate) {
-        return storage.insert(instance, simulate);
+    public T insert(int slot, @Nonnull T instance, TransactionContext transaction) {
+        return storage.insert(instance, transaction);
     }
 
     @Override
-    public T extract(int slot, long quantity, boolean simulate) {
+    public T extract(int slot, long quantity, TransactionContext transaction) {
         return getComponent().getMatcher().getEmptyInstance();
     }
 
@@ -70,17 +71,17 @@ public class IngredientComponentStorageSlottedInsertProxy<T, M> implements IIngr
     }
 
     @Override
-    public T insert(@Nonnull T instance, boolean simulate) {
-        return storage.insert(instance, simulate);
+    public T insert(@Nonnull T instance, TransactionContext transaction) {
+        return storage.insert(instance, transaction);
     }
 
     @Override
-    public T extract(@Nonnull T instance, M matchCondition, boolean simulate) {
+    public T extract(@Nonnull T instance, M matchCondition, TransactionContext transaction) {
         return getComponent().getMatcher().getEmptyInstance();
     }
 
     @Override
-    public T extract(long quantity, boolean simulate) {
+    public T extract(long quantity, TransactionContext transaction) {
         return getComponent().getMatcher().getEmptyInstance();
     }
 }

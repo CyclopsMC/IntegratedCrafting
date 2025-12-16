@@ -21,6 +21,11 @@ public class IngredientMatcherComplex implements IIngredientMatcher<ComplexStack
     }
 
     @Override
+    public Integer getQuantityMatchCondition() {
+        return ComplexStack.Match.AMOUNT;
+    }
+
+    @Override
     public Integer getExactMatchNoQuantityCondition() {
         return ComplexStack.Match.GROUP | ComplexStack.Match.META | ComplexStack.Match.TAG;
     }
@@ -48,6 +53,11 @@ public class IngredientMatcherComplex implements IIngredientMatcher<ComplexStack
     @Override
     public ComplexStack getEmptyInstance() {
         return null;
+    }
+
+    @Override
+    public ComplexStack getNonEmptyInstance() {
+        return new ComplexStack(ComplexStack.Group.A, 1, 1, ComplexStack.Tag.A);
     }
 
     @Override

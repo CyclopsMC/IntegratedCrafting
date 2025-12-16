@@ -4,7 +4,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
@@ -53,20 +55,34 @@ public class CraftingProcessOverrideBrewingStand implements ICraftingProcessOver
         // Insert the ingredients into the target
         return getTile(targetGetter.apply(IngredientComponent.ITEMSTACK))
                 .map(tile -> {
-                    IItemHandler ingredientHandler = tile.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, tile.getBlockPos(), tile.getBlockState(), tile, SIDE_INGREDIENT);
-                    IItemHandler bottleHandler = tile.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, tile.getBlockPos(), tile.getBlockState(), tile, SIDE_BOTTLE);
+                    ResourceHandler<ItemResource> ingredientHandler = tile.getLevel().getCapability(Capabilities.Item.BLOCK, tile.getBlockPos(), tile.getBlockState(), tile, SIDE_INGREDIENT);
+                    ResourceHandler<ItemResource> bottleHandler = tile.getLevel().getCapability(Capabilities.Item.BLOCK, tile.getBlockPos(), tile.getBlockState(), tile, SIDE_BOTTLE);
                     if (ingredientHandler != null && bottleHandler != null) {
                         int ingredientSlotIndex = 0;
                         int bottleSlotIndex = 0;
                         for (ItemStack instance : instances) {
                             if (tile.getLevel().potionBrewing().isIngredient(instance)) {
                                 // The instance is for the ingredient slot
-                                if (!ingredientHandler.insertItem(ingredientSlotIndex++, instance, simulate).isEmpty()) {
+                                int inserted;
+                                try (var tx = Transaction.openRoot()) {
+                                    inserted = ingredientHandler.insert(ingredientSlotIndex++, ItemResource.of(instance), instance.getCount(), tx);
+                                    if (!simulate) {
+                                        tx.commit();
+                                    }
+                                }
+                                if (inserted == 0) {
                                     return false;
                                 }
                             } else {
                                 // The instance is for one of the bottle slots
-                                if (!bottleHandler.insertItem(bottleSlotIndex++, instance, simulate).isEmpty()) {
+                                int inserted;
+                                try (var tx = Transaction.openRoot()) {
+                                    inserted = bottleHandler.insert(bottleSlotIndex++, ItemResource.of(instance), instance.getCount(), tx);
+                                    if (!simulate) {
+                                        tx.commit();
+                                    }
+                                }
+                                if (inserted == 0) {
                                     return false;
                                 }
                             }

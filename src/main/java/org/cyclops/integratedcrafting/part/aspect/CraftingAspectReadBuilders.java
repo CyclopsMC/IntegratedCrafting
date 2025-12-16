@@ -3,7 +3,7 @@ package org.cyclops.integratedcrafting.part.aspect;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cyclops.cyclopscore.datastructure.DimPos;
 import org.cyclops.integratedcrafting.Capabilities;
-import org.cyclops.integratedcrafting.IntegratedCrafting;
+import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
@@ -31,7 +31,7 @@ public class CraftingAspectReadBuilders {
 
         public static final AspectBuilder<ValueTypeList.ValueList, ValueTypeList, Pair<IAspectProperties, Optional<ICraftingNetwork>>>
                 BUILDER_LIST = AspectReadBuilders.BUILDER_LIST
-                .byMod(IntegratedCrafting._instance)
+                .byMod(Reference.MOD_ID)
                 .withProperties(AspectReadBuilders.Network.PROPERTIES)
                 .handle(PROP_GET_CRAFTING_NETWORK, "network");
 

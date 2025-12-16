@@ -20,6 +20,11 @@ public class IngredientMatcherSimple implements IIngredientMatcher<Long, Boolean
     }
 
     @Override
+    public Boolean getQuantityMatchCondition() {
+        return true;
+    }
+
+    @Override
     public Boolean getExactMatchNoQuantityCondition() {
         return false;
     }
@@ -47,6 +52,11 @@ public class IngredientMatcherSimple implements IIngredientMatcher<Long, Boolean
     @Override
     public Long getEmptyInstance() {
         return 0L;
+    }
+
+    @Override
+    public Long getNonEmptyInstance() {
+        return 1L;
     }
 
     @Override

@@ -8,14 +8,14 @@ import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinit
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.integratedcrafting.ingredient.IngredientComponentStubs;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author rubensworks
@@ -30,7 +30,7 @@ public class TestCraftingJobDependencyGraph {
 
     private CraftingJobDependencyGraph g;
 
-    @Before
+    @BeforeEach
     public void beforeEach() {
         J0 = new CraftingJob(0, 0, null, 1, new MixedIngredients(Maps.newIdentityHashMap()));
         J1 = new CraftingJob(1, 0, null, 1, new MixedIngredients(Maps.newIdentityHashMap()));

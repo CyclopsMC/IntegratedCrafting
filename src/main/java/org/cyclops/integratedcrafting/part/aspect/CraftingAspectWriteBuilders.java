@@ -7,7 +7,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.integratedcrafting.IntegratedCrafting;
+import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.part.PartTypeCraftingWriter;
@@ -72,16 +72,16 @@ public class CraftingAspectWriteBuilders {
             BUILDER_LONG_BASE = AspectWriteBuilders.getValue(AspectBuilder.forWriteType(ValueTypes.LONG));
 
     public static final AspectBuilder<ValueObjectTypeRecipe.ValueRecipe, ValueObjectTypeRecipe, Triple<PartTarget, IAspectProperties, IRecipeDefinition>>
-            BUILDER_RECIPE = AspectWriteBuilders.BUILDER_RECIPE.byMod(IntegratedCrafting._instance)
+            BUILDER_RECIPE = AspectWriteBuilders.BUILDER_RECIPE.byMod(Reference.MOD_ID)
             .appendKind("craft").handle(AspectWriteBuilders.PROP_GET_RECIPE);
     public static final AspectBuilder<ValueObjectTypeItemStack.ValueItemStack, ValueObjectTypeItemStack, Triple<PartTarget, IAspectProperties, ItemStack>>
-            BUILDER_ITEMSTACK = AspectWriteBuilders.BUILDER_ITEMSTACK.byMod(IntegratedCrafting._instance)
+            BUILDER_ITEMSTACK = AspectWriteBuilders.BUILDER_ITEMSTACK.byMod(Reference.MOD_ID)
             .appendKind("craft").handle(AspectWriteBuilders.PROP_GET_ITEMSTACK);
     public static final AspectBuilder<ValueObjectTypeFluidStack.ValueFluidStack, ValueObjectTypeFluidStack, Triple<PartTarget, IAspectProperties, FluidStack>>
-            BUILDER_FLUIDSTACK = AspectWriteBuilders.BUILDER_FLUIDSTACK.byMod(IntegratedCrafting._instance)
+            BUILDER_FLUIDSTACK = AspectWriteBuilders.BUILDER_FLUIDSTACK.byMod(Reference.MOD_ID)
             .appendKind("craft").handle(AspectWriteBuilders.PROP_GET_FLUIDSTACK);
     public static final AspectBuilder<ValueTypeLong.ValueLong, ValueTypeLong, Triple<PartTarget, IAspectProperties, Long>>
-            BUILDER_LONG = BUILDER_LONG_BASE.byMod(IntegratedCrafting._instance)
+            BUILDER_LONG = BUILDER_LONG_BASE.byMod(Reference.MOD_ID)
             .appendKind("craft").handle(AspectWriteBuilders.PROP_GET_LONG);
 
     public static final IAspectValuePropagator<Triple<PartTarget, IAspectProperties, ItemStack>, CraftingJobData<ItemStack, Integer>>
