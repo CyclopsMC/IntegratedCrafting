@@ -8,12 +8,10 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.datastructure.DistinctIterator;
 import org.cyclops.cyclopscore.datastructure.MultitransformIterator;
 import org.cyclops.cyclopscore.ingredient.collection.IIngredientMapMutable;
-import org.cyclops.cyclopscore.ingredient.collection.IngredientHashMap;
-import org.cyclops.cyclopscore.ingredient.collection.IngredientMapSingleClassified;
+import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionHelpers;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndexModifiable;
 
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -49,20 +47,11 @@ public class RecipeIndexDefault implements IRecipeIndexModifiable {
                         .iterator(output, matchCondition), (entry) -> entry.getValue())), true);
     }
 
-    @Nullable
-    protected <T, M> IIngredientMapMutable<T, M, Set<IRecipeDefinition>> initializeIndex(IngredientComponent<T, M> recipeComponent) {
-        // TODO: Consider moving/copying this logic to IngredientCollectionHelpers in next/major
-        if (recipeComponent.getCategoryTypes().size() == 1) {
-            return new IngredientHashMap<>(recipeComponent);
-        }
-        return new IngredientMapSingleClassified<>(recipeComponent, () -> new IngredientHashMap<>(recipeComponent), recipeComponent.getCategoryTypes().get(0));
-    }
-
     @Override
     public void addRecipe(IRecipeDefinition prioritizedRecipe) {
         recipes.add(prioritizedRecipe);
         for (IngredientComponent<?, ?> recipeComponent : prioritizedRecipe.getOutput().getComponents()) {
-            IIngredientMapMutable<?, ?, Set<IRecipeDefinition>> index = recipeComponentIndexes.computeIfAbsent(recipeComponent, this::initializeIndex);
+            IIngredientMapMutable<?, ?, Set<IRecipeDefinition>> index = recipeComponentIndexes.computeIfAbsent(recipeComponent, IngredientCollectionHelpers::createCollapsedMap);
             if (index != null) {
                 addRecipeForComponent(index, prioritizedRecipe);
             }

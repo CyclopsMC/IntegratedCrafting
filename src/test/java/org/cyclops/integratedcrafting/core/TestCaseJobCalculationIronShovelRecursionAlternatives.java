@@ -41,7 +41,7 @@ public class TestCaseJobCalculationIronShovelRecursionAlternatives {
     private static final ComplexStack C_IRON_ORE = new ComplexStack(ComplexStack.Group.A, 4, 1, null);
 
     private RecipeIndexDefault recipeIndex;
-    private IRecipeDefinition recipeShovel; // TODO
+    private IRecipeDefinition recipeShovel;
     private IRecipeDefinition recipeIngotFromBlock;
     private IRecipeDefinition recipeBlockFromIngots;
     private IRecipeDefinition recipeIngotFromOre;
