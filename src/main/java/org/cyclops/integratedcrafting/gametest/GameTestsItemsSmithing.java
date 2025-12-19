@@ -4,7 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -40,7 +40,7 @@ public class GameTestsItemsSmithing {
         chestIn.setItem(2, new ItemStack(Items.NETHERITE_INGOT, 1));
 
         // Add chest recipe to crafting interface
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMITHING, ResourceLocation.fromNamespaceAndPath("minecraft", "netherite_boots_smithing")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMITHING, Identifier.fromNamespaceAndPath("minecraft", "netherite_boots_smithing")));
 
         // Enable crafting aspect in crafting writer
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.NETHERITE_BOOTS));

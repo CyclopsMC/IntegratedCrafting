@@ -7,7 +7,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -64,7 +64,7 @@ public class GameTestsItemsCraft {
         chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
 
         // Add chest recipe to crafting interface
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "chest")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "chest")));
 
         // Enable crafting aspect in crafting writer
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.CHEST));
@@ -101,7 +101,7 @@ public class GameTestsItemsCraft {
         chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
 
         // Add chest recipe to crafting interface
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "chest")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "chest")));
 
         // Enable crafting aspect in crafting writer
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.CHEST));
@@ -141,7 +141,7 @@ public class GameTestsItemsCraft {
         chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 1));
 
         // Add iron ingot recipe to furnace
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
 
         // Enable crafting aspect in crafting writer
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_INGOT));
@@ -212,8 +212,8 @@ public class GameTestsItemsCraft {
         chestIn.setItem(0, new ItemStack(Items.OAK_LOG, 2));
 
         // Add chest recipe to crafting interface
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "chest")));
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(1, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "oak_planks")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "chest")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(1, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "oak_planks")));
 
         // Enable crafting aspect in crafting writer
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.CHEST));
@@ -239,11 +239,11 @@ public class GameTestsItemsCraft {
         chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 5));
 
         // Add iron ingot recipe to furnaces
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
-        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
-        positions.interfaceRecipeAdders().get(2).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
-        positions.interfaceRecipeAdders().get(3).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
-        positions.interfaceRecipeAdders().get(4).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(2).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(3).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(4).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
 
         // Enable crafting aspect in crafting writer
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_INGOT, 5));
@@ -278,11 +278,11 @@ public class GameTestsItemsCraft {
         chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 10));
 
         // Add iron ingot recipe to furnaces
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
-        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
-        positions.interfaceRecipeAdders().get(2).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
-        positions.interfaceRecipeAdders().get(3).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
-        positions.interfaceRecipeAdders().get(4).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(2).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(3).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(4).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
 
         // Enable crafting aspect in crafting writer
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_INGOT, 10));
@@ -327,16 +327,16 @@ public class GameTestsItemsCraft {
         chestIn.setItem(3, new ItemStack(Items.COBBLESTONE, 7));
 
         // Add chest recipe to crafting interface
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "oak_planks")));
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(1, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "crafting_table")));
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(2, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "redstone")));
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(3, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "crafter")));
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(4, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "dropper")));
-        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
-        positions.interfaceRecipeAdders().get(2).accept(Triple.of(1, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
-        positions.interfaceRecipeAdders().get(3).accept(Triple.of(2, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
-        positions.interfaceRecipeAdders().get(4).accept(Triple.of(3, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
-        positions.interfaceRecipeAdders().get(5).accept(Triple.of(4, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "oak_planks")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(1, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "crafting_table")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(2, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "redstone")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(3, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "crafter")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(4, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "dropper")));
+        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(2).accept(Triple.of(1, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(3).accept(Triple.of(2, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(4).accept(Triple.of(3, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(5).accept(Triple.of(4, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
 
         // Enable crafting aspect in crafting writer
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.CRAFTER));
@@ -365,7 +365,7 @@ public class GameTestsItemsCraft {
         chestIn.setItem(0, new ItemStack(Items.OAK_LOG, 64));
 
         // Add chest recipe to crafting interface
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "oak_planks")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "oak_planks")));
 
         // Enable crafting aspect in crafting writer
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.OAK_PLANKS));
@@ -399,7 +399,7 @@ public class GameTestsItemsCraft {
         chestIn.setItem(1, new ItemStack(Items.SPRUCE_SAPLING, 10));
 
         // Add dead bush to crafting interface
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("integratedcrafting", "special/minecraft_dead_bush")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("integratedcrafting", "special/minecraft_dead_bush")));
 
         // Enable crafting aspect in crafting writer
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.DEAD_BUSH));
@@ -503,7 +503,7 @@ public class GameTestsItemsCraft {
         createDeadBushTagReusableRecipe(helper, positions);
 
         // Add dead bush to gold recipe
-        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("integratedcrafting", "special/dead_bush_to_gold")));
+        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("integratedcrafting", "special/dead_bush_to_gold")));
 
         // Speed up crafting interfaces, to craft once every tick
         GameTestHelpersIntegratedCrafting.setCraftingInterfaceUpdateInterval(positions.interfaces().get(0), 1);
@@ -554,8 +554,8 @@ public class GameTestsItemsCraft {
         chestIn.setItem(1, new ItemStack(Items.OAK_PLANKS, 1));
 
         // Add chest recipe to crafting interface
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "oak_planks")));
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(1, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "crafting_table")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "oak_planks")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(1, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "crafting_table")));
 
         // Enable crafting aspect in crafting writer
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.CRAFTING_TABLE, 2));

@@ -1,7 +1,7 @@
 package org.cyclops.integratedcrafting;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -17,12 +17,12 @@ import org.cyclops.integrateddynamics.item.ItemVariable;
  */
 public class RegistryEntries {
 
-    public static final DeferredHolder<Item, Item> ITEM_PART_INTERFACE_CRAFTING = DeferredHolder.create(Registries.ITEM, ResourceLocation.parse("integratedcrafting:part_interface_crafting"));
-    public static final DeferredHolder<Item, ItemVariable> ITEM_VARIABLE = DeferredHolder.create(Registries.ITEM, ResourceLocation.parse("integrateddynamics:variable"));
+    public static final DeferredHolder<Item, Item> ITEM_PART_INTERFACE_CRAFTING = DeferredHolder.create(Registries.ITEM, Identifier.parse("integratedcrafting:part_interface_crafting"));
+    public static final DeferredHolder<Item, ItemVariable> ITEM_VARIABLE = DeferredHolder.create(Registries.ITEM, Identifier.parse("integrateddynamics:variable"));
 
-    public static final DeferredHolder<MenuType<?>, MenuType<ContainerPartInterfaceCrafting>> CONTAINER_INTERFACE_CRAFTING = DeferredHolder.create(Registries.MENU, ResourceLocation.parse("integratedcrafting:part_interface_crafting"));
-    public static final DeferredHolder<MenuType<?>, MenuType<ContainerPartInterfaceCraftingSettings>> CONTAINER_INTERFACE_CRAFTING_SETTINGS = DeferredHolder.create(Registries.MENU, ResourceLocation.parse("integratedcrafting:part_interface_crafting_settings"));
+    public static final DeferredHolder<MenuType<?>, MenuType<ContainerPartInterfaceCrafting>> CONTAINER_INTERFACE_CRAFTING = DeferredHolder.create(Registries.MENU, Identifier.parse("integratedcrafting:part_interface_crafting"));
+    public static final DeferredHolder<MenuType<?>, MenuType<ContainerPartInterfaceCraftingSettings>> CONTAINER_INTERFACE_CRAFTING_SETTINGS = DeferredHolder.create(Registries.MENU, Identifier.parse("integratedcrafting:part_interface_crafting_settings"));
 
-    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<RecipeDeadBush>> RECIPESERIALIZER_DEAD_BUSH = DeferredHolder.create(Registries.RECIPE_SERIALIZER, ResourceLocation.parse("integratedcrafting:crafting_special_dead_bush"));
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<RecipeDeadBush>> RECIPESERIALIZER_DEAD_BUSH = DeferredHolder.create(Registries.RECIPE_SERIALIZER, Identifier.parse("integratedcrafting:crafting_special_dead_bush"));
 
 }

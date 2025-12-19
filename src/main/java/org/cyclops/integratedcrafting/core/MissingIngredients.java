@@ -2,7 +2,7 @@ package org.cyclops.integratedcrafting.core;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
@@ -77,7 +77,7 @@ public class MissingIngredients<T, M> {
         ValueInput.ValueInputList missingIngredientsTagList = valueInput.childrenList("v").orElseThrow();
         for (ValueInput input : missingIngredientsTagList) {
             String componentName = input.getString("component").orElseThrow();
-            IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(ResourceLocation.parse(componentName));
+            IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(Identifier.parse(componentName));
             if (component == null) {
                 throw new IllegalArgumentException("Could not find the ingredient component type " + componentName);
             }

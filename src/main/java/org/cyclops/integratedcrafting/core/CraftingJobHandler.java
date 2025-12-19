@@ -9,7 +9,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -144,7 +144,7 @@ public class CraftingJobHandler {
                 Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pendingIngredientInstances = Maps.newIdentityHashMap();
                 for (ValueInput pendingIngredientTag : pendingIngredientsList) {
                     String componentName = pendingIngredientTag.getString("ingredientComponent").orElseThrow();
-                    IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.getValue(ResourceLocation.parse(componentName));
+                    IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.getValue(Identifier.parse(componentName));
                     if (ingredientComponent == null) {
                         throw new IllegalArgumentException("Could not find the ingredient component type " + componentName);
                     }
@@ -190,7 +190,7 @@ public class CraftingJobHandler {
 
         this.ingredientComponentTargetOverrides.clear();
         for (ValueInput targetOverride : valueInput.childrenList("targetOverrides").orElseThrow()) {
-            IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(ResourceLocation.parse(targetOverride.getString("key").orElseThrow()));
+            IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(Identifier.parse(targetOverride.getString("key").orElseThrow()));
             this.ingredientComponentTargetOverrides.put(component, Direction.values()[targetOverride.getInt("value").orElseThrow()]);
         }
 

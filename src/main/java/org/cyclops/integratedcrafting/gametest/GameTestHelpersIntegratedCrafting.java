@@ -8,7 +8,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.recipebook.PlaceRecipeHelper;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
@@ -89,7 +89,7 @@ public class GameTestHelpersIntegratedCrafting {
         BlockPos posi = pos;
         List<PartPos> interfaces = Lists.newArrayList();
         List<T> interfaceStates = Lists.newArrayList();
-        List<Consumer<Triple<Integer, RecipeType<?>, ResourceLocation>>> interfaceRecipeAdders = Lists.newArrayList();
+        List<Consumer<Triple<Integer, RecipeType<?>, Identifier>>> interfaceRecipeAdders = Lists.newArrayList();
         for (Block crafter : crafters) {
             if (!pos.equals(posi)) {
                 helper.setBlock(posi, RegistryEntries.BLOCK_CABLE.value());
@@ -135,7 +135,7 @@ public class GameTestHelpersIntegratedCrafting {
         return new NetworkPositions(pos.east(), PartPos.of(helper.getLevel(), helper.absolutePos(pos), Direction.NORTH), interfaces, interfaceStates, interfaceRecipeAdders);
     }
 
-    public static ItemStack createVariableForRecipe(Level level, RecipeType<?> recipeType, ResourceLocation recipeName) {
+    public static ItemStack createVariableForRecipe(Level level, RecipeType<?> recipeType, Identifier recipeName) {
         RecipeHolder<?> recipeUnknown = null;
         RecipeDisplay recipeDisplay = null;
         try {
@@ -244,7 +244,7 @@ public class GameTestHelpersIntegratedCrafting {
             PartPos writer,
             List<PartPos> interfaces,
             List<T> interfaceStates,
-            List<Consumer<Triple<Integer, RecipeType<?>, ResourceLocation>>> interfaceRecipeAdders
+            List<Consumer<Triple<Integer, RecipeType<?>, Identifier>>> interfaceRecipeAdders
     ) implements INetworkPositions<T> {}
 
     public static interface INetworkPositions<T extends PartTypeInterfaceCraftingBase.State<?, ?>> {
@@ -252,7 +252,7 @@ public class GameTestHelpersIntegratedCrafting {
         public PartPos writer();
         public List<PartPos> interfaces();
         public List<T> interfaceStates();
-        public List<Consumer<Triple<Integer, RecipeType<?>, ResourceLocation>>> interfaceRecipeAdders();
+        public List<Consumer<Triple<Integer, RecipeType<?>, Identifier>>> interfaceRecipeAdders();
     }
 
 }

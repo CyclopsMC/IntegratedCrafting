@@ -4,7 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -38,7 +38,7 @@ public class GameTestsItemsStonecutting {
         chestIn.setItem(0, new ItemStack(Items.COPPER_BLOCK, 1));
 
         // Add chest recipe to crafting interface
-        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.STONECUTTING, ResourceLocation.fromNamespaceAndPath("minecraft", "copper_grate_from_copper_block_stonecutting")));
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.STONECUTTING, Identifier.fromNamespaceAndPath("minecraft", "copper_grate_from_copper_block_stonecutting")));
 
         // Enable crafting aspect in crafting writer
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.COPPER_GRATE));

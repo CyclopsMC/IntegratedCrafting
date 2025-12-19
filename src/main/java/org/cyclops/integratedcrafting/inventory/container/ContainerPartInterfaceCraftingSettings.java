@@ -5,7 +5,7 @@ import com.google.common.collect.Sets;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -43,7 +43,7 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
         super(RegistryEntries.CONTAINER_INTERFACE_CRAFTING_SETTINGS.get(), id, playerInventory, inventory, target, partContainer, partType);
         lastChannelInterfaceCraftingValueId = getNextValueId();
         targetSideOverrideValueIds = Maps.newIdentityHashMap();
-        for (ResourceLocation key : Sets.newTreeSet(IngredientComponent.REGISTRY.keySet())) { // Consistently order keys
+        for (Identifier key : Sets.newTreeSet(IngredientComponent.REGISTRY.keySet())) { // Consistently order keys
             IngredientComponent<?, ?> ingredientComponent = IngredientComponent.REGISTRY.getValue(key);
             targetSideOverrideValueIds.put(ingredientComponent, getNextValueId());
         }

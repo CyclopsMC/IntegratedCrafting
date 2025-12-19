@@ -2,7 +2,7 @@ package org.cyclops.integratedcrafting.core.part;
 
 import com.google.common.collect.Lists;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.ValueInput;
@@ -212,7 +212,7 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
             this.inventoryOutputBuffer.clear();
             for (ValueInput instanceTag : valueInput.childrenList("inventoryOutputBuffer").orElseThrow()) {
                 String componentName = instanceTag.getString("component").orElseThrow();
-                IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(ResourceLocation.parse(componentName));
+                IngredientComponent<?, ?> component = IngredientComponent.REGISTRY.getValue(Identifier.parse(componentName));
                 this.inventoryOutputBuffer.add(new IngredientInstanceWrapper(component,
                         component.getSerializer().deserializeInstance(instanceTag.child("instance").orElseThrow())));
             }
