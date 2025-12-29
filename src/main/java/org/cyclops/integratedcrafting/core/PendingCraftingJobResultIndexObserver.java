@@ -1,19 +1,25 @@
 package org.cyclops.integratedcrafting.core;
 
+import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
-import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
-import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
+import org.apache.commons.compress.utils.Lists;
+import org.cyclops.commoncapabilities.api.ingredient.*;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.cyclopscore.ingredient.collection.IIngredientCollection;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
+import org.cyclops.cyclopscore.ingredient.collection.IngredientList;
 import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageCollectionWrapper;
+import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageSlottedCollectionWrapper;
+import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integrateddynamics.api.ingredient.IIngredientComponentStorageObservable;
+import org.cyclops.integrateddynamics.api.network.INetwork;
+import org.cyclops.integrateddynamics.api.network.INetworkIngredientsChannel;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetwork;
+import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 
 import java.util.Iterator;
 import java.util.List;
@@ -33,11 +39,15 @@ public class PendingCraftingJobResultIndexObserver<T, M>
     private final IngredientComponent<T, M> ingredientComponent;
     private final CraftingJobHandler handler;
     private final ICraftingNetwork craftingNetwork;
+    private final IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork;
+    private final INetwork network;
 
-    public PendingCraftingJobResultIndexObserver(IngredientComponent<T, M> ingredientComponent, CraftingJobHandler handler, ICraftingNetwork craftingNetwork) {
+    public PendingCraftingJobResultIndexObserver(IngredientComponent<T, M> ingredientComponent, CraftingJobHandler handler, ICraftingNetwork craftingNetwork, IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork, INetwork network) {
         this.ingredientComponent = ingredientComponent;
         this.handler = handler;
         this.craftingNetwork = craftingNetwork;
+        this.ingredientsNetwork = ingredientsNetwork;
+        this.network = network;
     }
 
     @Override
@@ -99,6 +109,36 @@ public class PendingCraftingJobResultIndexObserver<T, M>
                                     if (matcher.isEmpty(extracted)) {
                                         // Quickly break when no matches are available anymore
                                         break;
+                                    } else {
+                                        // Move this ingredient from storage to the first dependent crafting job.
+                                        IntIterator dependentJobs = craftingJob.getDependentCraftingJobs().intIterator();
+                                        while (dependentJobs.hasNext()) {
+                                            CraftingJob dependentJob = craftingNetwork.getCraftingJob(craftingJob.getChannel(), dependentJobs.nextInt());
+                                            if (dependentJob != null) {
+                                                INetworkIngredientsChannel<T, M> storage = this.ingredientsNetwork.getChannelInternal(craftingJob.getChannel());
+                                                T extractedFromStorage = storage.extract(extracted, matcher.getExactMatchCondition(), false);
+                                                if (!matcher.matchesExactly(extracted, extractedFromStorage)) {
+                                                    IntegratedCrafting.clog("Unable to extract ingredient from storage for pending crafting job: " + extracted);
+                                                    storage.insert(extractedFromStorage, false);
+                                                } else {
+                                                    IMixedIngredients buffer = dependentJob.getIngredientsStorageBuffer();
+                                                    if (!buffer.getComponents().contains(ingredientComponent)) {
+                                                        Map<IngredientComponent<?, ?>, List<?>> mixedIngredientsRaw = Maps.newIdentityHashMap();
+                                                        for (IngredientComponent<?, ?> component : buffer.getComponents()) {
+                                                            mixedIngredientsRaw.put(component, buffer.getInstances(component));
+                                                        }
+                                                        List<T> list = Lists.newArrayList();
+                                                        mixedIngredientsRaw.put(ingredientComponent, list);
+                                                        list.add(extractedFromStorage);
+                                                        buffer = new MixedIngredients(mixedIngredientsRaw);
+                                                        dependentJob.setIngredientsStorageBuffer(buffer);
+                                                    } else {
+                                                        new IngredientComponentStorageSlottedCollectionWrapper<>(new IngredientList<>(ingredientComponent, buffer.getInstances(ingredientComponent)), Long.MAX_VALUE, Long.MAX_VALUE).insert(extractedFromStorage, false);
+                                                    }
+                                                }
+                                                break;
+                                            }
+                                        }
                                     }
 
                                     remainingQuantity -= matcher.getQuantity(extracted);

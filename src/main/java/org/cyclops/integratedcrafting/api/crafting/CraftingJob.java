@@ -9,6 +9,7 @@ import net.minecraft.nbt.Tag;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.core.MissingIngredients;
 
@@ -27,7 +28,8 @@ public class CraftingJob {
     private final IntList dependencyCraftingJobs;
     private final IntList dependentCraftingJobs;
     private int amount;
-    private IMixedIngredients ingredientsStorage;
+    private IMixedIngredients ingredientsStorage; // Total to extract from storage (simulated and immutable)
+    private IMixedIngredients ingredientsStorageBuffer; // The actual ingredients from storage, which are consumed over time.
     private Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients;
     private long startTick;
     private boolean invalidInputs;
@@ -41,6 +43,7 @@ public class CraftingJob {
         this.recipe = recipe;
         this.amount = amount;
         this.ingredientsStorage = ingredientsStorage;
+        this.ingredientsStorageBuffer = new MixedIngredients(Maps.newIdentityHashMap());
         this.lastMissingIngredients = Maps.newIdentityHashMap();
         this.dependencyCraftingJobs = new IntArrayList();
         this.dependentCraftingJobs = new IntArrayList();
@@ -98,6 +101,14 @@ public class CraftingJob {
         this.ingredientsStorage = ingredientsStorage;
     }
 
+    public IMixedIngredients getIngredientsStorageBuffer() {
+        return ingredientsStorageBuffer;
+    }
+
+    public void setIngredientsStorageBuffer(IMixedIngredients ingredientsStorageBuffer) {
+        this.ingredientsStorageBuffer = ingredientsStorageBuffer;
+    }
+
     /**
      * @return The ingredients that were missing for 1 job amount. This will mostly be an empty map.
      */
@@ -151,6 +162,7 @@ public class CraftingJob {
         tag.put("dependents", new IntArrayTag(craftingJob.getDependentCraftingJobs()));
         tag.putInt("amount", craftingJob.amount);
         tag.put("ingredientsStorage", IMixedIngredients.serialize(craftingJob.ingredientsStorage));
+        tag.put("ingredientsStorageBuffer", IMixedIngredients.serialize(craftingJob.ingredientsStorageBuffer));
         tag.put("lastMissingIngredients", MissingIngredients.serialize(craftingJob.lastMissingIngredients));
         tag.putLong("startTick", craftingJob.startTick);
         tag.putBoolean("invalidInputs", craftingJob.invalidInputs);
@@ -197,6 +209,7 @@ public class CraftingJob {
         IRecipeDefinition recipe = IRecipeDefinition.deserialize(tag.getCompound("recipe"));
         int amount = tag.getInt("amount");
         IMixedIngredients ingredientsStorage = IMixedIngredients.deserialize(tag.getCompound("ingredientsStorage"));
+        IMixedIngredients ingredientsStorageBuffer = IMixedIngredients.deserialize(tag.contains("ingredientsStorageBuffer") ? tag.getCompound("ingredientsStorageBuffer") : new CompoundTag()); // TODO: rm backwards-compat in nextmajor
         CraftingJob craftingJob = new CraftingJob(id, channel, recipe, amount, ingredientsStorage);
         for (int dependency : tag.getIntArray("dependencies")) {
             craftingJob.dependencyCraftingJobs.add(dependency);
@@ -213,6 +226,7 @@ public class CraftingJob {
             craftingJob.setInitiatorUuid(tag.getString("initiatorUuid"));
         }
         craftingJob.setIgnoreDependencyCheck(tag.getBoolean("ignoreDependencyCheck"));
+        craftingJob.setIngredientsStorageBuffer(ingredientsStorageBuffer);
         return craftingJob;
     }
 
@@ -238,6 +252,9 @@ public class CraftingJob {
     }
 
     public CraftingJob clone(CraftingHelpers.IIdentifierGenerator identifierGenerator) {
+        if (!this.getIngredientsStorageBuffer().isEmpty()) {
+            throw new IllegalStateException("Cloning a job with an ingredient buffer is illegal");
+        }
         return new CraftingJob(
                 identifierGenerator.getNext(),
                 getChannel(),
