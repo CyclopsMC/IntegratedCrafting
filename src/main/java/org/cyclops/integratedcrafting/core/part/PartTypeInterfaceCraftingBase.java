@@ -15,10 +15,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.integratedcrafting.Capabilities;
 import org.cyclops.integratedcrafting.GeneralConfig;
-import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
-import org.cyclops.integratedcrafting.api.crafting.CraftingJobStatus;
-import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
-import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
+import org.cyclops.integratedcrafting.api.crafting.*;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.core.CraftingJobHandler;
@@ -35,6 +32,7 @@ import org.cyclops.integrateddynamics.core.part.PartStateBase;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * Base logic for parts that do crafting interfacing.
@@ -301,6 +299,11 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
         @Override
         public void scheduleCraftingJob(CraftingJob craftingJob) {
             getCraftingJobHandler().scheduleCraftingJob(craftingJob);
+        }
+
+        @Override
+        public void fillCraftingJobBufferFromStorage(CraftingJob craftingJob, Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter) throws StorageExtractionException {
+            getCraftingJobHandler().fillCraftingJobBufferFromStorage(craftingJob, storageGetter);
         }
 
         @Override

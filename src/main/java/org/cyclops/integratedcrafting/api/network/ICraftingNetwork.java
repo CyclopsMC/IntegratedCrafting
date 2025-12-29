@@ -3,15 +3,14 @@ package org.cyclops.integratedcrafting.api.network;
 import com.google.common.collect.Multimap;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
-import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
-import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
-import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
-import org.cyclops.integratedcrafting.api.crafting.UnavailableCraftingInterfacesException;
+import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
+import org.cyclops.integratedcrafting.api.crafting.*;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndex;
 
 import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * A network capability for crafting.
@@ -89,11 +88,14 @@ public interface ICraftingNetwork {
 
     /**
      * Add the given crafting job to the list of crafting jobs.
-     * @param craftingJob The crafting job.
+     *
+     * @param craftingJob       The crafting job.
      * @param allowDistribution If the crafting job is allowed to be split over multiple crafting interfaces.
+     * @param storageGetter     The storage getter.
      * @throws UnavailableCraftingInterfacesException If no crafting interfaces were available.
+     * @throws StorageExtractionException             If storage extraction failed.
      */
-    public void scheduleCraftingJob(CraftingJob craftingJob, boolean allowDistribution) throws UnavailableCraftingInterfacesException;
+    public void scheduleCraftingJob(CraftingJob craftingJob, boolean allowDistribution, Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter) throws UnavailableCraftingInterfacesException, StorageExtractionException;
 
     /**
      * Called by crafting interfaces when the crafting job is finished and should be removed from all lists.
