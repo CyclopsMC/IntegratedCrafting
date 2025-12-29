@@ -296,6 +296,10 @@ public class CraftingJobHandler {
             extracted.put(component, extractedList);
             if (!extractIngredientsFromStorage((IIngredientComponentStorage) storage, (IngredientComponent) component, (List) toExtract.getInstances(component), (List) extractedList)) {
                 // If extraction failed, re-insert ALL extracted ingredients so far to network, and throw an exception.
+                if (extractedList.isEmpty()) {
+                    // Remove list if empty, as this is illegal for MixedIngredients
+                    extracted.remove(component);
+                }
                 CraftingHelpers.insertIngredientsGuaranteed(new MixedIngredients(extracted), storageGetter, this.resultsSink);
                 throw new StorageExtractionException(craftingJob);
             }
