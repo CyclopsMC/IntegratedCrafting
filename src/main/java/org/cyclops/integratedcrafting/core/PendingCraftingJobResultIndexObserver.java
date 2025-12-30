@@ -133,7 +133,15 @@ public class PendingCraftingJobResultIndexObserver<T, M>
                                                         buffer = new MixedIngredients(mixedIngredientsRaw);
                                                         dependentJob.setIngredientsStorageBuffer(buffer);
                                                     } else {
-                                                        new IngredientComponentStorageSlottedCollectionWrapper<>(new IngredientList<>(ingredientComponent, buffer.getInstances(ingredientComponent)), Integer.MAX_VALUE, Integer.MAX_VALUE).insert(extractedFromStorage, false);
+                                                        List<T> instances = buffer.getInstances(ingredientComponent);
+                                                        if (!instances.stream().anyMatch(matcher::isEmpty)) {
+                                                            // Make sure we have at least one empty slot available, to guarantee insertion can succeed.
+                                                            instances.add(matcher.getEmptyInstance());
+                                                        }
+                                                        T remaining = new IngredientComponentStorageSlottedCollectionWrapper<>(new IngredientList<>(ingredientComponent, instances), Integer.MAX_VALUE, Integer.MAX_VALUE).insert(extractedFromStorage, false);
+                                                        if (!matcher.isEmpty(remaining)) {
+                                                            throw new IllegalStateException(String.format("Unable to insert %s into the crafting job buffer, remaining: ", extractedFromStorage, remaining));
+                                                        }
                                                     }
                                                 }
                                                 break;
