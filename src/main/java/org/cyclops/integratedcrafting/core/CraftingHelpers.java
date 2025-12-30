@@ -1178,7 +1178,7 @@ public class CraftingHelpers {
 
             // If none of the alternatives were found, fail immediately
             if (!hasInputInstance) {
-                if (!simulate) {
+                if (!simulate && !collectMissingIngredients) {
                     // But first, re-insert all already-extracted instances
                     for (T instance : inputInstances) {
                         T remaining = storage.insert(instance, false);
@@ -1188,7 +1188,6 @@ public class CraftingHelpers {
                                     "and non-simulation: " + storage + ". Lost: " + remaining);
                         }
                     }
-                    inputInstances.clear();
                 }
 
                 if (!collectMissingIngredients) {
