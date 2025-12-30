@@ -1188,6 +1188,7 @@ public class CraftingHelpers {
                                     "and non-simulation: " + storage + ". Lost: " + remaining);
                         }
                     }
+                    inputInstances.clear();
                 }
 
                 if (!collectMissingIngredients) {
