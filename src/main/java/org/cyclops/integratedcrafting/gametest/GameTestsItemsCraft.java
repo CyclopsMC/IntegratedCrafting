@@ -542,8 +542,8 @@ public class GameTestsItemsCraft {
             helper.assertValueEqual(chestIn.getItem(3).getCount(), 64, "Slot 3 amount is incorrect");
             helper.assertValueEqual(chestIn.getItem(4).getItem(), Items.GOLD_INGOT, "Slot 4 item is incorrect");
             helper.assertValueEqual(chestIn.getItem(4).getCount(), 64, "Slot 4 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(6).getItem(), Items.SHEARS, "Slot 6 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(6).getCount(), 1, "Slot 6 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(5).getItem(), Items.SHEARS, "Slot 5 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(5).getCount(), 1, "Slot 5 amount is incorrect");
         });
     }
 
