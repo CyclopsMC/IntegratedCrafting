@@ -571,12 +571,10 @@ public class GameTestsItemsCraft {
             // Check if items have been crafted
             // Try-catch block checks for two acceptable variants
             try {
-                helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CRAFTING_TABLE, "Slot 0 item is incorrect");
+                helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.OAK_PLANKS, "Slot 0 item is incorrect");
                 helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 0 amount is incorrect");
-                helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.OAK_PLANKS, "Slot 1 item is incorrect");
-                helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, "Slot 1 amount is incorrect");
-                helper.assertValueEqual(chestIn.getItem(2).getItem(), Items.CRAFTING_TABLE, "Slot 0 item is incorrect");
-                helper.assertValueEqual(chestIn.getItem(2).getCount(), 1, "Slot 0 amount is incorrect");
+                helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.CRAFTING_TABLE, "Slot 1 item is incorrect");
+                helper.assertValueEqual(chestIn.getItem(1).getCount(), 2, "Slot 1 amount is incorrect");
             } catch (GameTestAssertException e) {
                 helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.CRAFTING_TABLE, "Slot 0 item is incorrect");
                 helper.assertValueEqual(chestIn.getItem(0).getCount(), 2, "Slot 0 amount is incorrect");
@@ -617,10 +615,10 @@ public class GameTestsItemsCraft {
             helper.assertValueEqual(chestIn.getItem(1).getCount(), 63, "Slot 1 amount is incorrect");
             helper.assertValueEqual(chestIn.getItem(2).getItem(), Items.OAK_PLANKS, "Slot 2 item is incorrect");
             helper.assertValueEqual(chestIn.getItem(2).getCount(), 2, "Slot 2 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(3).getItem(), Items.STICK, "Slot 3 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(3).getCount(), 2, "Slot 3 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(4).getItem(), Items.IRON_SHOVEL, "Slot 4 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(4).getCount(), 1, "Slot 4 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(3).getItem(), Items.IRON_SHOVEL, "Slot 3 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(3).getCount(), 1, "Slot 3 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(4).getItem(), Items.STICK, "Slot 4 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(4).getCount(), 2, "Slot 4 amount is incorrect");
         });
     }
 
