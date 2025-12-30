@@ -27,6 +27,8 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.integratedcrafting.Reference;
+import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
+import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCraftingAttuned;
 import org.cyclops.integratedcrafting.part.PartTypes;
@@ -40,9 +42,11 @@ import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeItem
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeBoolean;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
+import org.cyclops.integrateddynamics.core.helper.NetworkHelpers;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 import org.cyclops.integratedtunnels.part.aspect.TunnelAspects;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -708,6 +712,45 @@ public class GameTestsItemsCraft {
             helper.assertValueEqual(chestIn.getItem(3).getCount(), 1, "Slot 3 amount is incorrect");
             helper.assertValueEqual(chestIn.getItem(4).getItem(), Items.STICK, "Slot 4 item is incorrect");
             helper.assertValueEqual(chestIn.getItem(4).getCount(), 2, "Slot 4 amount is incorrect");
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftAttunedIronShovelCancel(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingAttuned.State> positions = createBasicNetwork(helper, POS, true, Blocks.CRAFTING_TABLE, Blocks.FURNACE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.IRON_ORE, 64));
+        chestIn.setItem(1, new ItemStack(Items.OAK_LOG, 64));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_SHOVEL));
+
+        helper.runAfterDelay(10, () -> {
+            CraftingHelpers.getCraftingNetwork(NetworkHelpers.getNetworkChecked(positions.writer()))
+                    .ifPresent(network -> {
+                        PartHelpers.removePart(helper.getLevel(), positions.writer().getPos().getBlockPos(), positions.writer().getSide(), null, false, false, false);
+
+                        Iterator<CraftingJob> it = network.getCraftingJobs(0);
+                        while (it.hasNext()) {
+                            network.cancelCraftingJob(0, it.next().getId());
+                        }
+                    });
+        });
+
+        helper.succeedWhen(() -> {
+            // We don't check the writer state, as it has been removed
+
+            // Check if items have been crafted
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_ORE, "Slot 0 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 63, "Slot 0 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.OAK_LOG, "Slot 1 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 63, "Slot 1 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(2).getItem(), Items.OAK_PLANKS, "Slot 2 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(2).getCount(), 4, "Slot 2 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(3).getItem(), Items.IRON_INGOT, "Slot 3 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(3).getCount(), 1, "Slot 3 amount is incorrect");
         });
     }
 
