@@ -15,6 +15,7 @@ import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefini
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.helper.CraftingHelpers;
+import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverride;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integrateddynamics.api.part.PartPos;
@@ -50,7 +51,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
 
     @Override
     public boolean craft(Function<IngredientComponent<?, ?>, PartPos> targetGetter,
-                         IMixedIngredients ingredients, IRecipeDefinition recipe, ICraftingResultsSink resultsSink, boolean simulate) {
+                         IMixedIngredients ingredients, IRecipeDefinition recipe, ICraftingResultsSink resultsSink, CraftingJob craftingJob, boolean simulate) {
         PartPos target = targetGetter.apply(IngredientComponent.ITEMSTACK);
         CraftingGrid gridFull = new CraftingGrid(ingredients, 3, 3);
         CraftingInput gridInput = gridFull.asCraftInput();
@@ -87,7 +88,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
                         // Insert the remaining items into the sink
                         for (ItemStack remainingItem : craftingRecipe.getRemainingItems(gridInput)) {
                             if (!remainingItem.isEmpty()) {
-                                resultsSink.addResult(IngredientComponent.ITEMSTACK, remainingItem);
+                                craftingJob.addToIngredientsStorageBuffer(IngredientComponent.ITEMSTACK, remainingItem);
                             }
                         }
                     }

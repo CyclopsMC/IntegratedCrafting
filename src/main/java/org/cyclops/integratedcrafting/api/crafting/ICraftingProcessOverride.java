@@ -28,10 +28,11 @@ public interface ICraftingProcessOverride {
      * @param recipe       The recipe from which the ingredients were derived.
      * @param resultsSink  A sink where the ingredients can optionally be inserted into.
      *                     This should only be used if the processor does not have an internal storage.
+     * @param craftingJob  The running crafting job (or pending job if simulating).
      * @param simulate     If insertion should be simulated.
      * @return If all instances could be inserted.
      */
     public boolean craft(Function<IngredientComponent<?, ?>, PartPos> targetGetter, IMixedIngredients ingredients,
-                         IRecipeDefinition recipe, ICraftingResultsSink resultsSink, boolean simulate);
+                         IRecipeDefinition recipe, ICraftingResultsSink resultsSink, CraftingJob craftingJob, boolean simulate);
 
 }

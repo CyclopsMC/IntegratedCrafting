@@ -7,14 +7,19 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.Tag;
+import org.apache.commons.compress.utils.Lists;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
+import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
+import org.cyclops.cyclopscore.ingredient.collection.IngredientList;
+import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageSlottedCollectionWrapper;
 import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.core.MissingIngredients;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -108,6 +113,32 @@ public class CraftingJob {
 
     public void setIngredientsStorageBuffer(IMixedIngredients ingredientsStorageBuffer) {
         this.ingredientsStorageBuffer = ingredientsStorageBuffer;
+    }
+
+    public <T, M> void addToIngredientsStorageBuffer(IngredientComponent<T, M> ingredientComponent, T instance) {
+        IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
+        IMixedIngredients buffer = this.getIngredientsStorageBuffer();
+        if (!buffer.getComponents().contains(ingredientComponent)) {
+            Map<IngredientComponent<?, ?>, List<?>> mixedIngredientsRaw = Maps.newIdentityHashMap();
+            for (IngredientComponent<?, ?> component : buffer.getComponents()) {
+                mixedIngredientsRaw.put(component, buffer.getInstances(component));
+            }
+            List<T> list = Lists.newArrayList();
+            mixedIngredientsRaw.put(ingredientComponent, list);
+            list.add(instance);
+            buffer = new MixedIngredients(mixedIngredientsRaw);
+            this.setIngredientsStorageBuffer(buffer);
+        } else {
+            List<T> instances = buffer.getInstances(ingredientComponent);
+            if (!instances.stream().anyMatch(matcher::isEmpty)) {
+                // Make sure we have at least one empty slot available, to guarantee insertion can succeed.
+                instances.add(matcher.getEmptyInstance());
+            }
+            T remaining = new IngredientComponentStorageSlottedCollectionWrapper<>(new IngredientList<>(ingredientComponent, instances), Integer.MAX_VALUE, Integer.MAX_VALUE).insert(instance, false);
+            if (!matcher.isEmpty(remaining)) {
+                throw new IllegalStateException(String.format("Unable to insert %s into the crafting job buffer, remaining: ", instances, remaining));
+            }
+        }
     }
 
     /**
