@@ -1,17 +1,16 @@
 package org.cyclops.integratedcrafting.core;
 
-import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import org.apache.commons.compress.utils.Lists;
-import org.cyclops.commoncapabilities.api.ingredient.*;
+import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
+import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
+import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.cyclopscore.ingredient.collection.IIngredientCollection;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
-import org.cyclops.cyclopscore.ingredient.collection.IngredientList;
 import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageCollectionWrapper;
-import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageSlottedCollectionWrapper;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
@@ -121,28 +120,7 @@ public class PendingCraftingJobResultIndexObserver<T, M>
                                                     IntegratedCrafting.clog("Unable to extract ingredient from storage for pending crafting job: " + extracted);
                                                     storage.insert(extractedFromStorage, false);
                                                 } else {
-                                                    IMixedIngredients buffer = dependentJob.getIngredientsStorageBuffer();
-                                                    if (!buffer.getComponents().contains(ingredientComponent)) {
-                                                        Map<IngredientComponent<?, ?>, List<?>> mixedIngredientsRaw = Maps.newIdentityHashMap();
-                                                        for (IngredientComponent<?, ?> component : buffer.getComponents()) {
-                                                            mixedIngredientsRaw.put(component, buffer.getInstances(component));
-                                                        }
-                                                        List<T> list = Lists.newArrayList();
-                                                        mixedIngredientsRaw.put(ingredientComponent, list);
-                                                        list.add(extractedFromStorage);
-                                                        buffer = new MixedIngredients(mixedIngredientsRaw);
-                                                        dependentJob.setIngredientsStorageBuffer(buffer);
-                                                    } else {
-                                                        List<T> instances = buffer.getInstances(ingredientComponent);
-                                                        if (!instances.stream().anyMatch(matcher::isEmpty)) {
-                                                            // Make sure we have at least one empty slot available, to guarantee insertion can succeed.
-                                                            instances.add(matcher.getEmptyInstance());
-                                                        }
-                                                        T remaining = new IngredientComponentStorageSlottedCollectionWrapper<>(new IngredientList<>(ingredientComponent, instances), Integer.MAX_VALUE, Integer.MAX_VALUE).insert(extractedFromStorage, false);
-                                                        if (!matcher.isEmpty(remaining)) {
-                                                            throw new IllegalStateException(String.format("Unable to insert %s into the crafting job buffer, remaining: ", extractedFromStorage, remaining));
-                                                        }
-                                                    }
+                                                    dependentJob.addToIngredientsStorageBuffer(ingredientComponent, extractedFromStorage);
                                                 }
                                                 break;
                                             }
