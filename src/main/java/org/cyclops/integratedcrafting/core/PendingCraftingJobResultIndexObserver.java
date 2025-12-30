@@ -133,7 +133,7 @@ public class PendingCraftingJobResultIndexObserver<T, M>
                                                         buffer = new MixedIngredients(mixedIngredientsRaw);
                                                         dependentJob.setIngredientsStorageBuffer(buffer);
                                                     } else {
-                                                        new IngredientComponentStorageSlottedCollectionWrapper<>(new IngredientList<>(ingredientComponent, buffer.getInstances(ingredientComponent)), Long.MAX_VALUE, Long.MAX_VALUE).insert(extractedFromStorage, false);
+                                                        new IngredientComponentStorageSlottedCollectionWrapper<>(new IngredientList<>(ingredientComponent, buffer.getInstances(ingredientComponent)), Integer.MAX_VALUE, Integer.MAX_VALUE).insert(extractedFromStorage, false);
                                                     }
                                                 }
                                                 break;

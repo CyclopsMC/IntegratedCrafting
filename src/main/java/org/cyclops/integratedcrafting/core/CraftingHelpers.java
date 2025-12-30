@@ -1290,7 +1290,7 @@ public class CraftingHelpers {
     public static Function<IngredientComponent<?, ?>, IIngredientComponentStorage> getCraftingJobBufferStorageGetter(CraftingJob craftingJob) {
         return ingredientComponent -> {
             List<?> list = craftingJob.getIngredientsStorageBuffer().getInstances(ingredientComponent);
-            return new IngredientComponentStorageSlottedCollectionWrapper<>(new IngredientList(ingredientComponent, list), Long.MAX_VALUE, Long.MAX_VALUE);
+            return new IngredientComponentStorageSlottedCollectionWrapper<>(new IngredientList(ingredientComponent, list), Integer.MAX_VALUE, Integer.MAX_VALUE);
         };
     }
 
