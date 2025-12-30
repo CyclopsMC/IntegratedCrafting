@@ -284,41 +284,13 @@ public class CraftingJobHandler {
         }
     }
 
-    public void fillCraftingJobBufferFromStorage(CraftingJob craftingJob, Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter) throws StorageExtractionException {
+    public void fillCraftingJobBufferFromStorage(CraftingJob craftingJob, Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter) {
         if (!craftingJob.getIngredientsStorageBuffer().isEmpty()) {
             throw new IllegalStateException("Re-filling a non-empty crafting job buffer is illegal");
         }
-        IMixedIngredients toExtract = craftingJob.getIngredientsStorage();
-        Map<IngredientComponent<?, ?>, List<?>> extracted = Maps.newIdentityHashMap();
-        for (IngredientComponent<?, ?> component : toExtract.getComponents()) {
-            IIngredientComponentStorage<?, ?> storage = storageGetter.apply(component);
-            List<?> extractedList = Lists.newArrayList();
-            extracted.put(component, extractedList);
-            if (!extractIngredientsFromStorage((IIngredientComponentStorage) storage, (IngredientComponent) component, (List) toExtract.getInstances(component), (List) extractedList)) {
-                // If extraction failed, re-insert ALL extracted ingredients so far to network, and throw an exception.
-                if (extractedList.isEmpty()) {
-                    // Remove list if empty, as this is illegal for MixedIngredients
-                    extracted.remove(component);
-                }
-                CraftingHelpers.insertIngredientsGuaranteed(new MixedIngredients(extracted), storageGetter, this.resultsSink);
-                throw new StorageExtractionException(craftingJob);
-            }
-        }
-        craftingJob.setIngredientsStorageBuffer(new MixedIngredients(extracted));
-    }
-
-    protected <T, M> boolean extractIngredientsFromStorage(IIngredientComponentStorage<T, M> storage, IngredientComponent<T, M> ingredientComponent, List<T> toExtract, List<T> extracted) {
-        IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
-        M exactCondition = matcher.getExactMatchCondition();
-        for (T ingredient : toExtract) {
-            T extractedIngredient = storage.extract(ingredient, exactCondition, false);
-            if (matcher.matchesExactly(ingredient, extractedIngredient)) {
-                extracted.add(extractedIngredient);
-            } else {
-                return false;
-            }
-        }
-        return true;
+        // Determine the ingredients to extract. We can not reuse the ingredientsStorage value from the crafting job, as this may have been modified due to job splitting.
+        IMixedIngredients buffer = new MixedIngredients(CraftingHelpers.getRecipeInputs(storageGetter, craftingJob.getRecipe(), false, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), true, craftingJob.getAmount()).getLeft());
+        craftingJob.setIngredientsStorageBuffer(CraftingHelpers.compressMixedIngredients(buffer));
     }
 
     public Int2ObjectMap<List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>>> getProcessingCraftingJobsPendingIngredients() {
