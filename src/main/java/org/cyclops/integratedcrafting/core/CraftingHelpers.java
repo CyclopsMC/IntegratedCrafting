@@ -725,7 +725,7 @@ public class CraftingHelpers {
         for (CraftingJob craftingJob : craftingJobDependencyGraph.getCraftingJobs()) {
             try {
                 craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution, storageGetter);
-            } catch (StorageExtractionException | UnavailableCraftingInterfacesException e) {
+            } catch (UnavailableCraftingInterfacesException e) {
                 // First, cancel all jobs that were already started
                 for (CraftingJob startedJob : startedJobs) {
                     CraftingHelpers.insertIngredientsGuaranteed(startedJob.getIngredientsStorageBuffer(), storageGetter, (ICraftingResultsSink) Iterables.getFirst(craftingNetwork.getCraftingInterfaces(startedJob.getChannel()), null));
@@ -752,13 +752,12 @@ public class CraftingHelpers {
      * @param initiator         Optional UUID of the initiator.
      * @return The scheduled crafting job.
      * @throws UnavailableCraftingInterfacesException If no crafting interfaces were available.
-     * @throws StorageExtractionException             If storage extraction failed.
      */
     public static CraftingJob scheduleCraftingJob(ICraftingNetwork craftingNetwork,
                                                   Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
                                                   CraftingJob craftingJob,
                                                   boolean allowDistribution,
-                                                  @Nullable UUID initiator) throws UnavailableCraftingInterfacesException, StorageExtractionException {
+                                                  @Nullable UUID initiator) throws UnavailableCraftingInterfacesException {
         craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution, storageGetter);
         if (initiator != null) {
             craftingJob.setInitiatorUuid(initiator.toString());

@@ -302,7 +302,7 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
         }
 
         @Override
-        public void fillCraftingJobBufferFromStorage(CraftingJob craftingJob, Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter) throws StorageExtractionException {
+        public void fillCraftingJobBufferFromStorage(CraftingJob craftingJob, Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter) {
             getCraftingJobHandler().fillCraftingJobBufferFromStorage(craftingJob, storageGetter);
         }
 
