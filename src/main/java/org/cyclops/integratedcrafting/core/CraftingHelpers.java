@@ -136,21 +136,6 @@ public class CraftingHelpers {
     }
 
     /**
-     * If the network is guaranteed to have uncommitted changes (such as the one in #48),
-     * forcefully run observers synchronously, so that we can calculate the job in a consistent network state.
-     * @param network The network.
-     * @param channel A network channel.
-     */
-    public static void beforeCalculateCraftingJobs(INetwork network, int channel) {
-        for (IngredientComponent<?, ?> ingredientComponent : IngredientComponent.REGISTRY.stream().toList()) {
-            IPositionedAddonsNetworkIngredients<?, ?> ingredientsNetwork = getIngredientsNetwork(network, ingredientComponent).orElse(null);
-            if (ingredientsNetwork != null && (ingredientsNetwork.isObservationForcedPending(channel))) {
-                ingredientsNetwork.runObserverSync();
-            }
-        }
-    }
-
-    /**
      * Calculate the required crafting jobs and their dependencies for the given instance in the given network.
      * @param network The target network.
      * @param channel The target channel.
@@ -179,7 +164,6 @@ public class CraftingHelpers {
         ICraftingNetwork craftingNetwork = getCraftingNetworkChecked(network);
         IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
         Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel, true);
-        beforeCalculateCraftingJobs(network, channel);
 
         CraftingJob craftingJob = calculateCraftingJobs(recipeIndex, channel, storageGetter, ingredientComponent, instance, matchCondition,
                 craftMissing, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),
@@ -213,7 +197,6 @@ public class CraftingHelpers {
         ICraftingNetwork craftingNetwork = getCraftingNetworkChecked(network);
         IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
         Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel, true);
-        beforeCalculateCraftingJobs(network, channel);
 
         PartialCraftingJobCalculation result = calculateCraftingJobs(recipeIndex, channel, storageGetter, recipe, amount,
                 craftMissing, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),

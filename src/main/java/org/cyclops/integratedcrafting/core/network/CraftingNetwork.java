@@ -251,6 +251,9 @@ public class CraftingNetwork implements ICraftingNetwork {
             if (bestCraftingInterface == null || jobCount < bestCraftingInterfaceJobCount) {
                 bestCraftingInterfaceJobCount = jobCount;
                 bestCraftingInterface = craftingInterface;
+                if (bestCraftingInterfaceJobCount == 0) {
+                    break; // Break early, as we won't find a better interface than one with zero jobs
+                }
             }
         }
 
