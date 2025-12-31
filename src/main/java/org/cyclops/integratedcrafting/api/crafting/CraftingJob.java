@@ -19,6 +19,7 @@ import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.core.MissingIngredients;
 
 import javax.annotation.Nullable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -115,7 +116,24 @@ public class CraftingJob {
         this.ingredientsStorageBuffer = ingredientsStorageBuffer;
     }
 
+    public <T, M> long getMissingIngredientQuantity(IngredientComponent<T, M> ingredientComponent, T instance) {
+        long quantityMissing = 0;
+        MissingIngredients<?, ?> missingIngredients = this.lastMissingIngredients.get(ingredientComponent);
+        if (missingIngredients != null) {
+            IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
+            for (MissingIngredients.Element<?, ?> element : missingIngredients.getElements()) {
+                for (MissingIngredients.PrototypedWithRequested<?, ?> alternative : element.getAlternatives()) {
+                    if (matcher.matches(instance, (T) alternative.getRequestedPrototype().getPrototype(), matcher.withoutCondition((M) alternative.getRequestedPrototype().getCondition(), ingredientComponent.getPrimaryQuantifier().getMatchCondition()))) {
+                        quantityMissing += alternative.getQuantityMissing();
+                    }
+                }
+            }
+        }
+        return quantityMissing;
+    }
+
     public <T, M> void addToIngredientsStorageBuffer(IngredientComponent<T, M> ingredientComponent, T instance) {
+        // Add instance to the buffer
         IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
         IMixedIngredients buffer = this.getIngredientsStorageBuffer();
         if (!buffer.getComponents().contains(ingredientComponent)) {
@@ -137,6 +155,34 @@ public class CraftingJob {
             T remaining = new IngredientComponentStorageSlottedCollectionWrapper<>(new IngredientList<>(ingredientComponent, instances), Integer.MAX_VALUE, Integer.MAX_VALUE).insert(instance, false);
             if (!matcher.isEmpty(remaining)) {
                 throw new IllegalStateException(String.format("Unable to insert %s into the crafting job buffer, remaining: ", instances, remaining));
+            }
+        }
+
+        // If the instance was a missing ingredient, remove it
+        long instanceQuantity = matcher.getQuantity(instance);
+        MissingIngredients<?, ?> missingIngredients = this.lastMissingIngredients.get(ingredientComponent);
+        if (missingIngredients != null) {
+            Iterator<? extends MissingIngredients.Element<?, ?>> it = missingIngredients.getElements().iterator();
+            boolean removed = false;
+            while (it.hasNext() && instanceQuantity > 0) {
+                MissingIngredients.Element<?, ?> element = it.next();
+                for (MissingIngredients.PrototypedWithRequested<?, ?> alternative : element.getAlternatives()) {
+                    if (matcher.matches(instance, (T) alternative.getRequestedPrototype().getPrototype(), matcher.withoutCondition((M) alternative.getRequestedPrototype().getCondition(), ingredientComponent.getPrimaryQuantifier().getMatchCondition()))) {
+                        long missingQuantityToConsume = Math.min(alternative.getQuantityMissing(), instanceQuantity);
+                        alternative.setQuantityMissing(alternative.getQuantityMissing() - missingQuantityToConsume);
+                        instanceQuantity -= missingQuantityToConsume;
+                        if (alternative.getQuantityMissing() == 0) {
+                            removed = true;
+                            it.remove();
+                        }
+                        break;
+                    }
+                }
+            }
+            if (removed) {
+                if (missingIngredients.getElements().isEmpty()) {
+                    this.lastMissingIngredients.remove(ingredientComponent);
+                }
             }
         }
     }

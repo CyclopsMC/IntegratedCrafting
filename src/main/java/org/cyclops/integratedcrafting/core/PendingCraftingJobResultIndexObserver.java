@@ -104,30 +104,40 @@ public class PendingCraftingJobResultIndexObserver<T, M>
                                 do {
                                     extracted = ingredientsHayStack.extract(prototypedIngredient.getPrototype(),
                                             prototypedIngredient.getCondition(), false);
+                                    long extractedQuantity = matcher.getQuantity(extracted);
 
                                     if (matcher.isEmpty(extracted)) {
                                         // Quickly break when no matches are available anymore
                                         break;
                                     } else {
-                                        // Move this ingredient from storage to the first dependent crafting job.
+                                        long extractedQuantityToAssign = extractedQuantity;
+                                        // Move this ingredient from storage to dependent crafting jobs.
+                                        // We only consider jobs that have this instance as missing ingredient.
                                         IntIterator dependentJobs = craftingJob.getDependentCraftingJobs().intIterator();
                                         while (dependentJobs.hasNext()) {
                                             CraftingJob dependentJob = craftingNetwork.getCraftingJob(craftingJob.getChannel(), dependentJobs.nextInt());
                                             if (dependentJob != null) {
-                                                INetworkIngredientsChannel<T, M> storage = this.ingredientsNetwork.getChannel(craftingJob.getChannel());
-                                                T extractedFromStorage = storage.extract(extracted, matcher.getExactMatchCondition(), false);
-                                                if (!matcher.matchesExactly(extracted, extractedFromStorage)) {
-                                                    IntegratedCrafting.clog("Unable to extract ingredient from storage for pending crafting job: " + extracted);
-                                                    storage.insert(extractedFromStorage, false);
-                                                } else {
-                                                    dependentJob.addToIngredientsStorageBuffer(ingredientComponent, extractedFromStorage);
+                                                long missingQuantity = dependentJob.getMissingIngredientQuantity(ingredientComponent, extracted);
+                                                if (missingQuantity > 0) {
+                                                    INetworkIngredientsChannel<T, M> storage = this.ingredientsNetwork.getChannel(craftingJob.getChannel());
+                                                    T toExtract = matcher.withQuantity(extracted, Math.min(missingQuantity, extractedQuantityToAssign));
+                                                    T extractedFromStorage = storage.extract(toExtract, matcher.getExactMatchCondition(), false);
+                                                    if (!matcher.matchesExactly(toExtract, extractedFromStorage)) {
+                                                        IntegratedCrafting.clog("Unable to extract ingredient from storage for pending crafting job: " + toExtract);
+                                                        storage.insert(extractedFromStorage, false);
+                                                    } else {
+                                                        dependentJob.addToIngredientsStorageBuffer(ingredientComponent, extractedFromStorage);
+                                                    }
+                                                    extractedQuantityToAssign -= matcher.getQuantity(extractedFromStorage);
+                                                    if (extractedQuantityToAssign == 0) {
+                                                        break;
+                                                    }
                                                 }
-                                                break;
                                             }
                                         }
                                     }
 
-                                    remainingQuantity -= matcher.getQuantity(extracted);
+                                    remainingQuantity -= extractedQuantity;
                                 } while (!matcher.isEmpty(extracted) && remainingQuantity > 0);
 
                                 // Update the list if the prototype has changed.
