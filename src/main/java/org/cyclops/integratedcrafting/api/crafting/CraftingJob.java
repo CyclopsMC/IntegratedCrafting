@@ -5,13 +5,20 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import org.apache.commons.compress.utils.Lists;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
+import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
+import org.cyclops.cyclopscore.ingredient.collection.IngredientList;
+import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageSlottedCollectionWrapper;
 import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.core.MissingIngredients;
 
 import javax.annotation.Nullable;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -26,7 +33,8 @@ public class CraftingJob {
     private final IntList dependencyCraftingJobs;
     private final IntList dependentCraftingJobs;
     private int amount;
-    private IMixedIngredients ingredientsStorage;
+    private IMixedIngredients ingredientsStorage; // Total to extract from storage (simulated and immutable)
+    private IMixedIngredients ingredientsStorageBuffer; // The actual ingredients from storage, which are consumed over time.
     private Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients;
     private long startTick;
     private boolean invalidInputs;
@@ -40,6 +48,7 @@ public class CraftingJob {
         this.recipe = recipe;
         this.amount = amount;
         this.ingredientsStorage = ingredientsStorage;
+        this.ingredientsStorageBuffer = new MixedIngredients(Maps.newIdentityHashMap());
         this.lastMissingIngredients = Maps.newIdentityHashMap();
         this.dependencyCraftingJobs = new IntArrayList();
         this.dependentCraftingJobs = new IntArrayList();
@@ -97,6 +106,85 @@ public class CraftingJob {
         this.ingredientsStorage = ingredientsStorage;
     }
 
+    public IMixedIngredients getIngredientsStorageBuffer() {
+        return ingredientsStorageBuffer;
+    }
+
+    public void setIngredientsStorageBuffer(IMixedIngredients ingredientsStorageBuffer) {
+        this.ingredientsStorageBuffer = ingredientsStorageBuffer;
+    }
+
+    public <T, M> long getMissingIngredientQuantity(IngredientComponent<T, M> ingredientComponent, T instance) {
+        long quantityMissing = 0;
+        MissingIngredients<?, ?> missingIngredients = this.lastMissingIngredients.get(ingredientComponent);
+        if (missingIngredients != null) {
+            IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
+            for (MissingIngredients.Element<?, ?> element : missingIngredients.getElements()) {
+                for (MissingIngredients.PrototypedWithRequested<?, ?> alternative : element.getAlternatives()) {
+                    if (matcher.matches(instance, (T) alternative.getRequestedPrototype().getPrototype(), matcher.withoutCondition((M) alternative.getRequestedPrototype().getCondition(), ingredientComponent.getPrimaryQuantifier().getMatchCondition()))) {
+                        quantityMissing += alternative.getQuantityMissing();
+                    }
+                }
+            }
+        }
+        return quantityMissing;
+    }
+
+    public <T, M> void addToIngredientsStorageBuffer(IngredientComponent<T, M> ingredientComponent, T instance) {
+        // Add instance to the buffer
+        IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
+        IMixedIngredients buffer = this.getIngredientsStorageBuffer();
+        if (!buffer.getComponents().contains(ingredientComponent)) {
+            Map<IngredientComponent<?, ?>, List<?>> mixedIngredientsRaw = Maps.newIdentityHashMap();
+            for (IngredientComponent<?, ?> component : buffer.getComponents()) {
+                mixedIngredientsRaw.put(component, buffer.getInstances(component));
+            }
+            List<T> list = Lists.newArrayList();
+            mixedIngredientsRaw.put(ingredientComponent, list);
+            list.add(instance);
+            buffer = new MixedIngredients(mixedIngredientsRaw);
+            this.setIngredientsStorageBuffer(buffer);
+        } else {
+            List<T> instances = buffer.getInstances(ingredientComponent);
+            if (!instances.stream().anyMatch(matcher::isEmpty)) {
+                // Make sure we have at least one empty slot available, to guarantee insertion can succeed.
+                instances.add(matcher.getEmptyInstance());
+            }
+            T remaining = new IngredientComponentStorageSlottedCollectionWrapper<>(new IngredientList<>(ingredientComponent, instances), Integer.MAX_VALUE, Integer.MAX_VALUE).insert(instance, false);
+            if (!matcher.isEmpty(remaining)) {
+                throw new IllegalStateException(String.format("Unable to insert %s into the crafting job buffer, remaining: ", instances, remaining));
+            }
+        }
+
+        // If the instance was a missing ingredient, remove it
+        long instanceQuantity = matcher.getQuantity(instance);
+        MissingIngredients<?, ?> missingIngredients = this.lastMissingIngredients.get(ingredientComponent);
+        if (missingIngredients != null) {
+            Iterator<? extends MissingIngredients.Element<?, ?>> it = missingIngredients.getElements().iterator();
+            boolean removed = false;
+            while (it.hasNext() && instanceQuantity > 0) {
+                MissingIngredients.Element<?, ?> element = it.next();
+                for (MissingIngredients.PrototypedWithRequested<?, ?> alternative : element.getAlternatives()) {
+                    if (matcher.matches(instance, (T) alternative.getRequestedPrototype().getPrototype(), matcher.withoutCondition((M) alternative.getRequestedPrototype().getCondition(), ingredientComponent.getPrimaryQuantifier().getMatchCondition()))) {
+                        long missingQuantityToConsume = Math.min(alternative.getQuantityMissing(), instanceQuantity);
+                        alternative.setQuantityMissing(alternative.getQuantityMissing() - missingQuantityToConsume);
+                        instanceQuantity -= missingQuantityToConsume;
+                        if (alternative.getQuantityMissing() == 0) {
+                            removed = true;
+                            it.remove();
+                        }
+                        break;
+                    }
+                }
+            }
+            if (removed) {
+                if (missingIngredients.getElements().isEmpty()) {
+                    this.lastMissingIngredients.remove(ingredientComponent);
+                }
+            }
+        }
+    }
+
     /**
      * @return The ingredients that were missing for 1 job amount. This will mostly be an empty map.
      */
@@ -149,6 +237,7 @@ public class CraftingJob {
         valueOutput.putIntArray("dependents", craftingJob.getDependentCraftingJobs().toIntArray());
         valueOutput.putInt("amount", craftingJob.amount);
         IMixedIngredients.serialize(valueOutput.child("ingredientsStorage"), craftingJob.ingredientsStorage);
+        IMixedIngredients.serialize(valueOutput.child("ingredientsStorageBuffer"), craftingJob.ingredientsStorageBuffer);
         MissingIngredients.serialize(valueOutput.child("lastMissingIngredients"), craftingJob.lastMissingIngredients);
         valueOutput.putLong("startTick", craftingJob.startTick);
         valueOutput.putBoolean("invalidInputs", craftingJob.invalidInputs);
@@ -164,6 +253,7 @@ public class CraftingJob {
         IRecipeDefinition recipe = IRecipeDefinition.deserialize(valueInput.child("recipe").orElseThrow());
         int amount = valueInput.getInt("amount").orElseThrow();
         IMixedIngredients ingredientsStorage = IMixedIngredients.deserialize(valueInput.child("ingredientsStorage").orElseThrow());
+        IMixedIngredients ingredientsStorageBuffer = valueInput.child("ingredientsStorageBuffer").map(IMixedIngredients::deserialize).orElseGet(() -> new MixedIngredients(Maps.newIdentityHashMap())); // TODO: rm backwards-compat in nextmajor (use orElseThrow)
         CraftingJob craftingJob = new CraftingJob(id, channel, recipe, amount, ingredientsStorage);
         for (int dependency : valueInput.getIntArray("dependencies").orElseThrow()) {
             craftingJob.dependencyCraftingJobs.add(dependency);
@@ -178,6 +268,7 @@ public class CraftingJob {
         craftingJob.setInvalidInputs(valueInput.getBooleanOr("invalidInputs", false));
         valueInput.getString("initiatorUuid").ifPresent(craftingJob::setInitiatorUuid);
         craftingJob.setIgnoreDependencyCheck(valueInput.getBooleanOr("ignoreDependencyCheck", false));
+        craftingJob.setIngredientsStorageBuffer(ingredientsStorageBuffer);
         return craftingJob;
     }
 
@@ -203,6 +294,9 @@ public class CraftingJob {
     }
 
     public CraftingJob clone(CraftingHelpers.IIdentifierGenerator identifierGenerator) {
+        if (!this.getIngredientsStorageBuffer().isEmpty()) {
+            throw new IllegalStateException("Cloning a job with an ingredient buffer is illegal");
+        }
         return new CraftingJob(
                 identifierGenerator.getNext(),
                 getChannel(),

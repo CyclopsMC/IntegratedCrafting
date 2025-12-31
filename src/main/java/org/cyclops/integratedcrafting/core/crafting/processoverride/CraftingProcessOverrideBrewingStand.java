@@ -12,6 +12,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IMixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.datastructure.DimPos;
 import org.cyclops.cyclopscore.helper.IModHelpers;
+import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverride;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integrateddynamics.api.part.PartPos;
@@ -45,7 +46,7 @@ public class CraftingProcessOverrideBrewingStand implements ICraftingProcessOver
 
     @Override
     public boolean craft(Function<IngredientComponent<?, ?>, PartPos> targetGetter,
-                         IMixedIngredients ingredients, IRecipeDefinition recipe, ICraftingResultsSink resultsSink, boolean simulate) {
+                         IMixedIngredients ingredients, IRecipeDefinition recipe, ICraftingResultsSink resultsSink, CraftingJob craftingJob, boolean simulate) {
         // Validate the ingredients
         List<ItemStack> instances = ingredients.getInstances(IngredientComponent.ITEMSTACK);
         if (instances.size() != 4 || ingredients.getComponents().size() != 1) {

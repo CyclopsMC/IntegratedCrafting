@@ -1,0 +1,15 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.26.2 or higher.
+
+Changes:
+* Add dedicated storage per crafting job
+
+When a crafting job is started, ingredients are immediately moved from
+general storage to the new storage buffers per crafting job. This avoids
+issues where ingredients can be consumed elsewhere (e.g. exporters or
+other crafting jobs) before it is used by the crafting job.
+
+This also improves overall performance, as it is not necessary to run synchronous observers anymore.
+
+Closes #112
+

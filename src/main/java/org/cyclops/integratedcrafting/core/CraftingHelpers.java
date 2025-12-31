@@ -1,5 +1,6 @@
 package org.cyclops.integratedcrafting.core;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -17,6 +18,7 @@ import org.cyclops.commoncapabilities.api.ingredient.storage.IngredientComponent
 import org.cyclops.cyclopscore.datastructure.DimPos;
 import org.cyclops.cyclopscore.helper.IModHelpers;
 import org.cyclops.cyclopscore.ingredient.collection.*;
+import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageSlottedCollectionWrapper;
 import org.cyclops.integratedcrafting.Capabilities;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.*;
@@ -135,21 +137,6 @@ public class CraftingHelpers {
     }
 
     /**
-     * If the network is guaranteed to have uncommitted changes (such as the one in #48),
-     * forcefully run observers synchronously, so that we can calculate the job in a consistent network state.
-     * @param network The network.
-     * @param channel A network channel.
-     */
-    public static void beforeCalculateCraftingJobs(INetwork network, int channel) {
-        for (IngredientComponent<?, ?> ingredientComponent : IngredientComponent.REGISTRY.stream().toList()) {
-            IPositionedAddonsNetworkIngredients<?, ?> ingredientsNetwork = getIngredientsNetwork(network, ingredientComponent).orElse(null);
-            if (ingredientsNetwork != null && (ingredientsNetwork.isObservationForcedPending(channel))) {
-                ingredientsNetwork.runObserverSync();
-            }
-        }
-    }
-
-    /**
      * Calculate the required crafting jobs and their dependencies for the given instance in the given network.
      * @param network The target network.
      * @param channel The target channel.
@@ -178,7 +165,6 @@ public class CraftingHelpers {
         ICraftingNetwork craftingNetwork = getCraftingNetworkChecked(network);
         IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
         Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel, true);
-        beforeCalculateCraftingJobs(network, channel);
 
         CraftingJob craftingJob = calculateCraftingJobs(recipeIndex, channel, storageGetter, ingredientComponent, instance, matchCondition,
                 craftMissing, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),
@@ -212,7 +198,6 @@ public class CraftingHelpers {
         ICraftingNetwork craftingNetwork = getCraftingNetworkChecked(network);
         IRecipeIndex recipeIndex = craftingNetwork.getRecipeIndex(channel);
         Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel, true);
-        beforeCalculateCraftingJobs(network, channel);
 
         PartialCraftingJobCalculation result = calculateCraftingJobs(recipeIndex, channel, storageGetter, recipe, amount,
                 craftMissing, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),
@@ -706,13 +691,16 @@ public class CraftingHelpers {
 
     /**
      * Schedule all crafting jobs in the given dependency graph in the given network.
-     * @param craftingNetwork The target crafting network.
+     *
+     * @param craftingNetwork            The target crafting network.
+     * @param storageGetter              The storage getter.
      * @param craftingJobDependencyGraph The crafting job dependency graph.
-     * @param allowDistribution If the crafting jobs are allowed to be split over multiple crafting interfaces.
-     * @param initiator Optional UUID of the initiator.
+     * @param allowDistribution          If the crafting jobs are allowed to be split over multiple crafting interfaces.
+     * @param initiator                  Optional UUID of the initiator.
      * @throws UnavailableCraftingInterfacesException If no crafting interfaces were available.
      */
     public static void scheduleCraftingJobs(ICraftingNetwork craftingNetwork,
+                                            Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
                                             CraftingJobDependencyGraph craftingJobDependencyGraph,
                                             boolean allowDistribution,
                                             @Nullable UUID initiator) throws UnavailableCraftingInterfacesException {
@@ -720,10 +708,11 @@ public class CraftingHelpers {
         craftingNetwork.getCraftingJobDependencyGraph().importDependencies(craftingJobDependencyGraph);
         for (CraftingJob craftingJob : craftingJobDependencyGraph.getCraftingJobs()) {
             try {
-                craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution);
+                craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution, storageGetter);
             } catch (UnavailableCraftingInterfacesException e) {
                 // First, cancel all jobs that were already started
                 for (CraftingJob startedJob : startedJobs) {
+                    CraftingHelpers.insertIngredientsGuaranteed(startedJob.getIngredientsStorageBuffer(), storageGetter, (ICraftingResultsSink) Iterables.getFirst(craftingNetwork.getCraftingInterfaces(startedJob.getChannel()), null));
                     craftingNetwork.cancelCraftingJob(startedJob.getChannel(), startedJob.getId());
                 }
 
@@ -739,18 +728,21 @@ public class CraftingHelpers {
 
     /**
      * Schedule the given crafting job  in the given network.
-     * @param craftingNetwork The target crafting network.
-     * @param craftingJob The crafting job to schedule.
+     *
+     * @param craftingNetwork   The target crafting network.
+     * @param storageGetter     The storage getter.
+     * @param craftingJob       The crafting job to schedule.
      * @param allowDistribution If the crafting job is allowed to be split over multiple crafting interfaces.
-     * @param initiator Optional UUID of the initiator.
+     * @param initiator         Optional UUID of the initiator.
      * @return The scheduled crafting job.
      * @throws UnavailableCraftingInterfacesException If no crafting interfaces were available.
      */
     public static CraftingJob scheduleCraftingJob(ICraftingNetwork craftingNetwork,
+                                                  Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
                                                   CraftingJob craftingJob,
                                                   boolean allowDistribution,
                                                   @Nullable UUID initiator) throws UnavailableCraftingInterfacesException {
-        craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution);
+        craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution, storageGetter);
         if (initiator != null) {
             craftingJob.setInitiatorUuid(initiator.toString());
         }
@@ -786,7 +778,7 @@ public class CraftingHelpers {
 
             ICraftingNetwork craftingNetwork = getCraftingNetworkChecked(network);
 
-            scheduleCraftingJobs(craftingNetwork, dependencyGraph, allowDistribution, initiator);
+            scheduleCraftingJobs(craftingNetwork, getNetworkStorageGetter(network, channel, false), dependencyGraph, allowDistribution, initiator);
 
             return craftingJob;
         } catch (UnknownCraftingRecipeException | RecursiveCraftingRecipeException | UnavailableCraftingInterfacesException e) {
@@ -819,7 +811,7 @@ public class CraftingHelpers {
 
             ICraftingNetwork craftingNetwork = getCraftingNetworkChecked(network);
 
-            scheduleCraftingJobs(craftingNetwork, dependencyGraph, allowDistribution, initiator);
+            scheduleCraftingJobs(craftingNetwork, getNetworkStorageGetter(network, channel, false), dependencyGraph, allowDistribution, initiator);
 
             return craftingJob;
         } catch (RecursiveCraftingRecipeException | FailedCraftingRecipeException | UnavailableCraftingInterfacesException e) {
@@ -1170,7 +1162,7 @@ public class CraftingHelpers {
 
             // If none of the alternatives were found, fail immediately
             if (!hasInputInstance) {
-                if (!simulate) {
+                if (!simulate && !collectMissingIngredients) {
                     // But first, re-insert all already-extracted instances
                     for (T instance : inputInstances) {
                         T remaining = storage.insert(instance, false);
@@ -1237,6 +1229,33 @@ public class CraftingHelpers {
     }
 
     /**
+     * Get all required recipe input ingredients from the crafting job's buffer.
+     *
+     * If multiple alternative inputs are possible,
+     * then only the first possible match will be taken.
+     *
+     * Note: Make sure that you first call in simulation-mode
+     * to see if the ingredients are available.
+     * If you immediately call this non-simulated,
+     * then there might be a chance that ingredients are lost
+     * from the buffer.
+     *
+     * @param craftingJob The crafting job.
+     * @param recipe The recipe to get the inputs from.
+     * @param simulate If true, then the ingredients will effectively be removed from the buffer, not when false.
+     * @param recipeOutputQuantity The number of times the given recipe should be applied.
+     * @return The found ingredients or null.
+     */
+    @Nullable
+    public static IMixedIngredients getRecipeInputsFromCraftingJobBuffer(CraftingJob craftingJob,
+                                                    IRecipeDefinition recipe, boolean simulate,
+                                                    long recipeOutputQuantity) {
+        Map<IngredientComponent<?, ?>, List<?>> inputs = getRecipeInputs(getCraftingJobBufferStorageGetter(craftingJob),
+                recipe, simulate, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), false, recipeOutputQuantity).getLeft();
+        return inputs == null ? null : new MixedIngredients(inputs);
+    }
+
+    /**
      * Create a callback function for getting a storage for an ingredient component from the given network channel.
      * @param network The target network.
      * @param channel The target channel.
@@ -1245,6 +1264,18 @@ public class CraftingHelpers {
      */
     public static Function<IngredientComponent<?, ?>, IIngredientComponentStorage> getNetworkStorageGetter(INetwork network, int channel, boolean scheduleObservation) {
         return ingredientComponent -> getNetworkStorage(network, channel, ingredientComponent, scheduleObservation);
+    }
+
+    /**
+     * Create a callback function for getting a storage for an ingredient component from the given crafting job buffer.
+     * @param craftingJob The crafting job.
+     * @return A callback function for getting a storage for an ingredient component.
+     */
+    public static Function<IngredientComponent<?, ?>, IIngredientComponentStorage> getCraftingJobBufferStorageGetter(CraftingJob craftingJob) {
+        return ingredientComponent -> {
+            List<?> list = craftingJob.getIngredientsStorageBuffer().getInstances(ingredientComponent);
+            return new IngredientComponentStorageSlottedCollectionWrapper<>(new IngredientList(ingredientComponent, list), Integer.MAX_VALUE, Integer.MAX_VALUE);
+        };
     }
 
     /**
@@ -1723,6 +1754,28 @@ public class CraftingHelpers {
             }
         }
         return new MixedIngredients(remainingIngredients);
+    }
+
+    /**
+     * Insert the given ingredients into the given storage networks.
+     * If something fails to be inserted, produce a warning.
+     * @param ingredients A collection of ingredients.
+     * @param storageGetter A storage network getter.
+     * @param failureSink Ingredients that failed to be inserted will be inserted to this sink.
+     */
+    public static void insertIngredientsGuaranteed(IMixedIngredients ingredients,
+                                                   Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
+                                                   ICraftingResultsSink failureSink) {
+        IMixedIngredients remaining = insertIngredients(ingredients, storageGetter, false);
+        // If re-insertion into the network fails, insert it into the buffer of the crafting interface,
+        // to avoid loss of ingredients.
+        if (!remaining.isEmpty()) {
+            for (IngredientComponent<?, ?> component : remaining.getComponents()) {
+                for (Object instance : remaining.getInstances(component)) {
+                    failureSink.addResult((IngredientComponent) component, instance);
+                }
+            }
+        }
     }
 
     /**

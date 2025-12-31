@@ -7,7 +7,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
-import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
@@ -24,7 +23,10 @@ import org.cyclops.integratedcrafting.core.CraftingJobHandler;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
 import org.cyclops.integratedcrafting.ingredient.storage.IngredientComponentStorageSlottedInsertProxy;
 import org.cyclops.integrateddynamics.api.evaluate.variable.ValueDeseralizationContext;
-import org.cyclops.integrateddynamics.api.network.*;
+import org.cyclops.integrateddynamics.api.network.INetwork;
+import org.cyclops.integrateddynamics.api.network.IPartNetwork;
+import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
+import org.cyclops.integrateddynamics.api.network.NetworkCapability;
 import org.cyclops.integrateddynamics.api.part.PartCapability;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
@@ -34,6 +36,7 @@ import org.cyclops.integrateddynamics.core.part.PartStateBase;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * Base logic for parts that do crafting interfacing.
@@ -300,6 +303,11 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
         }
 
         @Override
+        public void fillCraftingJobBufferFromStorage(CraftingJob craftingJob, Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter) {
+            getCraftingJobHandler().fillCraftingJobBufferFromStorage(craftingJob, storageGetter);
+        }
+
+        @Override
         public int getCraftingJobsCount() {
             return this.craftingJobHandler.getAllCraftingJobs().size();
         }
@@ -408,69 +416,23 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
 
         public void flushInventoryOutputBuffer(INetwork network) {
             // Try to insert each ingredient in the buffer into the network.
-            boolean changed = false;
             ListIterator<IngredientInstanceWrapper<?, ?>> outputBufferIt = this.getInventoryOutputBuffer().listIterator();
             while (outputBufferIt.hasNext()) {
-                IngredientInstanceWrapper<?, ?> oldWrapper = outputBufferIt.next();
+                IngredientInstanceWrapper<?, ?> remainingInstance = outputBufferIt.next();
 
-                // Force observation before insertion (see #98 on why this is necessary)
-                this.forceObservationOnInsertable(oldWrapper);
+                // First try to give the ingredients to pending crafting jobs.
+                remainingInstance = getCraftingJobHandler().beforeFlushIngredientToNetwork(remainingInstance, channelCrafting);
 
-                IngredientInstanceWrapper<?, ?> newWrapper = insertIntoNetwork(oldWrapper,
+                // If none of the jobs need it, dump it into the network.
+                remainingInstance = insertIntoNetwork(remainingInstance,
                         network, this.getChannelCrafting());
-                if (newWrapper != oldWrapper) {
-                    changed = true;
-                }
-                if (newWrapper == null) {
+                if (remainingInstance == null) {
                     outputBufferIt.remove();
                 } else {
-                    outputBufferIt.set(newWrapper);
-                }
-            }
-
-            // If at least one ingredient was inserted, force a sync observer update in the network.
-            if (changed) {
-                CraftingHelpers.beforeCalculateCraftingJobs(network, getChannelCrafting());
-            }
-        }
-
-        /**
-         * Iterate over all positions that *could* accept the given instance,
-         * and force an observation over them.
-         *
-         * This is necessary to ensure that we have the latest state indexed right before insertion.
-         * This allows us to force another observation right after the insertion,
-         * which will guarantee that we will track the expected diff events as result.
-         *
-         * @param oldWrapper The ingredient to attempt to insert (simulated).
-         * @param <T> Ingredient type.
-         * @param <M> Match flags.
-         */
-        protected <T, M> void forceObservationOnInsertable(IngredientInstanceWrapper<T, M> oldWrapper) {
-            IIngredientMatcher<T, M> matcher = oldWrapper.getComponent().getMatcher();
-            IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers.getIngredientsNetwork(network, oldWrapper.getComponent()).orElse(null);
-            if (ingredientsNetwork != null) {
-                boolean marked = false;
-                INetworkIngredientsChannel<?, ?> ingredientsNetworkChannel = ingredientsNetwork.getChannel(this.getChannelCrafting());
-                T instance = oldWrapper.getInstance();
-                for (PartPos position : ingredientsNetworkChannel.findNonFullPositions()) {
-                    T instanceOut = ingredientsNetwork.getPositionedStorage(position).insert(instance, true);
-                    if (!matcher.matchesExactly(instanceOut, instance)) {
-                        marked = true;
-                        instance = instanceOut;
-                        ingredientsNetwork.scheduleObservationForced(this.getChannelCrafting(), position);
-                        if (matcher.isEmpty(instance)) {
-                            break;
-                        }
-                    }
-                }
-
-                if (marked || ingredientsNetwork.isObservationForcedPending(channel)) {
-                    ingredientsNetwork.runObserverSync();
+                    outputBufferIt.set(remainingInstance);
                 }
             }
         }
-
     }
 
 }

@@ -154,7 +154,7 @@ public class MissingIngredients<T, M> {
     public static class PrototypedWithRequested<T, M> {
 
         private final IPrototypedIngredient<T, M> requestedPrototype;
-        private final long quantityMissing;
+        private long quantityMissing;
 
         public PrototypedWithRequested(IPrototypedIngredient<T, M> requestedPrototype, long quantityMissing) {
             this.requestedPrototype = requestedPrototype;
@@ -167,6 +167,10 @@ public class MissingIngredients<T, M> {
 
         public long getQuantityMissing() {
             return quantityMissing;
+        }
+
+        public void setQuantityMissing(long quantityMissing) {
+            this.quantityMissing = quantityMissing;
         }
 
         @Override

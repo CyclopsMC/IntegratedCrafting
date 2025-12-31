@@ -1,8 +1,24 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.4.0"></a>
+## [1.21.1-1.4.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.3.4...1.21.1-1.4.0) - 2025-12-31 14:44:30
+
+
+### Changed
+* Add dedicated storage per crafting job
+
+When a crafting job is started, ingredients are immediately moved from
+general storage to the new storage buffers per crafting job. This avoids
+issues where ingredients can be consumed elsewhere (e.g. exporters or
+other crafting jobs) before it is used by the crafting job.
+
+This also improves overall performance, as it is not necessary to run synchronous observers anymore.
+
+Closes #112
+
 <a name="1.21.1-1.3.4"></a>
-## [1.21.1-1.3.4](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.3.3...1.21.1-1.3.4) - 2025-11-21 19:52:19
+## [1.21.1-1.3.4](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.3.3...1.21.1-1.3.4) - 2025-11-21 19:52:19 +0100
 
 
 ### Added

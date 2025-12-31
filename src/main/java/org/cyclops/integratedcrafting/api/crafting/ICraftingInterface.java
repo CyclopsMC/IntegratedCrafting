@@ -3,14 +3,12 @@ package org.cyclops.integratedcrafting.api.crafting;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integrateddynamics.api.part.PrioritizedPartPos;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 
 /**
  * A handler for invoking crafting recipes.
@@ -33,6 +31,13 @@ public interface ICraftingInterface {
      * @param craftingJob The crafting job.
      */
     public void scheduleCraftingJob(CraftingJob craftingJob);
+
+    /**
+     * Extract the required ingredients from storage and store them in the job.
+     * @param craftingJob The crafting job.
+     * @param storageGetter The storage getter.
+     */
+    public void fillCraftingJobBufferFromStorage(CraftingJob craftingJob, Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter);
 
     /**
      * @return Get the number of scheduled and running crafting jobs in this interface.
@@ -80,5 +85,4 @@ public interface ICraftingInterface {
     public static Comparator<ICraftingInterface> createComparator() {
         return Comparator.comparing(ICraftingInterface::getPosition);
     }
-
 }

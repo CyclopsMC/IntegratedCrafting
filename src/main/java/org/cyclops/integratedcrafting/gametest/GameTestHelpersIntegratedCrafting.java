@@ -5,10 +5,12 @@ import com.google.common.collect.Maps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
 import net.minecraft.recipebook.PlaceRecipeHelper;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
@@ -17,6 +19,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.FurnaceBlockEntity;
 import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.commoncapabilities.IngredientComponents;
@@ -237,6 +240,19 @@ public class GameTestHelpersIntegratedCrafting {
     public static <T extends IValueType<V>, V extends IValue> void setCraftingInterfaceUpdateInterval(PartPos writerPos, int updateInterval) {
         PartHelpers.PartStateHolder partStateHolder = PartHelpers.getPart(writerPos);
         partStateHolder.getState().setUpdateInterval(updateInterval);
+    }
+
+    public static void chestContains(GameTestHelper helper, ChestBlockEntity chest, ItemStack itemStack) {
+        boolean found = false;
+        for (int i = 0; i < chest.getContainerSize(); i++) {
+            if (ItemStack.matches(chest.getItem(i), itemStack)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            throw new GameTestAssertException(Component.literal("Could not find " + itemStack + " in chest"), (int) helper.getTick());
+        }
     }
 
     public static record NetworkPositions<T extends PartTypeInterfaceCraftingBase.State<?, ?>> (
