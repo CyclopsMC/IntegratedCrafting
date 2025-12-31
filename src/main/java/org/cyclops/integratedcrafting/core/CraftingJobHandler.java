@@ -289,8 +289,10 @@ public class CraftingJobHandler {
             throw new IllegalStateException("Re-filling a non-empty crafting job buffer is illegal");
         }
         // Determine the ingredients to extract. We can not reuse the ingredientsStorage value from the crafting job, as this may have been modified due to job splitting.
-        IMixedIngredients buffer = new MixedIngredients(CraftingHelpers.getRecipeInputs(storageGetter, craftingJob.getRecipe(), false, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), true, craftingJob.getAmount()).getLeft());
+        Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputResult = CraftingHelpers.getRecipeInputs(storageGetter, craftingJob.getRecipe(), false, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), true, craftingJob.getAmount());
+        IMixedIngredients buffer = new MixedIngredients(inputResult.getLeft());
         craftingJob.setIngredientsStorageBuffer(CraftingHelpers.compressMixedIngredients(buffer));
+        craftingJob.setLastMissingIngredients(inputResult.getRight());
     }
 
     public Int2ObjectMap<List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>>> getProcessingCraftingJobsPendingIngredients() {
@@ -505,15 +507,12 @@ public class CraftingJobHandler {
                         pendingCraftingJob.setInvalidInputs(true);
                     }
                 } else {
-                    // Register listeners for pending ingredients
+                    // For the missing ingredients that are reusable,
+                    // trigger a crafting job for them if no job is running yet.
+                    // This special case is needed because reusable ingredients are usually durability-based,
+                    // and may be consumed _during_ a bulk crafting job.
                     if (pendingCraftingJob.getLastMissingIngredients().isEmpty()) {
                         for (IngredientComponent<?, ?> component : inputs.getRight().keySet()) {
-                            registerIngredientObserver(component, network);
-
-                            // For the missing ingredients that are reusable,
-                            // trigger a crafting job for them if no job is running yet.
-                            // This special case is needed because reusable ingredients are usually durability-based,
-                            // and may be consumed _during_ a bulk crafting job.
                             MissingIngredients<?, ?> missingIngredients = inputs.getRight().get(component);
                             for (MissingIngredients.Element<?, ?> element : missingIngredients.getElements()) {
                                 if (element.isInputReusable()) {
@@ -546,21 +545,11 @@ public class CraftingJobHandler {
                             }
                         }
                     }
-
-                    pendingCraftingJob.setLastMissingIngredients(inputs.getRight());
                 }
             }
 
             // Start the crafting job
             if (startingCraftingJob != null) {
-                // If the job previously had missing in ingredients, unregister the observers that were previously created for it.
-                if (!startingCraftingJob.getLastMissingIngredients().isEmpty()) {
-                    for (IngredientComponent<?, ?> component : startingCraftingJob.getLastMissingIngredients().keySet()) {
-                        unregisterIngredientObserver(component, network);
-                    }
-                    startingCraftingJob.setLastMissingIngredients(Maps.newIdentityHashMap());
-                }
-
                 // Check if the job was started while blocking mode was enabled in this handler
                 boolean blockingMode = !nonBlockingJobsRunningAmount.containsKey(startingCraftingJob.getId()) || startingCraftingJob.getAmount() == 1;
 
