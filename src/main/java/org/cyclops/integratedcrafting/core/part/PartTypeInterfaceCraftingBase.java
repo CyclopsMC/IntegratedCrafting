@@ -10,13 +10,15 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
-import org.cyclops.commoncapabilities.api.ingredient.IIngredientMatcher;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.integratedcrafting.GeneralConfig;
-import org.cyclops.integratedcrafting.api.crafting.*;
+import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
+import org.cyclops.integratedcrafting.api.crafting.CraftingJobStatus;
+import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
+import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.capability.network.CraftingInterfaceConfig;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkConfig;
@@ -26,7 +28,6 @@ import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
 import org.cyclops.integratedcrafting.ingredient.storage.IngredientComponentStorageSlottedInsertProxy;
 import org.cyclops.integrateddynamics.api.evaluate.variable.ValueDeseralizationContext;
 import org.cyclops.integrateddynamics.api.network.INetwork;
-import org.cyclops.integrateddynamics.api.network.INetworkIngredientsChannel;
 import org.cyclops.integrateddynamics.api.network.IPartNetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.api.part.PartPos;
@@ -424,69 +425,23 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
 
         public void flushInventoryOutputBuffer(INetwork network) {
             // Try to insert each ingredient in the buffer into the network.
-            boolean changed = false;
             ListIterator<IngredientInstanceWrapper<?, ?>> outputBufferIt = this.getInventoryOutputBuffer().listIterator();
             while (outputBufferIt.hasNext()) {
-                IngredientInstanceWrapper<?, ?> oldWrapper = outputBufferIt.next();
+                IngredientInstanceWrapper<?, ?> remainingInstance = outputBufferIt.next();
 
-                // Force observation before insertion (see #98 on why this is necessary)
-                this.forceObservationOnInsertable(oldWrapper);
+                // First try to give the ingredients to pending crafting jobs.
+                remainingInstance = getCraftingJobHandler().beforeFlushIngredientToNetwork(remainingInstance, channelCrafting);
 
-                IngredientInstanceWrapper<?, ?> newWrapper = insertIntoNetwork(oldWrapper,
+                // If none of the jobs need it, dump it into the network.
+                remainingInstance = insertIntoNetwork(remainingInstance,
                         network, this.getChannelCrafting());
-                if (newWrapper != oldWrapper) {
-                    changed = true;
-                }
-                if (newWrapper == null) {
+                if (remainingInstance == null) {
                     outputBufferIt.remove();
                 } else {
-                    outputBufferIt.set(newWrapper);
-                }
-            }
-
-            // If at least one ingredient was inserted, force a sync observer update in the network.
-            if (changed) {
-                CraftingHelpers.beforeCalculateCraftingJobs(network, getChannelCrafting());
-            }
-        }
-
-        /**
-         * Iterate over all positions that *could* accept the given instance,
-         * and force an observation over them.
-         *
-         * This is necessary to ensure that we have the latest state indexed right before insertion.
-         * This allows us to force another observation right after the insertion,
-         * which will guarantee that we will track the expected diff events as result.
-         *
-         * @param oldWrapper The ingredient to attempt to insert (simulated).
-         * @param <T> Ingredient type.
-         * @param <M> Match flags.
-         */
-        protected <T, M> void forceObservationOnInsertable(IngredientInstanceWrapper<T, M> oldWrapper) {
-            IIngredientMatcher<T, M> matcher = oldWrapper.getComponent().getMatcher();
-            IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers.getIngredientsNetwork(network, oldWrapper.getComponent()).orElse(null);
-            if (ingredientsNetwork != null) {
-                boolean marked = false;
-                INetworkIngredientsChannel<?, ?> ingredientsNetworkChannel = ingredientsNetwork.getChannelInternal(this.getChannelCrafting());
-                T instance = oldWrapper.getInstance();
-                for (PartPos position : ingredientsNetworkChannel.findNonFullPositions()) {
-                    T instanceOut = ingredientsNetwork.getPositionedStorage(position).insert(instance, true);
-                    if (!matcher.matchesExactly(instanceOut, instance)) {
-                        marked = true;
-                        instance = instanceOut;
-                        ingredientsNetwork.scheduleObservationForced(this.getChannelCrafting(), position);
-                        if (matcher.isEmpty(instance)) {
-                            break;
-                        }
-                    }
-                }
-
-                if (marked || ingredientsNetwork.isObservationForcedPending(channel)) {
-                    ingredientsNetwork.runObserverSync();
+                    outputBufferIt.set(remainingInstance);
                 }
             }
         }
-
     }
 
 }

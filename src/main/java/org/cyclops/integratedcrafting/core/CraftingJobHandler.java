@@ -18,6 +18,8 @@ import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.*;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
+import org.cyclops.cyclopscore.ingredient.collection.IIngredientCollectionMutable;
+import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
 import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.*;
@@ -57,7 +59,7 @@ public class CraftingJobHandler {
     private final Int2ObjectMap<List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>>> processingCraftingJobsPendingIngredients;
     private final Int2ObjectMap<CraftingJob> pendingCraftingJobs;
     private final Object2IntMap<IngredientComponent<?, ?>> ingredientObserverCounters;
-    private final Map<IngredientComponent<?, ?>, IIngredientComponentStorageObservable.IIndexChangeObserver<?, ?>> ingredientObservers;
+    private final Map<IngredientComponent<?, ?>, PendingCraftingJobResultIndexObserver<?, ?>> ingredientObservers;
     private final List<IngredientComponent<?, ?>> observersPendingCreation;
     private final List<IngredientComponent<?, ?>> observersPendingDeletion;
     private final Int2ObjectMap<CraftingJob> finishedCraftingJobs;
@@ -392,7 +394,7 @@ public class CraftingJobHandler {
     }
 
     public void reRegisterObservers(INetwork network) {
-        for (Map.Entry<IngredientComponent<?, ?>, IIngredientComponentStorageObservable.IIndexChangeObserver<?, ?>> entry : ingredientObservers.entrySet()) {
+        for (Map.Entry<IngredientComponent<?, ?>, PendingCraftingJobResultIndexObserver<?, ?>> entry : ingredientObservers.entrySet()) {
             IPositionedAddonsNetworkIngredients ingredientsNetwork = CraftingHelpers
                     .getIngredientsNetworkChecked(network, entry.getKey());
             ingredientsNetwork.addObserver(entry.getValue());
@@ -687,5 +689,25 @@ public class CraftingJobHandler {
                 return PartPos.of(defaultPosition.getPos(), sideOverride);
             }
         };
+    }
+
+    /**
+     * This method is called right before a crafting interface's result buffer is flushed to the network.
+     * This will first try to pass the instance along to crafting jobs that have pending ingredients.
+     * The remaining instance that could not be inserted into any of those crafting jobs is returned.
+     * @param instanceWrapper The instance that would be inserted into the network.
+     * @param channel The channel.
+     * @return The remaining instance that was not consumed by observers.
+     * @param <T> The ingredient type.
+     * @param <M> The match condition.
+     */
+    public <T, M> IngredientInstanceWrapper<T, M> beforeFlushIngredientToNetwork(IngredientInstanceWrapper<T, M> instanceWrapper, int channel) {
+        PendingCraftingJobResultIndexObserver<T, M> observer = (PendingCraftingJobResultIndexObserver<T, M>) ingredientObservers.get(instanceWrapper.getComponent());
+        if (observer != null) {
+            IIngredientCollectionMutable<T, M> instances = new IngredientCollectionPrototypeMap<>(instanceWrapper.getComponent());
+            instances.add(instanceWrapper.getInstance());
+            return observer.addIngredient(instanceWrapper, channel);
+        }
+        return instanceWrapper;
     }
 }
