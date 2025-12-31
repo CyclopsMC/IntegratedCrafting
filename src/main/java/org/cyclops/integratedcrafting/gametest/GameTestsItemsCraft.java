@@ -803,4 +803,42 @@ public class GameTestsItemsCraft {
         });
     }
 
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftFencesDoorsConcurrent(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, true);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.OAK_LOG, 64));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.OAK_FENCE, 32));
+
+        // After a few ticks, start crafting 32 doors
+        helper.runAfterDelay(10, () -> {
+            PartHelpers.addPart(helper.getLevel(), helper.absolutePos(POS), Direction.SOUTH, PartTypes.CRAFTING_WRITER, new ItemStack(PartTypes.CRAFTING_WRITER.getItem()));
+            enableRecipeInWriter(helper, PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.SOUTH), new ItemStack(Items.OAK_DOOR, 32));
+        });
+
+        helper.succeedWhen(() -> {
+            // Check crafting writer state
+            IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)).getState();
+            helper.assertFalse(partStateWriter.isDeactivated(), "Importer is deactivated");
+            helper.assertValueEqual(
+                    PartTypes.CRAFTING_WRITER.getBlockState(PartHelpers.getPartContainerChecked(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)), Direction.NORTH).getValue(IgnoredBlockStatus.STATUS),
+                    IgnoredBlockStatus.Status.ACTIVE,
+                    "Block status is incorrect"
+            );
+            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT, "Active aspect is incorrect");
+            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), "Active aspect has errors");
+
+            // Check if items have been crafted
+            chestContains(helper, chestIn, new ItemStack(Items.OAK_LOG, 33));
+            chestContains(helper, chestIn, new ItemStack(Items.OAK_PLANKS, 2));
+            chestContains(helper, chestIn, new ItemStack(Items.OAK_DOOR, 33));
+            chestContains(helper, chestIn, new ItemStack(Items.STICK, 2));
+            chestContains(helper, chestIn, new ItemStack(Items.OAK_FENCE, 33));
+        });
+    }
+
 }
