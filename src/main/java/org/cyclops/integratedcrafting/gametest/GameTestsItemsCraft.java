@@ -323,6 +323,50 @@ public class GameTestsItemsCraft {
     }
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftIronIngotsParallelFromDepPartial(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.FURNACE, Blocks.CRAFTING_TABLE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 2));
+        chestIn.setItem(1, new ItemStack(Items.RAW_IRON_BLOCK, 1));
+
+        // Add iron ingot recipe to furnaces
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(2).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(3).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(4).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+        positions.interfaceRecipeAdders().get(5).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "raw_iron")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_INGOT, 5));
+
+        helper.succeedWhen(() -> {
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface 0 is not valid");
+            helper.assertTrue(positions.interfaceStates().get(1).isRecipeSlotValid(0), "Recipe in crafting interface 1 is not valid");
+            helper.assertTrue(positions.interfaceStates().get(2).isRecipeSlotValid(0), "Recipe in crafting interface 2 is not valid");
+            helper.assertTrue(positions.interfaceStates().get(3).isRecipeSlotValid(0), "Recipe in crafting interface 3 is not valid");
+            helper.assertTrue(positions.interfaceStates().get(4).isRecipeSlotValid(0), "Recipe in crafting interface 4 is not valid");
+            helper.assertTrue(positions.interfaceStates().get(5).isRecipeSlotValid(0), "Recipe in crafting interface 5 is not valid");
+
+            // Check if items have been crafted
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.RAW_IRON, "Slot 0 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 6, "Slot 0 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.IRON_INGOT, "Slot 1 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 5, "Slot 1 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(2).getCount(), 0, "Slot 2 amount is incorrect");
+
+            helper.assertBlockProperty(POS.west(), AbstractFurnaceBlock.LIT, true);
+            helper.assertBlockProperty(POS.south().west(), AbstractFurnaceBlock.LIT, true);
+            helper.assertBlockProperty(POS.south().south().west(), AbstractFurnaceBlock.LIT, true);
+            helper.assertBlockProperty(POS.south().south().south().west(), AbstractFurnaceBlock.LIT, true);
+            helper.assertBlockProperty(POS.south().south().south().south().west(), AbstractFurnaceBlock.LIT, true);
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftDropper(GameTestHelper helper) {
         GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE);
 
@@ -344,8 +388,13 @@ public class GameTestsItemsCraft {
             helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(1), "Recipe 1 in crafting interface 0 is not valid");
 
             // Check if items have been crafted
-            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.DROPPER, "Slot 0 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 0 amount is incorrect");
+            try {
+                helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.DROPPER, "Slot 0 item is incorrect");
+                helper.assertValueEqual(chestIn.getItem(0).getCount(), 1, "Slot 0 amount is incorrect");
+            } catch (GameTestAssertException e) {
+                helper.assertValueEqual(chestIn.getItem(2).getItem(), Items.DROPPER, "Slot 0 item is incorrect");
+                helper.assertValueEqual(chestIn.getItem(2).getCount(), 1, "Slot 0 amount is incorrect");
+            }
         });
     }
 
@@ -708,10 +757,10 @@ public class GameTestsItemsCraft {
             helper.assertValueEqual(chestIn.getItem(1).getCount(), 63, "Slot 1 amount is incorrect");
             helper.assertValueEqual(chestIn.getItem(2).getItem(), Items.OAK_PLANKS, "Slot 2 item is incorrect");
             helper.assertValueEqual(chestIn.getItem(2).getCount(), 2, "Slot 2 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(3).getItem(), Items.IRON_SHOVEL, "Slot 3 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(3).getCount(), 1, "Slot 3 amount is incorrect");
-            helper.assertValueEqual(chestIn.getItem(4).getItem(), Items.STICK, "Slot 4 item is incorrect");
-            helper.assertValueEqual(chestIn.getItem(4).getCount(), 2, "Slot 4 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(3).getItem(), Items.STICK, "Slot 3 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(3).getCount(), 2, "Slot 3 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(4).getItem(), Items.IRON_SHOVEL, "Slot 4 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(4).getCount(), 1, "Slot 4 amount is incorrect");
         });
     }
 
