@@ -54,7 +54,6 @@
   "info_book.integratedcrafting.crafting_interface.basics.text3": "Bir &lÜretim Arayüzü&r'nün GUI'sini açarken, &8Tarifler&0 içeren &lDeğişken Kartlar&r ekleyebilirsiniz. Bu, arayüze verilen tarifin bağlı makine kullanılarak üretilebileceğini söyleyecektir.",
   "info_book.integratedcrafting.crafting_interface.crafting": "Üretim Süreci",
   "info_book.integratedcrafting.crafting_interface.crafting.text1": "Bu bölüm üretim sürecinin &lÜretim Arayüzleri&r tarafından nasıl ele alındığını açıklayacaktır. Bu bilgi, bu moddan en iyi şekilde yararlanmak ve karşılaşabileceğiniz sorunlarda hata ayıklamak için gereklidir.",
-  "info_book.integratedcrafting.crafting_interface.crafting.text2": "Bir üretim işi başlatıldığında (örneğin &lÜretim Yazıcısı&r ile), verilen işe karşılık gelen bir tarife sahip bir (veya daha fazla) &lÜretim Arayüzü/Arayüzleri&r kullanılacaktır. &lÜretim Arayüzü&r, tarifin tüm girdilerini bağlı makineye yerleştirmekten sorumludur. Bunu &lIntegrated Tunnels arayüzleri&r tarafından sağlanan depolama ağı içeriklerine dayanarak yapacaktır.",
   "info_book.integratedcrafting.crafting_interface.crafting.text4": "Aşağıdaki şekillerde, bir Çalışma Masası ve Ocak ile otomatik üretim için geçerli en düşük kurulum örnekleri gösterilmektedir.",
   "info_book.integratedcrafting.crafting_interface.configuration": "Yapılandırma",
   "info_book.integratedcrafting.crafting_interface.configuration.text1": "Çoğu &lIntegrated Dynamics&r parçası gibi, &lÜretim Arayüzü&r'nde kanal, öncelik ve tik oranı gibi şeyleri yapılandırabilirsiniz.",

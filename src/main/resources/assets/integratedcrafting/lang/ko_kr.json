@@ -51,7 +51,6 @@
   "info_book.integratedcrafting.crafting_interface.basics.text3": "&l제작 인터페이스&r의 GUI를 열면 &8레시피&0가 있는 &l변수 카드&r를 삽입할 수 있습니다. 이렇게 하면 바인딩된 기계를 사용하여 주어진 레시피를 만들 수 있음을 인터페이스에 알릴 것입니다.",
   "info_book.integratedcrafting.crafting_interface.crafting": "제작 과정",
   "info_book.integratedcrafting.crafting_interface.crafting.text1": "이 섹션에서는 &l제작 인터페이스&r에서 제작 프로세스를 처리하는 방법을 설명합니다. 이 정보는 이 모드를 최대한 활용하고 발생할 수 있는 문제를 디버그하는 데 필수적입니다.",
-  "info_book.integratedcrafting.crafting_interface.crafting.text2": "제작 작업이 시작되면(예: &l제작 작성기&r 사용), 주어진 작업에 해당하는 레시피가 있는 하나 이상의 &l제작 인터페이스&r가 사용됩니다. &l제작 인터페이스&r는 레시피의 모든 입력을 바인딩된 기계에 삽입하는 역할을 합니다. &lIntegrated Tunnels 인터페이스&r에서 제공하는 저장 네트워크의 내용을 기반으로 이 작업을 수행합니다.",
   "info_book.integratedcrafting.crafting_interface.crafting.text4": "다음 그림은 제작대 및 화로 사용하여 자동 제작하기 위한 유효한 최소 설정의 예를 보여줍니다.",
   "info_book.integratedcrafting.crafting_interface.configuration": "구성",
   "info_book.integratedcrafting.crafting_interface.configuration.text1": "대부분의 &lIntegrated Dynamics&r 부품과 마찬가지로 &l제작 인터페이스&r에서 채널, 우선 순위 및 틱 속도와 같은 항목을 구성할 수 있습니다.",
