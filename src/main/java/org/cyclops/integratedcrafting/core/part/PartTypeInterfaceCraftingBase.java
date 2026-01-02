@@ -279,9 +279,6 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
             this.channel = channel;
             this.valueDeseralizationContext = valueDeseralizationContext;
             reloadRecipes(initialize);
-            if (network != null) {
-                this.getCraftingJobHandler().reRegisterObservers(network);
-            }
         }
 
         public void reloadRecipes(boolean initialize) {
