@@ -24,7 +24,7 @@ Craft stuff in Integrated Dynamics networks.
 [[dependencies.integratedcrafting]]
     modId="integrateddynamics"
     mandatory=true
-    versionRange="[1.29.9,)"
+    versionRange="[1.29.10,)"
     ordering="AFTER"
     side="BOTH"
 [[dependencies.integratedcrafting]]
