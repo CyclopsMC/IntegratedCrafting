@@ -1,8 +1,16 @@
 # Changelog for Minecraft 1.20.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.20.1-1.4.1"></a>
+## [1.20.1-1.4.1](/compare/1.20.1-1.4.0...1.20.1-1.4.1) - 2026-01-02 10:55:58
+
+
+### Fixed
+* Fix crafting storage not dropping when breaking crafting interfaces
+* Fix crafting job completion when using importers, Closes #170
+
 <a name="1.20.1-1.4.0"></a>
-## [1.20.1-1.4.0](/compare/1.20.1-1.3.3...1.20.1-1.4.0) - 2025-12-31 14:42:03
+## [1.20.1-1.4.0](/compare/1.20.1-1.3.3...1.20.1-1.4.0) - 2025-12-31 15:03:05 +0100
 
 
 ### Changed
