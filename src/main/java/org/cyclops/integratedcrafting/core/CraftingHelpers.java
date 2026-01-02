@@ -1169,9 +1169,9 @@ public class CraftingHelpers {
                     for (T instance : inputInstances) {
                         T remaining = storage.insert(instance, false);
                         if (!matcher.isEmpty(remaining)) {
-                            throw new IllegalStateException("Extraction for a crafting recipe failed" +
+                            throw new IllegalStateException(String.format("Extraction for a crafting recipe failed " +
                                     "due to inconsistent insertion behaviour by destination in simulation " +
-                                    "and non-simulation: " + storage + ". Lost: " + remaining);
+                                    "and non-simulation: %s. Lost: %s", storage, remaining));
                         }
                     }
                 }
@@ -1609,9 +1609,9 @@ public class CraftingHelpers {
         for (T instance : failedInstances) {
             T remaining = storageFallback.insert(instance, false);
             if (!matcher.isEmpty(remaining)) {
-                throw new IllegalStateException("Insertion for a crafting recipe failed" +
+                throw new IllegalStateException(String.format("Insertion for a crafting recipe failed " +
                         "due to inconsistent insertion behaviour by destination in simulation " +
-                        "and non-simulation: " + capabilityProvider + ". Lost: " + instances);
+                        "and non-simulation: %s. Lost: %s", capabilityProvider, instances));
             }
         }
 
