@@ -24,7 +24,6 @@ import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.*;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
-import org.cyclops.integrateddynamics.api.ingredient.IIngredientComponentStorageObservable;
 import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.api.part.PartPos;
@@ -306,9 +305,8 @@ public class CraftingJobHandler {
             IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers
                     .getIngredientsNetworkChecked(network, ingredientComponent);
             ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetworkChecked(network);
-            PendingCraftingJobResultIndexObserver<T, M> observer = new PendingCraftingJobResultIndexObserver<>(ingredientComponent, this, craftingNetwork, ingredientsNetwork, network);
-            ingredientsNetwork.addObserver(observer);
-            ingredientsNetwork.scheduleObservation();
+            PendingCraftingJobResultIndexObserver<T, M> observer = new PendingCraftingJobResultIndexObserver<>(ingredientComponent, this, craftingNetwork);
+            ingredientsNetwork.registerInsertPreConsumer(observer);
             ingredientObservers.put(ingredientComponent, observer);
         }
         ingredientObserverCounters.put(ingredientComponent, count + 1);
@@ -321,10 +319,10 @@ public class CraftingJobHandler {
         if (count == 0) {
             IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers
                     .getIngredientsNetworkChecked(network, ingredientComponent);
-            IIngredientComponentStorageObservable.IIndexChangeObserver<T, M> observer =
-                    (IIngredientComponentStorageObservable.IIndexChangeObserver<T, M>) ingredientObservers
+            PendingCraftingJobResultIndexObserver<T, M> observer =
+                    (PendingCraftingJobResultIndexObserver<T, M>) ingredientObservers
                             .remove(ingredientComponent);
-            ingredientsNetwork.removeObserver(observer);
+            ingredientsNetwork.unregisterInsertPreConsumer(observer);
         }
     }
 
@@ -345,14 +343,6 @@ public class CraftingJobHandler {
         CraftingJob craftingJob = this.allCraftingJobs.get(craftingJobId);
         this.finishedCraftingJobs.put(craftingJobId, craftingJob);
         craftingJob.setAmount(0);
-    }
-
-    public void reRegisterObservers(INetwork network) {
-        for (Map.Entry<IngredientComponent<?, ?>, PendingCraftingJobResultIndexObserver<?, ?>> entry : ingredientObservers.entrySet()) {
-            IPositionedAddonsNetworkIngredients ingredientsNetwork = CraftingHelpers
-                    .getIngredientsNetworkChecked(network, entry.getKey());
-            ingredientsNetwork.addObserver(entry.getValue());
-        }
     }
 
     public void onCraftingJobEntryFinished(ICraftingNetwork craftingNetwork, int craftingJobId) {
@@ -660,7 +650,7 @@ public class CraftingJobHandler {
         if (observer != null) {
             IIngredientCollectionMutable<T, M> instances = new IngredientCollectionPrototypeMap<>(instanceWrapper.getComponent());
             instances.add(instanceWrapper.getInstance());
-            return observer.addIngredient(instanceWrapper, channel);
+            return observer.addIngredient(instanceWrapper, channel, false);
         }
         return instanceWrapper;
     }

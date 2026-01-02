@@ -168,6 +168,13 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
         }
         state.getInventoryOutputBuffer().clear();
 
+        // Drop buffered items from running crafting jobs (only items)
+        for (CraftingJob craftingJob : state.getCraftingJobHandler().getAllCraftingJobs().values()) {
+            for (ItemStack instance : craftingJob.getIngredientsStorageBuffer().getInstances(IngredientComponent.ITEMSTACK)) {
+                itemStacks.add(instance);
+            }
+        }
+
         super.addDrops(target, state, itemStacks, dropMainElement, saveState);
     }
 
@@ -270,9 +277,6 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
             this.channel = channel;
             this.valueDeseralizationContext = valueDeseralizationContext;
             reloadRecipes(initialize);
-            if (network != null) {
-                this.getCraftingJobHandler().reRegisterObservers(network);
-            }
         }
 
         public void reloadRecipes(boolean initialize) {

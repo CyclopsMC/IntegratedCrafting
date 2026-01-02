@@ -1,8 +1,19 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.4.1"></a>
+## [1.21.1-1.4.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.0...1.21.1-1.4.1) - 2026-01-02 10:56:30
+
+
+### Added
+* Add translations through Crowdin (#165)
+
+### Fixed
+* Fix crafting storage not dropping when breaking crafting interfaces
+* Fix crafting job completion when using importers, Closes #170
+
 <a name="1.21.1-1.4.0"></a>
-## [1.21.1-1.4.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.3.4...1.21.1-1.4.0) - 2025-12-31 14:44:30
+## [1.21.1-1.4.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.3.4...1.21.1-1.4.0) - 2025-12-31 14:44:30 +0100
 
 
 ### Changed

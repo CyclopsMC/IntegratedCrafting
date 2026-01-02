@@ -472,6 +472,103 @@ public class GameTestsItemsCraft {
     }
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftPlanksAndExtractFromStorageSameNetwork(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
+        chestIn.setItem(0, new ItemStack(Items.OAK_LOG, 64));
+
+        // Add chest recipe to crafting interface
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "oak_planks")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.OAK_PLANKS));
+
+        // Set aspect to ignore storage contents
+        setWriterAspectProperty(positions.writer(), CraftingAspects.Write.ITEMSTACK_CRAFT, CraftingAspectWriteBuilders.PROP_IGNORE_STORAGE, ValueTypeBoolean.ValueBoolean.of(true));
+
+        // Extract all items from the network
+        helper.setBlock(positions.chest().south().west(), RegistryEntries.BLOCK_CABLE.value());
+        helper.setBlock(positions.chest().south().west().south(), Blocks.CHEST);
+        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(positions.chest().south().west()), Direction.SOUTH, org.cyclops.integratedtunnels.part.PartTypes.EXPORTER_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.EXPORTER_ITEM.getItem()));
+        placeVariableInWriter(helper, helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(positions.chest().south().west()), Direction.SOUTH), TunnelAspects.Write.Item.ITEMSTACK_EXPORT, createVariableForValue(helper.getLevel(), ValueTypes.OBJECT_ITEMSTACK, ValueObjectTypeItemStack.ValueItemStack.of(new ItemStack(Items.OAK_PLANKS))));
+
+        helper.succeedWhen(() -> {
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+
+            // Check if items have been crafted
+            helper.assertTrue(chestIn.getItem(0).isEmpty(), "Slot 0 item is incorrect");
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT * 5)
+    public void testItemsCraftIngotsAndExtractFromStorage(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
+        chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 8));
+
+        // Add chest recipe to crafting interface
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_INGOT));
+
+        // Set aspect to ignore storage contents
+        setWriterAspectProperty(positions.writer(), CraftingAspects.Write.ITEMSTACK_CRAFT, CraftingAspectWriteBuilders.PROP_IGNORE_STORAGE, ValueTypeBoolean.ValueBoolean.of(true));
+
+        // Extract all items from storage chest
+        helper.setBlock(positions.chest().south(), RegistryEntries.BLOCK_CABLE.value());
+        helper.setBlock(positions.chest().south().south(), Blocks.CHEST);
+        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(positions.chest().south()), Direction.SOUTH, org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_ITEM.getItem()));
+        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(positions.chest().south()), Direction.NORTH, org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM.getItem()));
+        placeVariableInWriter(helper, helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(positions.chest().south()), Direction.NORTH), TunnelAspects.Write.Item.ITEMSTACK_IMPORT, createVariableForValue(helper.getLevel(), ValueTypes.OBJECT_ITEMSTACK, ValueObjectTypeItemStack.ValueItemStack.of(new ItemStack(Items.IRON_INGOT))));
+
+        helper.succeedWhen(() -> {
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+
+            // Check if items have been crafted
+            helper.assertTrue(chestIn.getItem(0).isEmpty(), "Slot 0 item is incorrect, was " + chestIn.getItem(0));
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT * 5)
+    public void testItemsCraftIngotsAndExtractFromStorageSameNetwork(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
+        chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 8));
+
+        // Add chest recipe to crafting interface
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, Identifier.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_INGOT));
+
+        // Set aspect to ignore storage contents
+        setWriterAspectProperty(positions.writer(), CraftingAspects.Write.ITEMSTACK_CRAFT, CraftingAspectWriteBuilders.PROP_IGNORE_STORAGE, ValueTypeBoolean.ValueBoolean.of(true));
+
+        // Extract all items from the network
+        helper.setBlock(positions.chest().south().west(), RegistryEntries.BLOCK_CABLE.value());
+        helper.setBlock(positions.chest().south().west().south(), Blocks.CHEST);
+        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(positions.chest().south().west()), Direction.SOUTH, org.cyclops.integratedtunnels.part.PartTypes.EXPORTER_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.EXPORTER_ITEM.getItem()));
+        placeVariableInWriter(helper, helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(positions.chest().south().west()), Direction.SOUTH), TunnelAspects.Write.Item.ITEMSTACK_EXPORT, createVariableForValue(helper.getLevel(), ValueTypes.OBJECT_ITEMSTACK, ValueObjectTypeItemStack.ValueItemStack.of(new ItemStack(Items.IRON_INGOT))));
+
+        helper.succeedWhen(() -> {
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+
+            // Check if items have been crafted
+            helper.assertTrue(chestIn.getItem(0).isEmpty(), "Slot 0 item is incorrect, was " + chestIn.getItem(0));
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftDeadBushTag(GameTestHelper helper) {
         GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS);
 
