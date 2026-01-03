@@ -8,10 +8,8 @@ org.cyclops.integratedcrafting.core
 org.cyclops.integratedcrafting.core.crafting.processoverride
 org.cyclops.integratedcrafting.core.network
 org.cyclops.integratedcrafting.core.part
-org.cyclops.integratedcrafting.gametest
 org.cyclops.integratedcrafting.ingredient.storage
 org.cyclops.integratedcrafting.inventory.container
 org.cyclops.integratedcrafting.part
 org.cyclops.integratedcrafting.part.aspect
 org.cyclops.integratedcrafting.proxy
-org.cyclops.integratedcrafting.recipe.type
