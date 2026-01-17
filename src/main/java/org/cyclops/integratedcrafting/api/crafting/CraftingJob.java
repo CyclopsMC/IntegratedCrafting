@@ -154,7 +154,7 @@ public class CraftingJob {
             }
             T remaining = new IngredientComponentStorageSlottedCollectionWrapper<>(new IngredientList<>(ingredientComponent, instances), Integer.MAX_VALUE, Integer.MAX_VALUE).insert(instance, false);
             if (!matcher.isEmpty(remaining)) {
-                throw new IllegalStateException(String.format("Unable to insert %s into the crafting job buffer, remaining: ", instances, remaining));
+                throw new IllegalStateException(String.format("Unable to insert %s into the crafting job buffer, remaining: %s", instances, remaining));
             }
         }
 
