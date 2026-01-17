@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.20.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.20.1-1.4.2"></a>
+## [1.20.1-1.4.2](/compare/1.20.1-1.4.1...1.20.1-1.4.2) - 2026-01-17 14:14:28
+
+
+### Fixed
+* Fix formatting of some exception messages (#173)
+
 <a name="1.20.1-1.4.1"></a>
-## [1.20.1-1.4.1](/compare/1.20.1-1.4.0...1.20.1-1.4.1) - 2026-01-02 10:55:58
+## [1.20.1-1.4.1](/compare/1.20.1-1.4.0...1.20.1-1.4.1) - 2026-01-02 10:55:58 +0100
 
 
 ### Fixed
