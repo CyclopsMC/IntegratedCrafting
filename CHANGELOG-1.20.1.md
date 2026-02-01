@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.20.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.20.1-1.4.3"></a>
+## [1.20.1-1.4.3](/compare/1.20.1-1.4.2...1.20.1-1.4.3) - 2026-02-01 14:22:50
+
+
+### Fixed
+* Fix crash due to incorrect Lists import, Closes #176
+
 <a name="1.20.1-1.4.2"></a>
-## [1.20.1-1.4.2](/compare/1.20.1-1.4.1...1.20.1-1.4.2) - 2026-01-17 14:14:28
+## [1.20.1-1.4.2](/compare/1.20.1-1.4.1...1.20.1-1.4.2) - 2026-01-17 14:14:28 +0100
 
 
 ### Fixed
