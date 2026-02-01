@@ -1,8 +1,18 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.4.3"></a>
+## [1.21.1-1.4.3](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.2...1.21.1-1.4.3) - 2026-02-01 14:24:27
+
+
+### Added
+* Add translations through Crowdin (#174)
+
+### Fixed
+* Fix crash due to incorrect Lists import, Closes #176
+
 <a name="1.21.1-1.4.2"></a>
-## [1.21.1-1.4.2](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.1...1.21.1-1.4.2) - 2026-01-17 14:17:21
+## [1.21.1-1.4.2](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.1...1.21.1-1.4.2) - 2026-01-17 14:17:21 +0100
 
 
 ### Added
