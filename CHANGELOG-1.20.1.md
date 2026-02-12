@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.20.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.20.1-1.4.4"></a>
+## [1.20.1-1.4.4](/compare/1.20.1-1.4.3...1.20.1-1.4.4) - 2026-02-12 16:47:55
+
+
+### Fixed
+* Fix crash on invalid Stone Cutter recipes, Closes #178
+
 <a name="1.20.1-1.4.3"></a>
-## [1.20.1-1.4.3](/compare/1.20.1-1.4.2...1.20.1-1.4.3) - 2026-02-01 14:22:50
+## [1.20.1-1.4.3](/compare/1.20.1-1.4.2...1.20.1-1.4.3) - 2026-02-01 14:22:50 +0100
 
 
 ### Fixed
