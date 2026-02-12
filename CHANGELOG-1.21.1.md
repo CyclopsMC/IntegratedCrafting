@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.4.4"></a>
+## [1.21.1-1.4.4](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.3...1.21.1-1.4.4) - 2026-02-12 16:49:31
+
+
+### Fixed
+* Fix crash on invalid Stone Cutter recipes, Closes #178
+
 <a name="1.21.1-1.4.3"></a>
-## [1.21.1-1.4.3](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.2...1.21.1-1.4.3) - 2026-02-01 14:24:27
+## [1.21.1-1.4.3](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.2...1.21.1-1.4.3) - 2026-02-01 14:24:27 +0100
 
 
 ### Added
