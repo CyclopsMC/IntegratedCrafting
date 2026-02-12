@@ -562,7 +562,11 @@ public class CraftingJobHandler {
         // First check our crafting overrides
         for (ICraftingProcessOverride craftingProcessOverride : this.craftingProcessOverrides) {
             if (craftingProcessOverride.isApplicable(target)) {
-                return craftingProcessOverride.craft(targetGetter, ingredients, recipe, this.resultsSink, craftingJob, simulate);
+                try {
+                    return craftingProcessOverride.craft(targetGetter, ingredients, recipe, this.resultsSink, craftingJob, simulate);
+                } catch (IllegalArgumentException e) {
+                    return false;
+                }
             }
         }
 
@@ -576,7 +580,7 @@ public class CraftingJobHandler {
             IRecipeDefinition recipe = craftingJob.getRecipe();
             IMixedIngredients ingredientsSimulated = CraftingHelpers.getRecipeInputsFromCraftingJobBuffer(craftingJob,
                     recipe, true, 1);
-            if (ingredientsSimulated == null ||!insertCrafting(targetPos, ingredientsSimulated, recipe, craftingJob, network, channel, true)) {
+            if (ingredientsSimulated == null || !insertCrafting(targetPos, ingredientsSimulated, recipe, craftingJob, network, channel, true)) {
                 break;
             }
             if (!consumeAndInsertCrafting(true, network, channel, targetPos, craftingJob)) {
