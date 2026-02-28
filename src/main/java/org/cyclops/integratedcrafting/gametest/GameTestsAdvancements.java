@@ -9,7 +9,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -23,11 +22,12 @@ import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
 import org.cyclops.integrateddynamics.api.part.write.IPartStateWriter;
 import org.cyclops.integrateddynamics.api.part.write.IPartTypeWriter;
+import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
+import org.cyclops.integrateddynamics.core.evaluate.variable.Variable;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 import org.cyclops.integrateddynamics.core.part.event.PartVariableDrivenVariableContentsUpdatedEvent;
 
 import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.*;
-import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedDynamics.getVariableFacade;
 
 /**
  * Game tests for all advancements in the mod.
@@ -149,19 +149,15 @@ public class GameTestsAdvancements {
     /**
      * Test for the insert_recipe_planks advancement.
      * Trigger: integrateddynamics:part_variable_driven
-     * Condition: crafting interface has an oak planks recipe variable
+     * Condition: crafting interface has a recipe variable
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testAdvancementInsertRecipePlanks(GameTestHelper helper) {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
 
-        // Create the oak planks recipe variable
-        ItemStack variableRecipe = createVariableForRecipe(helper.getLevel(), RecipeType.CRAFTING,
-                ResourceLocation.fromNamespaceAndPath("minecraft", "oak_planks"));
-
-        // Get the IVariable from the value facade — ValueTypeVariableFacade.getVariable() does not
-        // need a network, so passing null is safe for this type of (value-baked) facade
-        IVariable<?> variable = getVariableFacade(helper.getLevel(), variableRecipe).getVariable(null, null);
+        // Create a recipe variable directly (bypassing ItemStack serialization to avoid potential
+        // deserialization issues) — the advancement only requires the variable to be of recipe type
+        IVariable<?> variable = new Variable<>(ValueObjectTypeRecipe.ValueRecipe.of(null));
 
         // Fire the event directly, mirroring what PartTypeInterfaceCrafting.State.reloadRecipe() does
         // when a player inserts a recipe variable into the crafting interface

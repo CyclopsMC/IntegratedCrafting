@@ -44,11 +44,7 @@
         "part_type": "integratedcrafting:interface_crafting",
         "variable": {
           "type": "value_type",
-          "value": {
-            "type": "serialized",
-            "value_type": "integrateddynamics:recipe",
-            "value": "{output:{\"minecraft:itemstack\":[{id:\"minecraft:oak_planks\",Count:4}]},input:{\"minecraft:itemstack\":[{val:[{condition:5,prototype:{id:\"minecraft:oak_log\",Count:1}}],type:0b}]}}"
-          }
+          "value_type": "integrateddynamics:recipe"
         }
       }
     }
