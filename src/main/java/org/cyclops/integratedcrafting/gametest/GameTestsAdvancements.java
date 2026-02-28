@@ -4,6 +4,8 @@ import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleContainer;
@@ -17,12 +19,15 @@ import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integrateddynamics.RegistryEntries;
+import org.cyclops.integrateddynamics.api.evaluate.variable.IValue;
 import org.cyclops.integrateddynamics.api.evaluate.variable.IVariable;
+import org.cyclops.integrateddynamics.api.evaluate.variable.ValueDeseralizationContext;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
 import org.cyclops.integrateddynamics.api.part.write.IPartStateWriter;
 import org.cyclops.integrateddynamics.api.part.write.IPartTypeWriter;
-import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
+import org.cyclops.integrateddynamics.core.evaluate.variable.ValueHelpers;
+import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
 import org.cyclops.integrateddynamics.core.evaluate.variable.Variable;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 import org.cyclops.integrateddynamics.core.part.event.PartVariableDrivenVariableContentsUpdatedEvent;
@@ -149,15 +154,29 @@ public class GameTestsAdvancements {
     /**
      * Test for the insert_recipe_planks advancement.
      * Trigger: integrateddynamics:part_variable_driven
-     * Condition: crafting interface has a recipe variable
+     * Condition: crafting interface has an oak planks recipe variable
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testAdvancementInsertRecipePlanks(GameTestHelper helper) {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
 
-        // Create a recipe variable directly (bypassing ItemStack serialization to avoid potential
-        // deserialization issues) — the advancement only requires the variable to be of recipe type
-        IVariable<?> variable = new Variable<>(ValueObjectTypeRecipe.ValueRecipe.of(null));
+        // Deserialize the recipe value from the exact same SNBT that the advancement JSON expects.
+        // This guarantees ValuePredicate.test() will find equal values via ValueHelpers.areValuesEqual().
+        Tag recipeTag;
+        try {
+            recipeTag =
+                    TagParser.parseTag(
+                            "{output:{\"minecraft:itemstack\":[{id:\"minecraft:oak_planks\",Count:4}]},"
+                                    + "input:{\"minecraft:itemstack\":[{val:[{condition:5,prototype:{id:\"minecraft:oak_log\",Count:1}}],type:0b}]}}");
+        } catch (com.mojang.brigadier.exceptions.CommandSyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        IValue recipeValue =
+                ValueHelpers.deserializeRaw(
+                        ValueDeseralizationContext.of(helper.getLevel()),
+                        ValueTypes.OBJECT_RECIPE,
+                        recipeTag);
+        IVariable<?> variable = new Variable<>(recipeValue);
 
         // Fire the event directly, mirroring what PartTypeInterfaceCrafting.State.reloadRecipe() does
         // when a player inserts a recipe variable into the crafting interface
