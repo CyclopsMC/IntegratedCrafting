@@ -14,18 +14,20 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
-import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integrateddynamics.RegistryEntries;
+import org.cyclops.integrateddynamics.api.evaluate.variable.IVariable;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
 import org.cyclops.integrateddynamics.api.part.write.IPartStateWriter;
 import org.cyclops.integrateddynamics.api.part.write.IPartTypeWriter;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
+import org.cyclops.integrateddynamics.core.part.event.PartVariableDrivenVariableContentsUpdatedEvent;
 
 import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.*;
+import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedDynamics.getVariableFacade;
 
 /**
  * Game tests for all advancements in the mod.
@@ -151,21 +153,20 @@ public class GameTestsAdvancements {
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testAdvancementInsertRecipePlanks(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions =
-                createBasicNetwork(helper, POS);
-
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
 
-        // Set the last player on the crafting interface state so that the PartVariableDrivenVariableContentsUpdatedEvent
-        // is fired with a real ServerPlayer when the recipe slot is updated
-        positions.interfaceStates().get(0).setLastPlayer(player);
+        // Create the oak planks recipe variable
+        ItemStack variableRecipe = createVariableForRecipe(helper.getLevel(), RecipeType.CRAFTING,
+                ResourceLocation.fromNamespaceAndPath("minecraft", "oak_planks"));
 
-        // Add the oak planks recipe variable to the crafting interface.
-        // This triggers onDirty() -> reloadRecipes() -> reloadRecipe() which fires
-        // PartVariableDrivenVariableContentsUpdatedEvent with the lastPlayer
-        positions.interfaceRecipeAdders().get(0).accept(
-                Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "oak_planks"))
-        );
+        // Get the IVariable from the value facade — ValueTypeVariableFacade.getVariable() does not
+        // need a network, so passing null is safe for this type of (value-baked) facade
+        IVariable<?> variable = getVariableFacade(helper.getLevel(), variableRecipe).getVariable(null, null);
+
+        // Fire the event directly, mirroring what PartTypeInterfaceCrafting.State.reloadRecipe() does
+        // when a player inserts a recipe variable into the crafting interface
+        NeoForge.EVENT_BUS.post(new PartVariableDrivenVariableContentsUpdatedEvent<>(
+                null, null, null, PartTypes.INTERFACE_CRAFTING, null, player, variable, null));
 
         helper.succeedWhen(() -> {
             AdvancementHolder advancement = helper.getLevel().getServer().getAdvancements()
