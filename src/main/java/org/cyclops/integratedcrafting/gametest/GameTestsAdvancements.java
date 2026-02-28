@@ -1,11 +1,17 @@
 package org.cyclops.integratedcrafting.gametest;
 
+import com.mojang.authlib.GameProfile;
+import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.Connection;
+import net.minecraft.network.ConnectionProtocol;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -14,6 +20,8 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.network.registration.ChannelAttributes;
+import net.neoforged.neoforge.network.registration.NetworkRegistry;
 import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
@@ -25,13 +33,17 @@ import org.cyclops.integrateddynamics.api.part.write.IPartStateWriter;
 import org.cyclops.integrateddynamics.api.part.write.IPartTypeWriter;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 
+import java.lang.reflect.Field;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.*;
 
 /**
  * Game tests for all advancements in the mod.
  * @author rubensworks
  */
-@SuppressWarnings("removal")
 @GameTestHolder(Reference.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class GameTestsAdvancements {
@@ -47,7 +59,7 @@ public class GameTestsAdvancements {
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testAdvancementRoot(GameTestHelper helper) {
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        ServerPlayer player = createMockServerPlayer(helper);
 
         // Add a variable item to the player's inventory, which fires the InventoryChangeTrigger implicitly
         player.getInventory().setItem(0, new ItemStack(RegistryEntries.ITEM_VARIABLE.get()));
@@ -70,7 +82,7 @@ public class GameTestsAdvancements {
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testAdvancementCraftCraftingInterface(GameTestHelper helper) {
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        ServerPlayer player = createMockServerPlayer(helper);
 
         // Fire the PlayerEvent.ItemCraftedEvent via the NeoForge event bus,
         // which is the same mechanism used when a player actually crafts an item
@@ -98,7 +110,7 @@ public class GameTestsAdvancements {
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testAdvancementCraftCraftingInterfaceAttuned(GameTestHelper helper) {
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        ServerPlayer player = createMockServerPlayer(helper);
 
         // Fire the PlayerEvent.ItemCraftedEvent via the NeoForge event bus
         NeoForge.EVENT_BUS.post(new PlayerEvent.ItemCraftedEvent(
@@ -125,7 +137,7 @@ public class GameTestsAdvancements {
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testAdvancementCraftCraftingWriter(GameTestHelper helper) {
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        ServerPlayer player = createMockServerPlayer(helper);
 
         // Fire the PlayerEvent.ItemCraftedEvent via the NeoForge event bus
         NeoForge.EVENT_BUS.post(new PlayerEvent.ItemCraftedEvent(
@@ -155,7 +167,7 @@ public class GameTestsAdvancements {
         GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions =
                 createBasicNetwork(helper, POS);
 
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        ServerPlayer player = createMockServerPlayer(helper);
 
         // Set the last player on the crafting interface state so that the PartVariableDrivenVariableContentsUpdatedEvent
         // is fired with a real ServerPlayer when the recipe slot is updated
@@ -192,7 +204,7 @@ public class GameTestsAdvancements {
         // Place oak planks variable in the crafting writer (sets the variable in the writer's inventory)
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.OAK_PLANKS));
 
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        ServerPlayer player = createMockServerPlayer(helper);
 
         // Call updateActivation with a real ServerPlayer to fire PartWriterAspectEvent with the player.
         // This is the same mechanism used when a player actually places a variable via the GUI.
@@ -216,6 +228,54 @@ public class GameTestsAdvancements {
     private static <P extends IPartTypeWriter<P, S>, S extends IPartStateWriter<P>> void callUpdateActivationWithPlayer(
             IPartTypeWriter<?, ?> partType, IPartStateWriter<?> partState, PartPos writerPos, ServerPlayer player) {
         ((P) partType).updateActivation(PartTarget.fromCenter(writerPos), (S) partState, player);
+    }
+
+    /**
+     * Creates a mock {@link ServerPlayer} suitable for advancement testing.
+     * <p>
+     * This replicates the logic of the deprecated {@link GameTestHelper#makeMockServerPlayerInLevel()}, but
+     * pre-registers all NeoForge payload channels as ad-hoc channels on the mock connection before
+     * {@code placeNewPlayer()} is called.  Without this, {@code PlayerLoggedInEvent} causes
+     * {@code LabelsWorldStorage} (IntegratedDynamics) to send {@code AllLabelsPacket} to the player,
+     * which fails with "Payload integrateddynamics:all_labels may not be sent to the client!" because the
+     * mock {@link EmbeddedChannel} connection never went through the NeoForge handshake.
+     */
+    @SuppressWarnings({"unchecked", "removal"})
+    private static ServerPlayer createMockServerPlayer(GameTestHelper helper) {
+        CommonListenerCookie cookie = CommonListenerCookie.createInitial(
+                new GameProfile(UUID.randomUUID(), "test-mock-player"), false);
+        ServerPlayer player = new ServerPlayer(
+                helper.getLevel().getServer(), helper.getLevel(),
+                cookie.gameProfile(), cookie.clientInformation()) {
+            @Override
+            public boolean isSpectator() {
+                return false;
+            }
+
+            @Override
+            public boolean isCreative() {
+                return true;
+            }
+        };
+        Connection connection = new Connection(PacketFlow.SERVERBOUND);
+        new EmbeddedChannel(connection);
+        // Pre-register all NeoForge payload channels as ad-hoc channels so that any packet send that
+        // happens during PlayerLoggedInEvent (e.g. integrateddynamics:all_labels) passes the
+        // NetworkRegistry.checkPacket() validation, even though no real NeoForge handshake occurred.
+        try {
+            Field field = NetworkRegistry.class.getDeclaredField("PAYLOAD_REGISTRATIONS");
+            field.setAccessible(true);
+            Map<ConnectionProtocol, Map<ResourceLocation, ?>> regs =
+                    (Map<ConnectionProtocol, Map<ResourceLocation, ?>>) field.get(null);
+            Set<ResourceLocation> adHocChannels = ChannelAttributes.getOrCreateAdHocChannels(connection);
+            for (Map<ResourceLocation, ?> byProtocol : regs.values()) {
+                adHocChannels.addAll(byProtocol.keySet());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to register payload channels for test player", e);
+        }
+        helper.getLevel().getServer().getPlayerList().placeNewPlayer(connection, player, cookie);
+        return player;
     }
 
 }
