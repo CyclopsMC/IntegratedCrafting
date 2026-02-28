@@ -3,6 +3,7 @@ package org.cyclops.integratedcrafting.gametest;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
@@ -225,6 +226,144 @@ public class GameTestsAdvancements {
                     "craft_planks advancement not granted"
             );
         });
+    }
+
+    private static void assertAdvancementNotDone(GameTestHelper helper, ServerPlayer player, String id) {
+        AdvancementHolder advancement = helper.getLevel().getServer().getAdvancements()
+                .get(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, id));
+        if (advancement != null && player.getAdvancements().getOrStartProgress(advancement).isDone()) {
+            throw new GameTestAssertException("Advancement should NOT have been obtained: " + Reference.MOD_ID + ":" + id);
+        }
+    }
+
+    /**
+     * Negative test for the root advancement.
+     * Trigger: minecraft:inventory_changed
+     * Condition: player has integrateddynamics:variable in inventory
+     * Here we add a stick instead – advancement must NOT be granted.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testAdvancementRootNegative(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+        // Add a stick (not a variable) to the player's inventory
+        player.getInventory().setItem(0, new ItemStack(Items.STICK));
+
+        helper.succeedWhen(() -> assertAdvancementNotDone(helper, player, "root"));
+    }
+
+    /**
+     * Negative test for the craft_crafting_interface advancement.
+     * Trigger: cyclopscore:item_crafted
+     * Condition: player crafts integratedcrafting:part_interface_crafting
+     * Here we craft a stick instead – advancement must NOT be granted.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testAdvancementCraftCraftingInterfaceNegative(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+        NeoForge.EVENT_BUS.post(new PlayerEvent.ItemCraftedEvent(
+                player,
+                new ItemStack(Items.STICK),
+                new SimpleContainer(9)
+        ));
+
+        helper.succeedWhen(() -> assertAdvancementNotDone(helper, player, "autocrafting_setup/craft_crafting_interface"));
+    }
+
+    /**
+     * Negative test for the craft_crafting_interface_attuned advancement.
+     * Trigger: cyclopscore:item_crafted
+     * Condition: player crafts integratedcrafting:part_interface_crafting_attuned
+     * Here we craft the non-attuned interface instead – advancement must NOT be granted.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testAdvancementCraftCraftingInterfaceAttunedNegative(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+        NeoForge.EVENT_BUS.post(new PlayerEvent.ItemCraftedEvent(
+                player,
+                new ItemStack(PartTypes.INTERFACE_CRAFTING.getItem()),
+                new SimpleContainer(9)
+        ));
+
+        helper.succeedWhen(() -> assertAdvancementNotDone(helper, player, "autocrafting_setup/craft_crafting_interface_attuned"));
+    }
+
+    /**
+     * Negative test for the craft_crafting_writer advancement.
+     * Trigger: cyclopscore:item_crafted
+     * Condition: player crafts integratedcrafting:part_crafting_writer
+     * Here we craft a stick instead – advancement must NOT be granted.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testAdvancementCraftCraftingWriterNegative(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+        NeoForge.EVENT_BUS.post(new PlayerEvent.ItemCraftedEvent(
+                player,
+                new ItemStack(Items.STICK),
+                new SimpleContainer(9)
+        ));
+
+        helper.succeedWhen(() -> assertAdvancementNotDone(helper, player, "autocrafting_trigger/craft_crafting_writer"));
+    }
+
+    /**
+     * Negative test for the insert_recipe_planks advancement.
+     * Trigger: integrateddynamics:part_variable_driven
+     * Condition: crafting interface has an oak planks recipe variable
+     * Here we fire the event with a wrong part type (crafting_writer) – advancement must NOT be granted.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testAdvancementInsertRecipePlanksNegative(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+        Tag recipeTag;
+        try {
+            recipeTag =
+                    TagParser.parseTag(
+                            "{output:{\"minecraft:itemstack\":[{id:\"minecraft:oak_planks\",Count:4}]},"
+                                    + "input:{\"minecraft:itemstack\":[{val:[{condition:5,prototype:{id:\"minecraft:oak_log\",Count:1}}],type:0b}]}}");
+        } catch (com.mojang.brigadier.exceptions.CommandSyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        IValue recipeValue =
+                ValueHelpers.deserializeRaw(
+                        ValueDeseralizationContext.of(helper.getLevel()),
+                        ValueTypes.OBJECT_RECIPE,
+                        recipeTag);
+        IVariable<?> variable = new Variable<>(recipeValue);
+
+        // Fire with wrong part type (crafting_writer instead of interface_crafting)
+        NeoForge.EVENT_BUS.post(new PartVariableDrivenVariableContentsUpdatedEvent<>(
+                null, null, null, PartTypes.CRAFTING_WRITER, null, player, variable, null));
+
+        helper.succeedWhen(() -> assertAdvancementNotDone(helper, player, "autocrafting_setup/insert_recipe_planks"));
+    }
+
+    /**
+     * Negative test for the craft_planks advancement.
+     * Trigger: integrateddynamics:part_writer_aspect
+     * Condition: crafting writer writes an oak_planks itemstack as the ITEMSTACK_CRAFT aspect
+     * Here we place a stick variable in the writer instead – advancement must NOT be granted.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testAdvancementCraftPlanksNegative(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions =
+                createBasicNetwork(helper, POS);
+
+        // Place stick variable in the crafting writer instead of oak planks
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.STICK));
+
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+        PartHelpers.PartStateHolder writerStateHolder = PartHelpers.getPart(positions.writer());
+        IPartTypeWriter<?, ?> partTypeWriter = (IPartTypeWriter<?, ?>) writerStateHolder.getPart();
+        IPartStateWriter<?> writerState = (IPartStateWriter<?>) writerStateHolder.getState();
+        callUpdateActivationWithPlayer(partTypeWriter, writerState, positions.writer(), player);
+
+        helper.succeedWhen(() -> assertAdvancementNotDone(helper, player, "autocrafting_trigger/craft_planks"));
     }
 
     @SuppressWarnings("unchecked")
