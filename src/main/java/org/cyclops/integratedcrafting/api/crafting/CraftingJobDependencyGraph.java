@@ -238,6 +238,49 @@ public class CraftingJobDependencyGraph {
         }
 
         if (markMergeeAsFinished) {
+            // Transfer all dependents of the mergee to the target before removing the mergee.
+            // This ensures that jobs which depended on the mergee now correctly depend on the target,
+            // so that crafted outputs are properly routed to those dependent jobs.
+            IntCollection mergeeDependents = dependents.get(mergee.getId());
+            if (mergeeDependents != null) {
+                for (int dependentId : mergeeDependents.toIntArray()) {
+                    CraftingJob dependentJob = craftingJobs.get(dependentId);
+
+                    // Update graph-level dependency map: replace mergee with target for this dependent
+                    IntCollection depDependencies = dependencies.get(dependentId);
+                    if (depDependencies != null) {
+                        depDependencies.rem(mergee.getId());
+                        if (!depDependencies.contains(target.getId())) {
+                            depDependencies.add(target.getId());
+                        }
+                    }
+
+                    // Update graph-level dependent map: add this dependent to target
+                    IntCollection targetDependents = dependents.get(target.getId());
+                    if (targetDependents == null) {
+                        targetDependents = new IntArrayList();
+                        dependents.put(target.getId(), targetDependents);
+                    }
+                    if (!targetDependents.contains(dependentId)) {
+                        targetDependents.add(dependentId);
+                    }
+
+                    // Update job-level lists if the dependent job is available
+                    if (dependentJob != null) {
+                        dependentJob.getDependencyCraftingJobs().rem(mergee.getId());
+                        if (!dependentJob.getDependencyCraftingJobs().contains(target.getId())) {
+                            dependentJob.getDependencyCraftingJobs().add(target.getId());
+                        }
+                        if (!target.getDependentCraftingJobs().contains(dependentId)) {
+                            target.getDependentCraftingJobs().add(dependentId);
+                        }
+                    }
+                }
+                // Clear mergee's dependents so onCraftingJobFinished doesn't process them
+                dependents.remove(mergee.getId());
+                mergee.getDependentCraftingJobs().clear();
+            }
+
             // Remove the crafting job from the graph
             this.onCraftingJobFinished(mergee, true);
         }

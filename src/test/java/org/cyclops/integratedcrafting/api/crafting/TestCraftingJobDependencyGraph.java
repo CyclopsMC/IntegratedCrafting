@@ -426,4 +426,44 @@ public class TestCraftingJobDependencyGraph {
         assertThat(g.getDependents(J11D), equalTo(Lists.newArrayList(J0)));
     }
 
+    /**
+     * Test that when two jobs (with different dependents) are merged, the mergee's dependents are
+     * transferred to the target rather than being lost. This covers the bug where a job that
+     * depended on the mergee would lose its dependency link after the merge, causing the merged
+     * job's output to bypass that dependent and flow to network storage instead.
+     *
+     * Concrete scenario: planks_for_fences (target) and planks_for_sticks (mergee) have the same
+     * recipe and are merged. fence_main depends on planks_for_fences; sticks_job depends on
+     * planks_for_sticks. After the merge, planks_merged must be depended upon by BOTH fence_main
+     * and sticks_job, so that all produced planks are routed correctly.
+     */
+    @Test
+    public void testMergeCraftingJobsDependentsTransferred() {
+        // J2 depends on J0 (J0 is depended upon by J2)
+        J2.addDependency(J0);
+        g.addDependency(J2, J0);
+        // J3 depends on J1 (J1 is depended upon by J3)
+        J3.addDependency(J1);
+        g.addDependency(J3, J1);
+
+        // Merge J1 into J0 (same recipe, different dependents)
+        g.mergeCraftingJobs(J0, J1, true);
+
+        // J1 should be removed; J0, J2, J3 should remain
+        assertThat(Sets.newHashSet(g.getCraftingJobs()), equalTo(Sets.newHashSet(J0, J2, J3)));
+        assertThat(J0.getAmount(), equalTo(2));
+
+        // J0 should now be depended upon by both J2 and J3
+        assertThat(Sets.newHashSet(g.getDependents(J0)), equalTo(Sets.newHashSet(J2, J3)));
+        assertThat(J0.getDependentCraftingJobs().size(), equalTo(2));
+
+        // J2 should still depend on J0 (unchanged)
+        assertThat(Sets.newHashSet(g.getDependencies(J2)), equalTo(Sets.newHashSet(J0)));
+        assertThat(J2.getDependencyCraftingJobs(), equalTo(Lists.newArrayList(0)));
+
+        // J3 should now depend on J0 (transferred from J1)
+        assertThat(Sets.newHashSet(g.getDependencies(J3)), equalTo(Sets.newHashSet(J0)));
+        assertThat(J3.getDependencyCraftingJobs(), equalTo(Lists.newArrayList(0)));
+    }
+
 }
