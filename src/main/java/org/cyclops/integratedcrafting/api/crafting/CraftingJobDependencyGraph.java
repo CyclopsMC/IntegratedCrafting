@@ -343,7 +343,7 @@ public class CraftingJobDependencyGraph {
         }
 
         Int2ObjectMap<IntCollection> dependents = new Int2ObjectOpenHashMap<>();
-        CompoundTag dependentsTag = tag.getCompound("dependencies");
+        CompoundTag dependentsTag = tag.getCompound("dependents");
         for (String key : dependentsTag.getAllKeys()) {
             int id = Integer.parseInt(key);
             int[] value = dependentsTag.getIntArray(key);
