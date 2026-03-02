@@ -982,6 +982,17 @@ public class CraftingHelpers {
                               IngredientCollectionPrototypeMap<T, M> simulatedExtractionMemory,
                               IIngredientCollectionMutable<T, M> extractionMemoryReusable,
                               boolean collectMissingIngredients, long recipeOutputQuantity) {
+        return getIngredientRecipeInputs(storage, ingredientComponent, recipe, simulate, simulatedExtractionMemory,
+                extractionMemoryReusable, collectMissingIngredients, recipeOutputQuantity, false);
+    }
+
+    public static <T, M> Pair<List<T>, MissingIngredients<T, M>>
+    getIngredientRecipeInputs(IIngredientComponentStorage<T, M> storage, IngredientComponent<T, M> ingredientComponent,
+                              IRecipeDefinition recipe, boolean simulate,
+                              IngredientCollectionPrototypeMap<T, M> simulatedExtractionMemory,
+                              IIngredientCollectionMutable<T, M> extractionMemoryReusable,
+                              boolean collectMissingIngredients, long recipeOutputQuantity,
+                              boolean skipReusableIngredients) {
         IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
 
         // Quickly return if the storage is empty
@@ -1016,6 +1027,15 @@ public class CraftingHelpers {
                 collectMissingIngredients ? Lists.newArrayList() : null;
         for (int inputIndex = 0; inputIndex < inputAlternativePrototypes.size(); inputIndex++) {
             IPrototypedIngredientAlternatives<T, M> inputPrototypes = inputAlternativePrototypes.get(inputIndex);
+
+            // If reusable ingredients should be skipped, treat them as empty (not needed yet).
+            // This is used when a job has dependencies, so that reusable ingredients remain available
+            // for other jobs to use, and will be extracted lazily in the update loop.
+            if (skipReusableIngredients && recipe.isInputReusable(ingredientComponent, inputIndex)) {
+                inputInstances.add(matcher.getEmptyInstance());
+                continue;
+            }
+
             T firstInputInstance = null;
             boolean setFirstInputInstance = false;
             T inputInstance = null;
@@ -1310,6 +1330,15 @@ public class CraftingHelpers {
                     Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemories,
                     Map<IngredientComponent<?, ?>, IIngredientCollectionMutable<?, ?>> extractionMemoriesReusable,
                     boolean collectMissingIngredients, long recipeOutputQuantity) {
+        return getRecipeInputs(storageGetter, recipe, simulate, simulatedExtractionMemories, extractionMemoriesReusable,
+                collectMissingIngredients, recipeOutputQuantity, false);
+    }
+
+    public static Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>>
+    getRecipeInputs(Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter, IRecipeDefinition recipe, boolean simulate,
+                    Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemories,
+                    Map<IngredientComponent<?, ?>, IIngredientCollectionMutable<?, ?>> extractionMemoriesReusable,
+                    boolean collectMissingIngredients, long recipeOutputQuantity, boolean skipReusableIngredients) {
         // Determine available and missing ingredients
         Map<IngredientComponent<?, ?>, List<?>> ingredientsAvailable = Maps.newIdentityHashMap();
         Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> ingredientsMissing = Maps.newIdentityHashMap();
@@ -1327,7 +1356,7 @@ public class CraftingHelpers {
             }
             Pair<List<?>, MissingIngredients<?, ?>> subIngredients = getIngredientRecipeInputs(storage,
                     (IngredientComponent) ingredientComponent, recipe, simulate, simulatedExtractionMemory, extractionMemoryReusable,
-                    collectMissingIngredients, recipeOutputQuantity);
+                    collectMissingIngredients, recipeOutputQuantity, skipReusableIngredients);
             List<?> subIngredientAvailable = subIngredients.getLeft();
             MissingIngredients<?, ?> subIngredientsMissing = subIngredients.getRight();
             if (subIngredientAvailable == null && !collectMissingIngredients) {

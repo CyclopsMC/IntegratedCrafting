@@ -786,6 +786,44 @@ public class GameTestsItemsCraft {
         });
     }
 
+    // Reproduces https://github.com/CyclopsMC/IntegratedCrafting/issues/182
+    // When a job with a reusable ingredient (shears) has a dependency (craft shears from iron ingots),
+    // the reusable ingredient should be extracted lazily after the dependency finishes.
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftDeadBushTagReusableNeedsCrafting(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE, Blocks.CRAFTING_TABLE);
+
+        // Insert items in interface chest: no shears, but iron ingots to craft them
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.IRON_INGOT, 2));
+        chestIn.setItem(1, new ItemStack(Items.SPRUCE_SAPLING, 10));
+
+        // Add dead bush recipe with reusable shears to crafting interface 0
+        createDeadBushTagReusableRecipe(helper, positions);
+
+        // Add shears recipe to crafting interface 1
+        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "shears")));
+
+        // Speed up crafting interfaces, to craft once every tick
+        GameTestHelpersIntegratedCrafting.setCraftingInterfaceUpdateInterval(positions.interfaces().get(0), 1);
+        GameTestHelpersIntegratedCrafting.setCraftingInterfaceUpdateInterval(positions.interfaces().get(1), 1);
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.DEAD_BUSH, 10));
+
+        helper.succeedWhen(() -> {
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+            helper.assertTrue(positions.interfaceStates().get(1).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+
+            // Check if items have been crafted: 10 dead bushes and 1 shears (returned from reusable use)
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.DEAD_BUSH, "Slot 0 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 10, "Slot 0 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.SHEARS, "Slot 1 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, "Slot 1 amount is incorrect");
+        });
+    }
+
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftCraftingTablesWithExistingPlank(GameTestHelper helper) {
         GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE);
