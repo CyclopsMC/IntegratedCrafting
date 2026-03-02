@@ -291,6 +291,10 @@ public class CraftingJobHandler {
             throw new IllegalStateException("Re-filling a non-empty crafting job buffer is illegal");
         }
         // Determine the ingredients to extract. We can not reuse the ingredientsStorage value from the crafting job, as this may have been modified due to job splitting.
+        if (!craftingJob.getDependencyCraftingJobs().isEmpty()) {
+            System.out.println("HAS DEPENDENCIES!!!"); // TODO: remove this statement when fixed
+            // TODO: if so, make sure we don't add reusable ingreds to our buffer yet, as others may use it. => add a flag to CraftingHelpers.getRecipeInputs?
+        }
         Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputResult = CraftingHelpers.getRecipeInputs(storageGetter, craftingJob.getRecipe(), false, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), true, craftingJob.getAmount());
         IMixedIngredients buffer = new MixedIngredients(inputResult.getLeft());
         craftingJob.setIngredientsStorageBuffer(CraftingHelpers.compressMixedIngredients(buffer));
@@ -504,7 +508,7 @@ public class CraftingJobHandler {
                     // trigger a crafting job for them if no job is running yet.
                     // This special case is needed because reusable ingredients are usually durability-based,
                     // and may be consumed _during_ a bulk crafting job.
-                    if (pendingCraftingJob.getLastMissingIngredients().isEmpty()) {
+                    if (pendingCraftingJob.getLastMissingIngredients().isEmpty() || true) { // TODO: after fixing the issue, remove this if statement completely
                         for (IngredientComponent<?, ?> component : inputs.getRight().keySet()) {
                             MissingIngredients<?, ?> missingIngredients = inputs.getRight().get(component);
                             for (MissingIngredients.Element<?, ?> element : missingIngredients.getElements()) {
