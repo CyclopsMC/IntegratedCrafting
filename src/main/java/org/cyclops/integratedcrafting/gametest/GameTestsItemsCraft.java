@@ -164,6 +164,59 @@ public class GameTestsItemsCraft {
         });
     }
 
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT * 4)
+    public void testItemsCraftIronIngotFourBlockingMode(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 4));
+
+        // Add iron ingot recipe to furnace
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+
+        // Enable crafting aspect in crafting writer (blocking mode is on by default)
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_INGOT, 4));
+
+        helper.succeedWhen(() -> {
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+
+            // Check if all 4 items have been crafted
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, "Slot 0 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 4, "Slot 0 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, "Slot 1 amount is incorrect");
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT * 4)
+    public void testItemsCraftIronIngotFourNonBlockingMode(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 4));
+
+        // Add iron ingot recipe to furnace
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_INGOT, 4));
+
+        // Disable blocking mode
+        setCraftingInterfaceBlockingMode(positions.interfaces().get(0), false);
+
+        helper.succeedWhen(() -> {
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+
+            // Check if all 4 items have been crafted
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, "Slot 0 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 4, "Slot 0 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, "Slot 1 amount is incorrect");
+        });
+    }
+
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftIronIngotRecipeWithEmptySpaces(GameTestHelper helper) {
         GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE);

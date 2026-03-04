@@ -355,8 +355,9 @@ public class CraftingJobHandler {
             IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers
                     .getIngredientsNetworkChecked(network, ingredientComponent);
             ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetworkChecked(network);
-            PendingCraftingJobResultIndexObserver<T, M> observer = new PendingCraftingJobResultIndexObserver<>(ingredientComponent, this, craftingNetwork);
+            PendingCraftingJobResultIndexObserver<T, M> observer = new PendingCraftingJobResultIndexObserver<>(ingredientComponent, this, craftingNetwork, ingredientsNetwork);
             ingredientsNetwork.registerInsertPreConsumer(observer);
+            ingredientsNetwork.addObserver(observer);
             ingredientObservers.put(ingredientComponent, observer);
         }
         ingredientObserverCounters.put(ingredientComponent, count + 1);
@@ -373,6 +374,7 @@ public class CraftingJobHandler {
                     (PendingCraftingJobResultIndexObserver<T, M>) ingredientObservers
                             .remove(ingredientComponent);
             ingredientsNetwork.unregisterInsertPreConsumer(observer);
+            ingredientsNetwork.removeObserver(observer);
         }
     }
 

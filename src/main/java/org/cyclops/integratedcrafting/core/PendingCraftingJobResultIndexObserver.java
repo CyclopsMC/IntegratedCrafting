@@ -6,7 +6,9 @@ import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import org.cyclops.commoncapabilities.api.ingredient.*;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
+import org.cyclops.integrateddynamics.api.ingredient.IIngredientComponentStorageObservable;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetwork;
+import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.core.network.IIngredientChannelInsertPreConsumer;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,16 +24,21 @@ import java.util.Map;
  *
  * @author rubensworks
  */
-public class PendingCraftingJobResultIndexObserver<T, M> implements IIngredientChannelInsertPreConsumer<T> {
+public class PendingCraftingJobResultIndexObserver<T, M> implements IIngredientChannelInsertPreConsumer<T>,
+        IIngredientComponentStorageObservable.IIndexChangeObserver<T, M> {
 
     private final IngredientComponent<T, M> ingredientComponent;
     private final CraftingJobHandler handler;
     private final ICraftingNetwork craftingNetwork;
+    private final IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork;
 
-    public PendingCraftingJobResultIndexObserver(IngredientComponent<T, M> ingredientComponent, CraftingJobHandler handler, ICraftingNetwork craftingNetwork) {
+    public PendingCraftingJobResultIndexObserver(IngredientComponent<T, M> ingredientComponent, CraftingJobHandler handler,
+                                                 ICraftingNetwork craftingNetwork,
+                                                 IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork) {
         this.ingredientComponent = ingredientComponent;
         this.handler = handler;
         this.craftingNetwork = craftingNetwork;
+        this.ingredientsNetwork = ingredientsNetwork;
     }
 
     /**
@@ -156,6 +163,26 @@ public class PendingCraftingJobResultIndexObserver<T, M> implements IIngredientC
     @Override
     public T insert(int channel, @NotNull T ingredient, boolean simulate) {
         IngredientInstanceWrapper<T, M> instanceWrapper = addIngredient(new IngredientInstanceWrapper<>(ingredientComponent, ingredient), channel, simulate);
+        if (!simulate) {
+            // Schedule an observation after a direct insert so the observation baseline is updated.
+            // This prevents double-processing when IIndexChangeObserver fires in subsequent ticks
+            // for an item that was already handled via insertPreConsumer.
+            ingredientsNetwork.scheduleObservation();
+        }
         return instanceWrapper.getInstance();
+    }
+
+    @Override
+    public void onChange(IIngredientComponentStorageObservable.StorageChangeEvent<T, M> event) {
+        // Only process non-initial additions.
+        // Initial changes contain all items already in storage when the observer was registered,
+        // which should not be used to resolve pending crafting job outputs.
+        if (event.getChangeType() == IIngredientComponentStorageObservable.Change.ADDITION
+                && !event.isInitialChange()) {
+            int channel = event.getChannel();
+            for (T instance : event.getInstances()) {
+                addIngredient(new IngredientInstanceWrapper<>(ingredientComponent, instance), channel, false);
+            }
+        }
     }
 }
