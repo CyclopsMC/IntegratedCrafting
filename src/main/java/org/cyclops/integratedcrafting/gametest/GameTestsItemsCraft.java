@@ -938,6 +938,75 @@ public class GameTestsItemsCraft {
         });
     }
 
+    // Reproduces https://github.com/CyclopsMC/IntegratedCrafting/issues/186
+    // When a crafting plan is initiated for multiple instances of a recipe on a non-crafting-table crafter (furnace),
+    // in blocking mode, it should process all instances sequentially (one-by-one).
+    // Bug: only the first instance is processed, and the remaining ingredients get stuck in the crafting interface.
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT * 2)
+    public void testItemsCraftFurnaceBlockingMultiple(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 4));
+
+        // Add iron ingot recipe to furnace
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+
+        // Enable crafting aspect in crafting writer - request 4 iron ingots (requires 4 sequential furnace runs)
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_INGOT, 4));
+
+        helper.succeedWhen(() -> {
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+
+            // Check if all 4 items have been crafted (single furnace must process each one sequentially)
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.IRON_INGOT, "Slot 0 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 4, "Slot 0 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 0, "Slot 1 amount is incorrect");
+        });
+    }
+
+    // Reproduces https://github.com/CyclopsMC/IntegratedCrafting/issues/186
+    // When a crafting interface completes a crafting job on a non-crafting-table crafter (furnace),
+    // it should be able to accept and process a new crafting job afterwards.
+    // Bug: after the first job completes, a second request does not get processed.
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT * 2)
+    public void testItemsCraftFurnaceSecondRequest(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.RAW_IRON, 2));
+
+        // Add iron ingot recipe to furnace
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.SMELTING, ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
+
+        // Disable blocking mode to more clearly test re-requests
+        setCraftingInterfaceBlockingMode(positions.interfaces().get(0), false);
+
+        // Enable crafting aspect in crafting writer - request 1 iron ingot
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.IRON_INGOT));
+
+        // Set up an exporter that continuously removes iron ingots from the network,
+        // so the crafting writer will keep triggering new crafting requests once each is complete.
+        helper.setBlock(positions.chest().south().west(), RegistryEntries.BLOCK_CABLE.value());
+        helper.setBlock(positions.chest().south().west().south(), Blocks.CHEST);
+        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(positions.chest().south().west()), Direction.SOUTH, org.cyclops.integratedtunnels.part.PartTypes.EXPORTER_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.EXPORTER_ITEM.getItem()));
+        placeVariableInWriter(helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(positions.chest().south().west()), Direction.SOUTH), TunnelAspects.Write.Item.ITEMSTACK_EXPORT, createVariableForValue(helper.getLevel(), ValueTypes.OBJECT_ITEMSTACK, ValueObjectTypeItemStack.ValueItemStack.of(new ItemStack(Items.IRON_INGOT))));
+
+        helper.succeedWhen(() -> {
+            // Check crafting interface state
+            helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
+
+            // Both raw iron should be consumed: first request crafts 1 ingot (exported),
+            // then a second request should craft the remaining 1 ingot.
+            ChestBlockEntity exportChest = helper.getBlockEntity(positions.chest().south().west().south());
+            helper.assertTrue(chestIn.getItem(0).isEmpty(), "Slot 0 in storage chest is not empty (raw iron remains)");
+            helper.assertFalse(exportChest.isEmpty(), "Export chest is empty (no iron ingots were exported)");
+        });
+    }
+
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftFencesDoorsConcurrent(GameTestHelper helper) {
         GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, true);
