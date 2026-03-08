@@ -244,7 +244,10 @@ public class CraftingJobHandler {
             throw new IllegalStateException("Re-filling a non-empty crafting job buffer is illegal");
         }
         // Determine the ingredients to extract. We can not reuse the ingredientsStorage value from the crafting job, as this may have been modified due to job splitting.
-        Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputResult = CraftingHelpers.getRecipeInputs(storageGetter, craftingJob.getRecipe(), false, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), true, craftingJob.getAmount());
+        // If this job has dependencies, skip reusable ingredients so that they remain available for other jobs.
+        // They will be lazily extracted in the update loop once the dependencies have finished.
+        boolean skipReusableIngredients = !craftingJob.getDependencyCraftingJobs().isEmpty();
+        Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputResult = CraftingHelpers.getRecipeInputs(storageGetter, craftingJob.getRecipe(), false, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), true, craftingJob.getAmount(), skipReusableIngredients);
         IMixedIngredients buffer = new MixedIngredients(inputResult.getLeft());
         craftingJob.setIngredientsStorageBuffer(CraftingHelpers.compressMixedIngredients(buffer));
         craftingJob.setLastMissingIngredients(inputResult.getRight());
@@ -457,35 +460,33 @@ public class CraftingJobHandler {
                     // trigger a crafting job for them if no job is running yet.
                     // This special case is needed because reusable ingredients are usually durability-based,
                     // and may be consumed _during_ a bulk crafting job.
-                    if (pendingCraftingJob.getLastMissingIngredients().isEmpty()) {
-                        for (IngredientComponent<?, ?> component : inputs.getRight().keySet()) {
-                            MissingIngredients<?, ?> missingIngredients = inputs.getRight().get(component);
-                            for (MissingIngredients.Element<?, ?> element : missingIngredients.getElements()) {
-                                if (element.isInputReusable()) {
-                                    IIngredientComponentStorage storage = CraftingHelpers.getNetworkStorage(network, channel, component, true);
-                                    for (MissingIngredients.PrototypedWithRequested alternative : element.getAlternatives()) {
-                                        // First check if we can extract it from storage.
-                                        Object extractedFromStorage = storage.extract(alternative.getRequestedPrototype().getPrototype(), alternative.getRequestedPrototype().getCondition(), false);
-                                        if (!((IIngredientMatcher) component.getMatcher()).isEmpty(extractedFromStorage)) {
-                                            pendingCraftingJob.addToIngredientsStorageBuffer((IngredientComponent<? super Object, ? extends Object>) component, extractedFromStorage);
-                                            break;
-                                        }
+                    for (IngredientComponent<?, ?> component : inputs.getRight().keySet()) {
+                        MissingIngredients<?, ?> missingIngredients = inputs.getRight().get(component);
+                        for (MissingIngredients.Element<?, ?> element : missingIngredients.getElements()) {
+                            if (element.isInputReusable()) {
+                                IIngredientComponentStorage storage = CraftingHelpers.getNetworkStorage(network, channel, component, true);
+                                for (MissingIngredients.PrototypedWithRequested alternative : element.getAlternatives()) {
+                                    // First check if we can extract it from storage.
+                                    Object extractedFromStorage = storage.extract(alternative.getRequestedPrototype().getPrototype(), alternative.getRequestedPrototype().getCondition(), false);
+                                    if (!((IIngredientMatcher) component.getMatcher()).isEmpty(extractedFromStorage)) {
+                                        pendingCraftingJob.addToIngredientsStorageBuffer((IngredientComponent<? super Object, ? extends Object>) component, extractedFromStorage);
+                                        break;
+                                    }
 
-                                        // Try to start crafting jobs for each alternative until one of them succeeds.
-                                        if (CraftingHelpers.isCrafting(craftingNetwork, channel,
-                                                alternative.getRequestedPrototype().getComponent(), alternative.getRequestedPrototype().getPrototype(), alternative.getRequestedPrototype().getCondition())) {
-                                            // Break loop if we have found an existing job for our dependency
-                                            // This may occur if a crafting job was triggered in a parallelized job
-                                            break;
-                                        }
-                                        CraftingJob craftingJob = CraftingHelpers.calculateAndScheduleCraftingJob(network, channel,
-                                                alternative.getRequestedPrototype().getComponent(), alternative.getRequestedPrototype().getPrototype(), alternative.getRequestedPrototype().getCondition(), true, true,
-                                                CraftingHelpers.getGlobalCraftingJobIdentifier(), null);
-                                        if (craftingJob != null) {
-                                            pendingCraftingJob.addDependency(craftingJob);
-                                            // Break loop once we have found a valid job
-                                            break;
-                                        }
+                                    // Try to start crafting jobs for each alternative until one of them succeeds.
+                                    if (CraftingHelpers.isCrafting(craftingNetwork, channel,
+                                            alternative.getRequestedPrototype().getComponent(), alternative.getRequestedPrototype().getPrototype(), alternative.getRequestedPrototype().getCondition())) {
+                                        // Break loop if we have found an existing job for our dependency
+                                        // This may occur if a crafting job was triggered in a parallelized job
+                                        break;
+                                    }
+                                    CraftingJob craftingJob = CraftingHelpers.calculateAndScheduleCraftingJob(network, channel,
+                                            alternative.getRequestedPrototype().getComponent(), alternative.getRequestedPrototype().getPrototype(), alternative.getRequestedPrototype().getCondition(), true, true,
+                                            CraftingHelpers.getGlobalCraftingJobIdentifier(), null);
+                                    if (craftingJob != null) {
+                                        pendingCraftingJob.addDependency(craftingJob);
+                                        // Break loop once we have found a valid job
+                                        break;
                                     }
                                 }
                             }

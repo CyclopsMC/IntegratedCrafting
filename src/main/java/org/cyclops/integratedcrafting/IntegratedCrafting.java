@@ -19,6 +19,7 @@ import org.cyclops.integratedcrafting.capability.network.CraftingNetworkCapabili
 import org.cyclops.integratedcrafting.capability.network.NetworkCraftingHandlerCraftingNetwork;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrideRegistry;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
+import org.cyclops.integratedcrafting.gametest.GameTestsAdvancements;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsCraft;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsSmithing;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsStonecutting;
@@ -124,6 +125,7 @@ public class IntegratedCrafting extends ModBaseNeoForge<IntegratedCrafting> {
     @Override
     public Class<?>[] getGameTestClasses() {
         return new Class<?>[]{
+                GameTestsAdvancements.class,
                 GameTestsItemsCraft.class,
                 GameTestsItemsSmithing.class,
                 GameTestsItemsStonecutting.class
