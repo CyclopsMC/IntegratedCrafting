@@ -4,7 +4,7 @@ import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -21,7 +21,6 @@ import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integrateddynamics.RegistryEntries;
 import org.cyclops.integrateddynamics.api.evaluate.variable.IValue;
 import org.cyclops.integrateddynamics.api.evaluate.variable.IVariable;
-import org.cyclops.integrateddynamics.api.evaluate.variable.ValueDeseralizationContext;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
 import org.cyclops.integrateddynamics.api.part.write.IPartStateWriter;
@@ -31,6 +30,7 @@ import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
 import org.cyclops.integrateddynamics.core.evaluate.variable.Variable;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 import org.cyclops.integrateddynamics.core.part.event.PartVariableDrivenVariableContentsUpdatedEvent;
+import org.cyclops.integrateddynamics.core.test.TestHelpers;
 
 import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.createBasicNetwork;
 import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.enableRecipeInWriter;
@@ -161,20 +161,19 @@ public class GameTestsAdvancements {
 
         // Deserialize the recipe value from the exact same SNBT that the advancement JSON expects.
         // This guarantees ValuePredicate.test() will find equal values via ValueHelpers.areValuesEqual().
-        Tag recipeTag;
+        CompoundTag recipeTag;
         try {
             recipeTag =
-                    TagParser.parseTag(
+                    TagParser.parseCompoundFully(
                             "{output:{\"minecraft:itemstack\":[{id:\"minecraft:oak_planks\",Count:4}]},"
                                     + "input:{\"minecraft:itemstack\":[{val:[{condition:5,prototype:{id:\"minecraft:oak_log\",Count:1}}],type:0b}]}}");
         } catch (com.mojang.brigadier.exceptions.CommandSyntaxException e) {
             throw new RuntimeException(e);
         }
         IValue recipeValue =
-                ValueHelpers.deserializeRaw(
-                        ValueDeseralizationContext.of(helper.getLevel()),
-                        ValueTypes.OBJECT_RECIPE,
-                        recipeTag);
+                TestHelpers.deserialize(
+                        recipeTag,
+                        valueInput -> ValueHelpers.deserializeRaw(valueInput, ValueTypes.OBJECT_RECIPE));
         IVariable<?> variable = new Variable<>(recipeValue);
 
         // Fire the event directly, mirroring what PartTypeInterfaceCrafting.State.reloadRecipe() does
@@ -317,20 +316,19 @@ public class GameTestsAdvancements {
     public void testAdvancementInsertRecipePlanksNegative(GameTestHelper helper) {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
 
-        Tag recipeTag;
+        CompoundTag recipeTag;
         try {
             recipeTag =
-                    TagParser.parseTag(
+                    TagParser.parseCompoundFully(
                             "{output:{\"minecraft:itemstack\":[{id:\"minecraft:oak_planks\",Count:4}]},"
                                     + "input:{\"minecraft:itemstack\":[{val:[{condition:5,prototype:{id:\"minecraft:oak_log\",Count:1}}],type:0b}]}}");
         } catch (com.mojang.brigadier.exceptions.CommandSyntaxException e) {
             throw new RuntimeException(e);
         }
         IValue recipeValue =
-                ValueHelpers.deserializeRaw(
-                        ValueDeseralizationContext.of(helper.getLevel()),
-                        ValueTypes.OBJECT_RECIPE,
-                        recipeTag);
+                TestHelpers.deserialize(
+                        recipeTag,
+                        valueInput -> ValueHelpers.deserializeRaw(valueInput, ValueTypes.OBJECT_RECIPE));
         IVariable<?> variable = new Variable<>(recipeValue);
 
         // Fire with wrong part type (crafting_writer instead of interface_crafting)
