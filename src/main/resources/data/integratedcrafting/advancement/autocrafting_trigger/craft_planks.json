@@ -22,7 +22,7 @@
           "value": {
             "type": "itemstack",
             "item": {
-              "item": "minecraft:oak_planks"
+              "items": "minecraft:oak_planks"
             }
           }
         }
