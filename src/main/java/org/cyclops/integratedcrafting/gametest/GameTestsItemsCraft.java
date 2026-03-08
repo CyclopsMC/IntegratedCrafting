@@ -791,7 +791,7 @@ public class GameTestsItemsCraft {
         GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.CRAFTING_TABLE, Blocks.CRAFTING_TABLE);
 
         // Insert items in interface chest: no shears, but iron ingots to craft them
-        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
         chestIn.setItem(0, new ItemStack(Items.IRON_INGOT, 2));
         chestIn.setItem(1, new ItemStack(Items.SPRUCE_SAPLING, 10));
 
@@ -799,7 +799,7 @@ public class GameTestsItemsCraft {
         createDeadBushTagReusableRecipe(helper, positions);
 
         // Add shears recipe to crafting interface 1
-        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "shears")));
+        positions.interfaceRecipeAdders().get(1).accept(Triple.of(0, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "shears")));
 
         // Speed up crafting interfaces, to craft once every tick
         GameTestHelpersIntegratedCrafting.setCraftingInterfaceUpdateInterval(positions.interfaces().get(0), 1);

@@ -2,27 +2,25 @@ package org.cyclops.integratedcrafting.gametest;
 
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.cyclops.cyclopscore.gametest.GameTest;
 import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integrateddynamics.RegistryEntries;
 import org.cyclops.integrateddynamics.api.evaluate.variable.IValue;
 import org.cyclops.integrateddynamics.api.evaluate.variable.IVariable;
-import org.cyclops.integrateddynamics.api.evaluate.variable.ValueDeseralizationContext;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
 import org.cyclops.integrateddynamics.api.part.write.IPartStateWriter;
@@ -32,18 +30,18 @@ import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
 import org.cyclops.integrateddynamics.core.evaluate.variable.Variable;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 import org.cyclops.integrateddynamics.core.part.event.PartVariableDrivenVariableContentsUpdatedEvent;
+import org.cyclops.integrateddynamics.core.test.TestHelpers;
 
-import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.*;
+import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.createBasicNetwork;
+import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.enableRecipeInWriter;
 
 /**
  * Game tests for all advancements in the mod.
  * @author rubensworks
  */
-@GameTestHolder(Reference.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class GameTestsAdvancements {
 
-    public static final String TEMPLATE_EMPTY = "empty10";
+    public static final String TEMPLATE_EMPTY = Reference.MOD_ID + ":empty10";
     public static final int TIMEOUT = 200;
     public static final BlockPos POS = BlockPos.ZERO.offset(2, 0, 2);
 
@@ -61,7 +59,7 @@ public class GameTestsAdvancements {
 
         helper.succeedWhen(() -> {
             AdvancementHolder advancement = helper.getLevel().getServer().getAdvancements()
-                    .get(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "root"));
+                    .get(Identifier.fromNamespaceAndPath(Reference.MOD_ID, "root"));
             helper.assertTrue(advancement != null, "Root advancement not found");
             helper.assertTrue(
                     player.getAdvancements().getOrStartProgress(advancement).isDone(),
@@ -89,7 +87,7 @@ public class GameTestsAdvancements {
 
         helper.succeedWhen(() -> {
             AdvancementHolder advancement = helper.getLevel().getServer().getAdvancements()
-                    .get(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "autocrafting_setup/craft_crafting_interface"));
+                    .get(Identifier.fromNamespaceAndPath(Reference.MOD_ID, "autocrafting_setup/craft_crafting_interface"));
             helper.assertTrue(advancement != null, "craft_crafting_interface advancement not found");
             helper.assertTrue(
                     player.getAdvancements().getOrStartProgress(advancement).isDone(),
@@ -116,7 +114,7 @@ public class GameTestsAdvancements {
 
         helper.succeedWhen(() -> {
             AdvancementHolder advancement = helper.getLevel().getServer().getAdvancements()
-                    .get(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "autocrafting_setup/craft_crafting_interface_attuned"));
+                    .get(Identifier.fromNamespaceAndPath(Reference.MOD_ID, "autocrafting_setup/craft_crafting_interface_attuned"));
             helper.assertTrue(advancement != null, "craft_crafting_interface_attuned advancement not found");
             helper.assertTrue(
                     player.getAdvancements().getOrStartProgress(advancement).isDone(),
@@ -143,7 +141,7 @@ public class GameTestsAdvancements {
 
         helper.succeedWhen(() -> {
             AdvancementHolder advancement = helper.getLevel().getServer().getAdvancements()
-                    .get(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "autocrafting_trigger/craft_crafting_writer"));
+                    .get(Identifier.fromNamespaceAndPath(Reference.MOD_ID, "autocrafting_trigger/craft_crafting_writer"));
             helper.assertTrue(advancement != null, "craft_crafting_writer advancement not found");
             helper.assertTrue(
                     player.getAdvancements().getOrStartProgress(advancement).isDone(),
@@ -163,20 +161,19 @@ public class GameTestsAdvancements {
 
         // Deserialize the recipe value from the exact same SNBT that the advancement JSON expects.
         // This guarantees ValuePredicate.test() will find equal values via ValueHelpers.areValuesEqual().
-        Tag recipeTag;
+        CompoundTag recipeTag;
         try {
             recipeTag =
-                    TagParser.parseTag(
+                    TagParser.parseCompoundFully(
                             "{output:{\"minecraft:itemstack\":[{id:\"minecraft:oak_planks\",Count:4}]},"
                                     + "input:{\"minecraft:itemstack\":[{val:[{condition:5,prototype:{id:\"minecraft:oak_log\",Count:1}}],type:0b}]}}");
         } catch (com.mojang.brigadier.exceptions.CommandSyntaxException e) {
             throw new RuntimeException(e);
         }
         IValue recipeValue =
-                ValueHelpers.deserializeRaw(
-                        ValueDeseralizationContext.of(helper.getLevel()),
-                        ValueTypes.OBJECT_RECIPE,
-                        recipeTag);
+                TestHelpers.deserialize(
+                        recipeTag,
+                        valueInput -> ValueHelpers.deserializeRaw(valueInput, ValueTypes.OBJECT_RECIPE));
         IVariable<?> variable = new Variable<>(recipeValue);
 
         // Fire the event directly, mirroring what PartTypeInterfaceCrafting.State.reloadRecipe() does
@@ -186,7 +183,7 @@ public class GameTestsAdvancements {
 
         helper.succeedWhen(() -> {
             AdvancementHolder advancement = helper.getLevel().getServer().getAdvancements()
-                    .get(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "autocrafting_setup/insert_recipe_planks"));
+                    .get(Identifier.fromNamespaceAndPath(Reference.MOD_ID, "autocrafting_setup/insert_recipe_planks"));
             helper.assertTrue(advancement != null, "insert_recipe_planks advancement not found");
             helper.assertTrue(
                     player.getAdvancements().getOrStartProgress(advancement).isDone(),
@@ -219,7 +216,7 @@ public class GameTestsAdvancements {
 
         helper.succeedWhen(() -> {
             AdvancementHolder advancement = helper.getLevel().getServer().getAdvancements()
-                    .get(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "autocrafting_trigger/craft_planks"));
+                    .get(Identifier.fromNamespaceAndPath(Reference.MOD_ID, "autocrafting_trigger/craft_planks"));
             helper.assertTrue(advancement != null, "craft_planks advancement not found");
             helper.assertTrue(
                     player.getAdvancements().getOrStartProgress(advancement).isDone(),
@@ -230,9 +227,9 @@ public class GameTestsAdvancements {
 
     private static void assertAdvancementNotDone(GameTestHelper helper, ServerPlayer player, String id) {
         AdvancementHolder advancement = helper.getLevel().getServer().getAdvancements()
-                .get(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, id));
+                .get(Identifier.fromNamespaceAndPath(Reference.MOD_ID, id));
         if (advancement != null && player.getAdvancements().getOrStartProgress(advancement).isDone()) {
-            throw new GameTestAssertException("Advancement should NOT have been obtained: " + Reference.MOD_ID + ":" + id);
+            throw new GameTestAssertException(Component.literal("Advancement should NOT have been obtained: " + Reference.MOD_ID + ":" + id), (int) helper.getTick());
         }
     }
 
@@ -319,20 +316,19 @@ public class GameTestsAdvancements {
     public void testAdvancementInsertRecipePlanksNegative(GameTestHelper helper) {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
 
-        Tag recipeTag;
+        CompoundTag recipeTag;
         try {
             recipeTag =
-                    TagParser.parseTag(
+                    TagParser.parseCompoundFully(
                             "{output:{\"minecraft:itemstack\":[{id:\"minecraft:oak_planks\",Count:4}]},"
                                     + "input:{\"minecraft:itemstack\":[{val:[{condition:5,prototype:{id:\"minecraft:oak_log\",Count:1}}],type:0b}]}}");
         } catch (com.mojang.brigadier.exceptions.CommandSyntaxException e) {
             throw new RuntimeException(e);
         }
         IValue recipeValue =
-                ValueHelpers.deserializeRaw(
-                        ValueDeseralizationContext.of(helper.getLevel()),
-                        ValueTypes.OBJECT_RECIPE,
-                        recipeTag);
+                TestHelpers.deserialize(
+                        recipeTag,
+                        valueInput -> ValueHelpers.deserializeRaw(valueInput, ValueTypes.OBJECT_RECIPE));
         IVariable<?> variable = new Variable<>(recipeValue);
 
         // Fire with wrong part type (crafting_writer instead of interface_crafting)
@@ -369,7 +365,7 @@ public class GameTestsAdvancements {
     @SuppressWarnings("unchecked")
     private static <P extends IPartTypeWriter<P, S>, S extends IPartStateWriter<P>> void callUpdateActivationWithPlayer(
             IPartTypeWriter<?, ?> partType, IPartStateWriter<?> partState, PartPos writerPos, ServerPlayer player) {
-        ((P) partType).updateActivation(PartTarget.fromCenter(writerPos), (S) partState, player);
+        ((P) partType).updateActivation(PartTarget.fromCenter(writerPos), (S) partState, player, false);
     }
 
 }
