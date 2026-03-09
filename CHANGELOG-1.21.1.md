@@ -1,8 +1,25 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.4.5"></a>
+## [1.21.1-1.4.5](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.4...1.21.1-1.4.5) - 2026-03-09 16:17:51
+
+
+### Added
+* Add translations through Crowdin (#181)
+
+### Fixed
+* Fix the reusable ingredients in chains of recipes blocking each other (#187)
+  If the same reusable ingredient would be used within a chain of dependent
+  recipes, the ingredient could be used in a dependent recipe, thereby blocking
+  the dependency recipe.
+  This change ensures that dependency-less recipes first get to use the reusable ingredients.
+  Closes #182
+* Fix craft_planks.json: use "items" instead of "item" for MC 1.21 item predicate format
+* Fix insert_recipe_planks advancement condition
+
 <a name="1.21.1-1.4.4"></a>
-## [1.21.1-1.4.4](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.3...1.21.1-1.4.4) - 2026-02-12 16:49:31
+## [1.21.1-1.4.4](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.3...1.21.1-1.4.4) - 2026-02-12 16:49:31 +0100
 
 
 ### Fixed
