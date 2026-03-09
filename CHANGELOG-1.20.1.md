@@ -1,8 +1,23 @@
 # Changelog for Minecraft 1.20.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.20.1-1.4.5"></a>
+## [1.20.1-1.4.5](/compare/1.20.1-1.4.4...1.20.1-1.4.5) - 2026-03-09 08:58:52
+
+
+### Fixed
+* Fix the reusable ingredients in chains of recipes blocking each other (#187)
+
+If the same reusable ingredient would be used within a chain of dependent
+recipes, the ingredient could be used in a dependent recipe, thereby blocking
+the dependency recipe.
+
+This change ensures that dependency-less recipes first get to use the reusable ingredients.
+
+Closes #182
+
 <a name="1.20.1-1.4.4"></a>
-## [1.20.1-1.4.4](/compare/1.20.1-1.4.3...1.20.1-1.4.4) - 2026-02-12 16:47:55
+## [1.20.1-1.4.4](/compare/1.20.1-1.4.3...1.20.1-1.4.4) - 2026-02-12 16:47:55 +0100
 
 
 ### Fixed

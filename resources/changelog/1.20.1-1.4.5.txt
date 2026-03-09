@@ -1,0 +1,13 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.18.4 or higher.
+
+Fixes:
+* Fix the reusable ingredients in chains of recipes blocking each other (#187)
+
+If the same reusable ingredient would be used within a chain of dependent
+recipes, the ingredient could be used in a dependent recipe, thereby blocking
+the dependency recipe.
+
+This change ensures that dependency-less recipes first get to use the reusable ingredients.
+
+Closes #182
