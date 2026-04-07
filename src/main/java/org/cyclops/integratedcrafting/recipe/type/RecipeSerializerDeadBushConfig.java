@@ -1,6 +1,6 @@
 package org.cyclops.integratedcrafting.recipe.type;
 
-import net.minecraft.world.item.crafting.CustomRecipe;
+import net.minecraft.world.item.crafting.RecipeSerializer;
 import org.cyclops.cyclopscore.config.extendedconfig.RecipeConfigCommon;
 import org.cyclops.cyclopscore.init.IModBase;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
@@ -14,7 +14,7 @@ public class RecipeSerializerDeadBushConfig extends RecipeConfigCommon<RecipeDea
     public RecipeSerializerDeadBushConfig() {
         super(IntegratedCrafting._instance,
                 "crafting_special_dead_bush",
-                eConfig -> new CustomRecipe.Serializer<>(RecipeDeadBush::new));
+                eConfig -> new RecipeSerializer<>(RecipeDeadBush.MAP_CODEC, RecipeDeadBush.STREAM_CODEC));
     }
 
 }

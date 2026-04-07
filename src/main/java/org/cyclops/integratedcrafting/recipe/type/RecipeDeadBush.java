@@ -1,13 +1,16 @@
 package org.cyclops.integratedcrafting.recipe.type;
 
 import com.google.common.collect.Lists;
-import net.minecraft.core.HolderLookup;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.item.crafting.display.RecipeDisplay;
@@ -27,10 +30,14 @@ import java.util.List;
  */
 public class RecipeDeadBush extends CustomRecipe {
 
+    public static final RecipeDeadBush INSTANCE = new RecipeDeadBush();
+    public static final MapCodec<RecipeDeadBush> MAP_CODEC = MapCodec.unit(INSTANCE);
+    public static final StreamCodec<RegistryFriendlyByteBuf, RecipeDeadBush> STREAM_CODEC = StreamCodec.unit(INSTANCE);
+
     private PlacementInfo placementInfo;
 
-    public RecipeDeadBush(CraftingBookCategory category) {
-        super(category);
+    public RecipeDeadBush() {
+        super();
     }
 
     @Override
@@ -49,11 +56,7 @@ public class RecipeDeadBush extends CustomRecipe {
     }
 
     @Override
-    public ItemStack assemble(CraftingInput inv, HolderLookup.Provider registryAccess) {
-        return getResultItem(registryAccess).copy();
-    }
-
-    public ItemStack getResultItem(HolderLookup.Provider registryAccess) {
+    public ItemStack assemble(CraftingInput inv) {
         return new ItemStack(Items.DEAD_BUSH);
     }
 
@@ -95,7 +98,8 @@ public class RecipeDeadBush extends CustomRecipe {
                     }
                 }
             } else {
-                itemStack = itemStack.getCraftingRemainder();
+                ItemStackTemplate remainder = itemStack.getCraftingRemainder();
+                itemStack = remainder != null ? remainder.create() : ItemStack.EMPTY;
             }
             stacks.add(itemStack);
         }

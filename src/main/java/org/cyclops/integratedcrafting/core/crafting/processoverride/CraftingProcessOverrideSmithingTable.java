@@ -45,7 +45,7 @@ public class CraftingProcessOverrideSmithingTable implements ICraftingProcessOve
         return IModHelpers.get().getCraftingHelpers().findRecipe(RecipeType.SMITHING, smithingRecipeInput, level)
                 .map(recipeHolder -> {
                     SmithingRecipe smithingRecipe = recipeHolder.value();
-                    ItemStack result = smithingRecipe.assemble(smithingRecipeInput, level.registryAccess());
+                    ItemStack result = smithingRecipe.assemble(smithingRecipeInput);
 
                     if (result.isEmpty()) {
                         return false;

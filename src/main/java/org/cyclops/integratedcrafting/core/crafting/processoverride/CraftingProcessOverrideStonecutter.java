@@ -61,7 +61,7 @@ public class CraftingProcessOverrideStonecutter implements ICraftingProcessOverr
                 .findFirst()
                 .map(recipeHolder -> {
                     StonecutterRecipe stonecutterRecipe = recipeHolder.value();
-                    ItemStack result = stonecutterRecipe.assemble(recipeInput, level.registryAccess());
+                    ItemStack result = stonecutterRecipe.assemble(recipeInput);
 
                     if (result.isEmpty()) {
                         return false;

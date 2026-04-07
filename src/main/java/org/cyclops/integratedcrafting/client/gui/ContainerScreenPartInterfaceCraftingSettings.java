@@ -2,7 +2,7 @@ package org.cyclops.integratedcrafting.client.gui;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -178,24 +178,24 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
-        super.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
+    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        super.extractBackground(guiGraphics, mouseX, mouseY, partialTicks);
 
-        guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integrateddynamics.partsettings.side"), leftPos + 8, topPos + 12, IModHelpers.get().getBaseHelpers().RGBAToInt(0, 0, 0, 255), false);
-        ingredientComponentSideSelector.render(guiGraphics, mouseX, mouseY, partialTicks);
-        dropdownFieldSide.render(guiGraphics, mouseX, mouseY, partialTicks);
+        guiGraphics.text(font, IModHelpers.get().getL10NHelpers().localize("gui.integrateddynamics.partsettings.side"), leftPos + 8, topPos + 12, IModHelpers.get().getBaseHelpers().RGBAToInt(0, 0, 0, 255), false);
+        ingredientComponentSideSelector.extractRenderState(guiGraphics, mouseX, mouseY, partialTicks);
+        dropdownFieldSide.extractRenderState(guiGraphics, mouseX, mouseY, partialTicks);
 
-        guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integratedcrafting.partsettings.channel.interface"),
+        guiGraphics.text(font, IModHelpers.get().getL10NHelpers().localize("gui.integratedcrafting.partsettings.channel.interface"),
                 leftPos + 8, topPos + 137, ARGB.opaque(0), false);
-        numberFieldChannelInterfaceCrafting.render(guiGraphics, mouseX, mouseY, partialTicks);
+        numberFieldChannelInterfaceCrafting.extractRenderState(guiGraphics, mouseX, mouseY, partialTicks);
 
-        guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integratedcrafting.partsettings.craftingcheckdisabled"),
+        guiGraphics.text(font, IModHelpers.get().getL10NHelpers().localize("gui.integratedcrafting.partsettings.craftingcheckdisabled"),
                 leftPos + 8, topPos + 152, ARGB.opaque(0), false);
-        checkboxFieldDisabledCraftingCheck.render(guiGraphics, mouseX, mouseY, partialTicks);
+        checkboxFieldDisabledCraftingCheck.extractRenderState(guiGraphics, mouseX, mouseY, partialTicks);
 
-        guiGraphics.drawString(font, IModHelpers.get().getL10NHelpers().localize("gui.integratedcrafting.partsettings.blockingmode"),
+        guiGraphics.text(font, IModHelpers.get().getL10NHelpers().localize("gui.integratedcrafting.partsettings.blockingmode"),
                 leftPos + 8, topPos + 162, ARGB.opaque(0), false);
-        checkboxFieldBlockingMode.render(guiGraphics, mouseX, mouseY, partialTicks);
+        checkboxFieldBlockingMode.extractRenderState(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
     @Override

@@ -69,7 +69,7 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
                 })
                 .map(recipeHolder -> {
                     CraftingRecipe craftingRecipe = recipeHolder.value();
-                    ItemStack result = craftingRecipe.assemble(gridInput, level.registryAccess());
+                    ItemStack result = craftingRecipe.assemble(gridInput);
 
                     if (result.isEmpty()) {
                         return false;
