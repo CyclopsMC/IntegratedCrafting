@@ -38,8 +38,6 @@
   "aspect.integratedcrafting.write.itemstack.craft.info": "Verilen eşyayı üret",
   "aspect.integratedcrafting.write.fluidstack.craft": "Sıvıyı Üret",
   "aspect.integratedcrafting.write.fluidstack.craft.info": "Verilen sıvıyı üret",
-  "aspect.integratedcrafting.write.integer.craft": "Enerjiyi Üret",
-  "aspect.integratedcrafting.write.integer.craft.info": "Verilen enerji miktarını üret",
   "info_book.integratedcrafting.section.main": "Üretiliyor",
   "info_book.integratedcrafting.introduction": "Tanıtım",
   "info_book.integratedcrafting.introduction.text1": "&lIntegrated Crafting&r, &lIntegrated Dynamics&r ağları içinde otomatik üretim için &lIntegrated Dynamics&r'in bir uzantısıdır. Otomatik üretim &oeşyalar&r, &osıvılar&r ve &oenerji&r'nin herhangi bir kombinasyonu ile gerçekleşebilir. Bunun için gerekli olan iki ana parça &lÜretim Arayüzü&r ve &lÜretim Yazıcısı&r'dır.",
