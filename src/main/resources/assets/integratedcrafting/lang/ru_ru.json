@@ -44,8 +44,6 @@
   "aspect.integratedcrafting.write.itemstack.craft.info": "Создать указанный предмет",
   "aspect.integratedcrafting.write.fluidstack.craft": "Крафт жидкости",
   "aspect.integratedcrafting.write.fluidstack.craft.info": "Создать указанную жидкость",
-  "aspect.integratedcrafting.write.integer.craft": "Крафт энергии",
-  "aspect.integratedcrafting.write.integer.craft.info": "Создать указанное количество энергии",
   "info_book.integratedcrafting.section.main": "Крафт",
   "info_book.integratedcrafting.introduction": "Введение",
   "info_book.integratedcrafting.introduction.text1": "&lIntegrated Crafting&r — это расширение для &lIntegrated Dynamics&r, которое позволяет автоматизировать крафт в сетях &lIntegrated Dynamics&r. Автокрафт может происходить с любой комбинацией &oпредметов&r, &oжидкостей&r и &oэнергии&r. Для этого требуются две основные части: &lИнтерфейс Крафта&r и &lПисатель Крафта&r.",

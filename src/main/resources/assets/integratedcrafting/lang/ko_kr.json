@@ -35,8 +35,6 @@
   "aspect.integratedcrafting.write.itemstack.craft.info": "주어진 아이템을 제작합니다",
   "aspect.integratedcrafting.write.fluidstack.craft": "유체 제작",
   "aspect.integratedcrafting.write.fluidstack.craft.info": "주어진 유체를 제작합니다",
-  "aspect.integratedcrafting.write.integer.craft": "에너지 제작",
-  "aspect.integratedcrafting.write.integer.craft.info": "주어진 양의 에너지를 제작합니다",
   "info_book.integratedcrafting.section.main": "제작",
   "info_book.integratedcrafting.introduction": "소개",
   "info_book.integratedcrafting.introduction.text1": "&lIntegrated Crafting&r은 &lIntegrated Dynamics&r 네트워크 내에서 자동 제작을 위한 &lIntegrated Dynamics&r의 애드온입니다. 자동 제작은 &o아이템&r, &o유체&r 및 &o에너지&r의 모든 조합으로 실행할 수 있습니다. 이를 위해 필요한 두 가지 주요 부품은 &l제작 인터페이스&r 및 &l제작 작성기&r입니다.",

@@ -44,8 +44,6 @@
   "aspect.integratedcrafting.write.itemstack.craft.info": "Cria o item fornecido",
   "aspect.integratedcrafting.write.fluidstack.craft": "Criar Fluido",
   "aspect.integratedcrafting.write.fluidstack.craft.info": "Cria o fluido fornecido",
-  "aspect.integratedcrafting.write.integer.craft": "Criar Energia",
-  "aspect.integratedcrafting.write.integer.craft.info": "Cria a quantidade de energia fornecida",
   "info_book.integratedcrafting.section.main": "Criação",
   "info_book.integratedcrafting.introduction": "Introdução",
   "info_book.integratedcrafting.introduction.text1": "&lIntegrated Crafting&r é uma extensão para o &lIntegrated Dynamics&r para criação automática dentro das redes do &lIntegrated Dynamics&r. A criação automática pode ocorrer com qualquer combinação de &oitens&r, &ofluidos&r e &oenergia&r. As duas partes principais necessárias para isso são a &lInterface de Criação&r e o &lEscritor de Criação&r.",

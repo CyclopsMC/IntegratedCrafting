@@ -44,8 +44,6 @@
   "aspect.integratedcrafting.write.itemstack.craft.info": "Vervaardig het gegeven voorwerp",
   "aspect.integratedcrafting.write.fluidstack.craft": "Vervaardig vloeistof",
   "aspect.integratedcrafting.write.fluidstack.craft.info": "Vervaardig de gegeven vloeistof",
-  "aspect.integratedcrafting.write.integer.craft": "Vervaardig energie",
-  "aspect.integratedcrafting.write.integer.craft.info": "Vervaardig de gegeven energiehoeveelheid",
   "info_book.integratedcrafting.section.main": "Vervaardigen",
   "info_book.integratedcrafting.introduction": "Introductie",
   "info_book.integratedcrafting.introduction.text1": "&lIntegrated Crafting&r is een uitbreiding op &lIntegrated Dynamics&r voor automatische vervaardiging binnen &lIntegrated Dynamics&r netwerken. Automatische vervaardiging kan uitgevoerd worden op iedere combinatie van &ovoorwerpen&r, &ovloeistoffen&r en &oenergie&r. De twee hoofdzaken die hiervoor vereist zijn, zijn de &lvervaardigingsinterface&r en de &lvervaardigingsschrijver&r.",
