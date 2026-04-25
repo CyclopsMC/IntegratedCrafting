@@ -115,7 +115,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         setSideInDropdownField(selectedIngredientComponent, ((ContainerPartInterfaceCraftingSettings) container).getTargetSideOverrideValue(selectedIngredientComponent));
         dropdownFieldSide.setMaxLength(15);
         dropdownFieldSide.setVisible(true);
-        dropdownFieldSide.setTextColor(16777215);
+        dropdownFieldSide.setTextColor(ARGB.opaque(16777215));
         dropdownFieldSide.setCanLoseFocus(true);
 
         numberFieldChannelInterfaceCrafting = new WidgetNumberField(font, leftPos + 106, topPos + 134, 70, 14,
@@ -123,7 +123,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         numberFieldChannelInterfaceCrafting.setPositiveOnly(false);
         numberFieldChannelInterfaceCrafting.setMaxLength(15);
         numberFieldChannelInterfaceCrafting.setVisible(true);
-        numberFieldChannelInterfaceCrafting.setTextColor(16777215);
+        numberFieldChannelInterfaceCrafting.setTextColor(ARGB.opaque(16777215));
         numberFieldChannelInterfaceCrafting.setCanLoseFocus(true);
 
         checkboxFieldDisabledCraftingCheck = new ButtonCheckbox(leftPos + 110, topPos + 149, 110, 10,
