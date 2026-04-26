@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.20.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.20.1-1.4.6"></a>
+## [1.20.1-1.4.6](/compare/1.20.1-1.4.5...1.20.1-1.4.6) - 2026-04-26 13:55:14
+
+
+### Fixed
+* Fix channel mixup in crafting interface settings
+
 <a name="1.20.1-1.4.5"></a>
-## [1.20.1-1.4.5](/compare/1.20.1-1.4.4...1.20.1-1.4.5) - 2026-03-09 08:58:52
+## [1.20.1-1.4.5](/compare/1.20.1-1.4.4...1.20.1-1.4.5) - 2026-03-09 08:58:52 +0100
 
 
 ### Fixed
