@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.4.6"></a>
+## [1.21.1-1.4.6](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.5...1.21.1-1.4.6) - 2026-04-26 13:55:40
+
+
+### Fixed
+* Fix channel mixup in crafting interface settings
+
 <a name="1.21.1-1.4.5"></a>
-## [1.21.1-1.4.5](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.4...1.21.1-1.4.5) - 2026-03-09 16:17:51
+## [1.21.1-1.4.5](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.4...1.21.1-1.4.5) - 2026-03-09 16:17:51 +0100
 
 
 ### Added

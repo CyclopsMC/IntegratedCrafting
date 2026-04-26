@@ -82,9 +82,9 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
     protected void addTargetToNetwork(INetwork network, PartTarget pos, S state, boolean initialize) {
         network.getCapability(getNetworkCapability())
                 .ifPresent(craftingNetwork -> {
-                    int channelCrafting = state.getChannelCrafting();
+                    int channel = state.getChannel();
                     state.setTarget(pos);
-                    state.setNetworks(network, craftingNetwork, NetworkHelpers.getPartNetworkChecked(network), channelCrafting, ValueDeseralizationContext.of(pos.getCenter().getPos().getLevel(true)), initialize);
+                    state.setNetworks(network, craftingNetwork, NetworkHelpers.getPartNetworkChecked(network), channel, ValueDeseralizationContext.of(pos.getCenter().getPos().getLevel(true)), initialize);
                     state.setShouldAddToCraftingNetwork(true);
                 });
     }
@@ -138,12 +138,12 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
             addTargetToNetwork(network, target, state, false);
         }
 
-        int channel = state.getChannelCrafting();
+        int channelCrafting = state.getChannelCrafting();
 
         // Update the network data in the part state
         if (state.shouldAddToCraftingNetwork()) {
             ICraftingNetwork craftingNetwork = network.getCapability(getNetworkCapability()).orElse(null);
-            craftingNetwork.addCraftingInterface(channel, state);
+            craftingNetwork.addCraftingInterface(channelCrafting, state);
             state.setShouldAddToCraftingNetwork(false);
         }
 
@@ -154,7 +154,7 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
         if (state.getInventoryOutputBuffer().isEmpty()) {
             // Tick the job handler
             PartPos targetPos = state.getTarget().getTarget();
-            state.getCraftingJobHandler().update(network, channel, targetPos);
+            state.getCraftingJobHandler().update(network, channelCrafting, targetPos);
         }
     }
 
@@ -189,7 +189,6 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
         protected INetwork network = null;
         protected IPartNetwork partNetwork = null;
         protected ICraftingNetwork craftingNetwork = null;
-        private int channel = -1;
         protected ValueDeseralizationContext valueDeseralizationContext;
         private boolean shouldAddToCraftingNetwork = false;
         protected Player lastPlayer;
@@ -274,7 +273,7 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
             this.network = network;
             this.craftingNetwork = craftingNetwork;
             this.partNetwork = partNetwork;
-            this.channel = channel;
+            this.setChannel(channel);
             this.valueDeseralizationContext = valueDeseralizationContext;
             reloadRecipes(initialize);
         }
@@ -289,11 +288,6 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
 
         public ICraftingNetwork getCraftingNetwork() {
             return craftingNetwork;
-        }
-
-        @Override
-        public int getChannel() {
-            return channel;
         }
 
         @Override
