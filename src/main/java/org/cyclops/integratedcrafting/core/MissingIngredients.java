@@ -49,7 +49,7 @@ public class MissingIngredients<T, M> {
         ValueOutput.ValueOutputList missingIngredientsTagList = valueOutput.childrenList("v");
         for (Map.Entry<IngredientComponent<?, ?>, MissingIngredients<?, ?>> entry : ingredients.entrySet()) {
             ValueOutput missingIngredientsTag = missingIngredientsTagList.addChild();
-            missingIngredientsTag.putString("component", entry.getKey().toString());
+            missingIngredientsTag.putString("component", entry.getKey().getName().toString());
             ValueOutput.ValueOutputList elements = missingIngredientsTag.childrenList("elements");
             for (Element<?, ?> element : entry.getValue().getElements()) {
                 ValueOutput elementsTag = elements.addChild();
