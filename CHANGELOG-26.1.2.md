@@ -1,8 +1,15 @@
 # Changelog for Minecraft 26.1.2
 All notable changes to this project will be documented in this file.
 
+<a name="26.1.2-1.4.7"></a>
+## [26.1.2-1.4.7](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.4.6...26.1.2-1.4.7) - 2026-04-29 19:25:44
+
+
+### Fixed
+* Fix MissingIngredients incorrectly serializing ingredients
+
 <a name="26.1.2-1.4.6"></a>
-## [26.1.2-1.4.6](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.4.5...26.1.2-1.4.6) - 2026-04-26 13:56:53
+## [26.1.2-1.4.6](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.4.5...26.1.2-1.4.6) - 2026-04-26 13:56:53 +0200
 
 
 ### Added
