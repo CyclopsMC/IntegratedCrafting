@@ -120,6 +120,18 @@ public class GameTestHelpersIntegratedCrafting {
                 helper.setBlock(posi.below().west(), RegistryEntries.BLOCK_CABLE.value());
                 PartHelpers.addPart(helper.getLevel(), helper.absolutePos(posi.below().west()), Direction.UP, org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM.getItem()));
                 placeVariableInWriter(helper, helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(posi.below().west()), Direction.UP), TunnelAspects.Write.Item.BOOLEAN_IMPORT, new ItemStack(RegistryEntries.ITEM_VARIABLE));
+            } else if (crafter instanceof org.cyclops.integrateddynamics.block.BlockMechanicalDryingBasin
+                    || crafter instanceof org.cyclops.integrateddynamics.block.BlockMechanicalSqueezer) {
+                // Add energy battery adjacent to the mechanical machine
+                helper.setBlock(posi.west().north(), RegistryEntries.BLOCK_ENERGY_BATTERY.value());
+                org.cyclops.integrateddynamics.blockentity.BlockEntityEnergyBattery battery = helper.getBlockEntity(posi.west().north(), org.cyclops.integrateddynamics.blockentity.BlockEntityEnergyBattery.class);
+                battery.setEnergyStored(100_000);
+
+                // Extract result from output slots via the DOWN face
+                helper.setBlock(posi.below(), RegistryEntries.BLOCK_CABLE.value());
+                helper.setBlock(posi.below().west(), RegistryEntries.BLOCK_CABLE.value());
+                PartHelpers.addPart(helper.getLevel(), helper.absolutePos(posi.below().west()), Direction.UP, org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM.getItem()));
+                placeVariableInWriter(helper, helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(posi.below().west()), Direction.UP), TunnelAspects.Write.Item.BOOLEAN_IMPORT, new ItemStack(RegistryEntries.ITEM_VARIABLE));
             }
 
             interfaces.add(PartPos.of(helper.getLevel(), helper.absolutePos(posi.above().west()), Direction.DOWN));
@@ -215,6 +227,29 @@ public class GameTestHelpersIntegratedCrafting {
             }
             recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
             recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(result));
+        } else if (recipeUnknown.value() instanceof org.cyclops.integrateddynamics.core.recipe.type.RecipeDryingBasin recipeDryingBasin) {
+            recipeDryingBasin.getInputIngredient().ifPresent(ingredient ->
+                    alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                            new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(ingredient.items().findFirst().get()), ItemMatch.ITEM | ItemMatch.DATA)
+                    )))
+            );
+            recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
+            recipeDryingBasin.getOutputItemFirst().ifPresent(outputItem ->
+                    recipeOut.put(IngredientComponents.ITEMSTACK, Lists.newArrayList(outputItem))
+            );
+        } else if (recipeUnknown.value() instanceof org.cyclops.integrateddynamics.core.recipe.type.RecipeSqueezer recipeSqueezer) {
+            alternatives.add(new PrototypedIngredientAlternativesList<>(Lists.newArrayList(
+                    new PrototypedIngredient<>(IngredientComponents.ITEMSTACK, new ItemStack(recipeSqueezer.getInputIngredient().items().findFirst().get()), ItemMatch.ITEM | ItemMatch.DATA)
+            )));
+            recipeIn.put(IngredientComponents.ITEMSTACK, alternatives);
+            java.util.List<ItemStack> squeezerOutputItems = recipeSqueezer.getOutputItems().stream()
+                    .filter(ic -> ic.getChance() == 1.0F)
+                    .map(ic -> ic.getIngredientFirst().copy())
+                    .filter(stack -> !stack.isEmpty())
+                    .collect(java.util.stream.Collectors.toList());
+            if (!squeezerOutputItems.isEmpty()) {
+                recipeOut.put(IngredientComponents.ITEMSTACK, squeezerOutputItems);
+            }
         } else {
             throw new IllegalStateException("Unknown recipe type " + recipeType);
         }
