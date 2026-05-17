@@ -20,6 +20,7 @@ import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeExceptio
 import org.cyclops.integratedcrafting.ingredient.ComplexStack;
 import org.cyclops.integratedcrafting.ingredient.IngredientComponentStubs;
 import org.junit.jupiter.api.BeforeEach;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -138,34 +139,36 @@ public class TestCaseJobCalculationBronzeDrillHead {
 
     @Test
     public void testCraft1Valid() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
-        // This test makes sure that multi-output recipes don't assume the storage contains more items in actually does.
-        IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
-        storage.insert(C_DUST.withAmount(8), false);
-        storage.insert(C_COPPER_DUST.withAmount(64), false);
-        storage.insert(C_TIN_DUST.withAmount(64), false);
-        storageGetter = (c) -> storage;
-
-        CraftingJob jobMain = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
-                IngredientComponentStubs.COMPLEX, C_DRILL_HEAD, ComplexStack.Match.EXACT, true,
-                simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
-
-        assertThat(jobMain.getId(), equalTo(21));
-        assertThat(jobMain.getChannel(), equalTo(0));
-        assertThat(jobMain.getAmount(), equalTo(1));
-        assertThat(jobMain.getRecipe(), equalTo(recipeDrillHead));
-        assertThat(jobMain.getIngredientsStorage().getComponents().size(), equalTo(0));
-
-        assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(22));
-        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(jobMain), equalTo(true));
-        assertThat(craftingJobDependencyGraph.getDependencies(jobMain).size(), equalTo(5));
-        assertThat(craftingJobDependencyGraph.getDependents(jobMain).size(), equalTo(0));
-
-        IMixedIngredients fullStorage = RecipeHelpers.collectIngredientStoragesDependencies(craftingJobDependencyGraph, jobMain);
-        assertThat(new IngredientHashSet<>(IngredientComponentStubs.COMPLEX, fullStorage.getInstances(IngredientComponentStubs.COMPLEX)), equalTo(new IngredientHashSet<>(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
-                C_TIN_DUST.withAmount(2),
-                C_COPPER_DUST.withAmount(6),
-                C_DUST.withAmount(10) // This is 10 instead of 8, because we have a surplus of 2 that is used by other sub-jobs.
-        ))));
+        try (Transaction transaction = Transaction.openRoot()) {
+            // This test makes sure that multi-output recipes don't assume the storage contains more items in actually does.
+            IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+            storage.insert(C_DUST.withAmount(8), transaction);
+            storage.insert(C_COPPER_DUST.withAmount(64), transaction);
+            storage.insert(C_TIN_DUST.withAmount(64), transaction);
+            storageGetter = (c) -> storage;
+    
+            CraftingJob jobMain = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+                    IngredientComponentStubs.COMPLEX, C_DRILL_HEAD, ComplexStack.Match.EXACT, true,
+                    simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true, transaction);
+    
+            assertThat(jobMain.getId(), equalTo(21));
+            assertThat(jobMain.getChannel(), equalTo(0));
+            assertThat(jobMain.getAmount(), equalTo(1));
+            assertThat(jobMain.getRecipe(), equalTo(recipeDrillHead));
+            assertThat(jobMain.getIngredientsStorage().getComponents().size(), equalTo(0));
+    
+            assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(22));
+            assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(jobMain), equalTo(true));
+            assertThat(craftingJobDependencyGraph.getDependencies(jobMain).size(), equalTo(5));
+            assertThat(craftingJobDependencyGraph.getDependents(jobMain).size(), equalTo(0));
+    
+            IMixedIngredients fullStorage = RecipeHelpers.collectIngredientStoragesDependencies(craftingJobDependencyGraph, jobMain);
+            assertThat(new IngredientHashSet<>(IngredientComponentStubs.COMPLEX, fullStorage.getInstances(IngredientComponentStubs.COMPLEX)), equalTo(new IngredientHashSet<>(IngredientComponentStubs.COMPLEX, Lists.newArrayList(
+                    C_TIN_DUST.withAmount(2),
+                    C_COPPER_DUST.withAmount(6),
+                    C_DUST.withAmount(10) // This is 10 instead of 8, because we have a surplus of 2 that is used by other sub-jobs.
+            ))));
+        }
     }
 
 

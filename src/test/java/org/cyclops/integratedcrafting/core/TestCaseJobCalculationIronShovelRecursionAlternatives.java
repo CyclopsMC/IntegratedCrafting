@@ -19,6 +19,7 @@ import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeExceptio
 import org.cyclops.integratedcrafting.ingredient.ComplexStack;
 import org.cyclops.integratedcrafting.ingredient.IngredientComponentStubs;
 import org.junit.jupiter.api.BeforeEach;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -95,41 +96,43 @@ public class TestCaseJobCalculationIronShovelRecursionAlternatives {
 
     @Test
     public void testCraft1Valid() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
-        // We have exactly enough for crafting one comparator with a single redstone block that produces 9 redstone dusts that need to be reused for crafting 3 redstone torches
-        IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
-        storage.insert(C_IRON_ORE.withAmount(9), false);
-        storage.insert(C_STICK.withAmount(1), false);
-        storageGetter = (c) -> storage;
-
-        CraftingJob jobMain = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
-                IngredientComponentStubs.COMPLEX, C_IRON_SHOVEL, ComplexStack.Match.EXACT, true,
-                simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
-
-        assertThat(jobMain.getId(), equalTo(1));
-        assertThat(jobMain.getChannel(), equalTo(0));
-        assertThat(jobMain.getAmount(), equalTo(1));
-        assertThat(jobMain.getRecipe(), equalTo(recipeShovel));
-        assertThat(jobMain.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(jobMain.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_STICK
-        )));
-
-        assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
-        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(jobMain), equalTo(true));
-        assertThat(craftingJobDependencyGraph.getDependencies(jobMain).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(jobMain).size(), equalTo(0));
-
-        CraftingJob j0 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(jobMain), null);
-        assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
-        assertThat(craftingJobDependencyGraph.getDependents(j0).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j0).contains(jobMain), equalTo(true));
-        assertThat(j0.getId(), equalTo(0));
-        assertThat(j0.getAmount(), equalTo(2));
-        assertThat(j0.getRecipe(), equalTo(recipeIngotFromOre));
-        assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_IRON_ORE.withAmount(2)
-        )));
+        try (Transaction transaction = Transaction.openRoot()) {
+            // We have exactly enough for crafting one comparator with a single redstone block that produces 9 redstone dusts that need to be reused for crafting 3 redstone torches
+            IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+            storage.insert(C_IRON_ORE.withAmount(9), transaction);
+            storage.insert(C_STICK.withAmount(1), transaction);
+            storageGetter = (c) -> storage;
+    
+            CraftingJob jobMain = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+                    IngredientComponentStubs.COMPLEX, C_IRON_SHOVEL, ComplexStack.Match.EXACT, true,
+                    simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true, transaction);
+    
+            assertThat(jobMain.getId(), equalTo(1));
+            assertThat(jobMain.getChannel(), equalTo(0));
+            assertThat(jobMain.getAmount(), equalTo(1));
+            assertThat(jobMain.getRecipe(), equalTo(recipeShovel));
+            assertThat(jobMain.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(jobMain.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_STICK
+            )));
+    
+            assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(2));
+            assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(jobMain), equalTo(true));
+            assertThat(craftingJobDependencyGraph.getDependencies(jobMain).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(jobMain).size(), equalTo(0));
+    
+            CraftingJob j0 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(jobMain), null);
+            assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
+            assertThat(craftingJobDependencyGraph.getDependents(j0).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j0).contains(jobMain), equalTo(true));
+            assertThat(j0.getId(), equalTo(0));
+            assertThat(j0.getAmount(), equalTo(2));
+            assertThat(j0.getRecipe(), equalTo(recipeIngotFromOre));
+            assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_IRON_ORE.withAmount(2)
+            )));
+        }
     }
 
 }

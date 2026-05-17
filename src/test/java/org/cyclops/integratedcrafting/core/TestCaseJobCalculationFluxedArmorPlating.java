@@ -19,6 +19,7 @@ import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeExceptio
 import org.cyclops.integratedcrafting.ingredient.ComplexStack;
 import org.cyclops.integratedcrafting.ingredient.IngredientComponentStubs;
 import org.junit.jupiter.api.BeforeEach;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -107,231 +108,237 @@ public class TestCaseJobCalculationFluxedArmorPlating {
 
     @Test
     public void testCraft1Valid() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
-        // We have exactly enough for crafting one plating
-        IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
-        storage.insert(C_REDSTONE_ITEM.withAmount(20), false);
-        storage.insert(C_ELECTRUM.withAmount(4), false);
-        storage.insert(C_SAND.withAmount(4), false);
-        storage.insert(C_GEM, false);
-        storageGetter = (c) -> storage;
-
-        CraftingJob j4 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
-                IngredientComponentStubs.COMPLEX, C_PLATING, ComplexStack.Match.EXACT, true,
-                simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
-
-        assertThat(j4.getId(), equalTo(4));
-        assertThat(j4.getChannel(), equalTo(0));
-        assertThat(j4.getAmount(), equalTo(1));
-        assertThat(j4.getRecipe(), equalTo(recipePlating));
-        assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j4.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_GEM
-        )));
-
-        assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(5));
-        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j4), equalTo(true));
-        assertThat(craftingJobDependencyGraph.getDependencies(j4).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j4).size(), equalTo(0));
-
-        CraftingJob j3 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j4), null);
-        assertThat(craftingJobDependencyGraph.getDependencies(j3).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j3).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j3).contains(j4), equalTo(true));
-        assertThat(j3.getId(), equalTo(3));
-        assertThat(j3.getAmount(), equalTo(4));
-        assertThat(j3.getRecipe(), equalTo(recipePlate));
-        assertThat(j3.getIngredientsStorage().getComponents().size(), equalTo(0));
-
-        CraftingJob j2 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j3), null);
-        assertThat(craftingJobDependencyGraph.getDependencies(j2).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j2).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j2).contains(j3), equalTo(true));
-        assertThat(j2.getId(), equalTo(2));
-        assertThat(j2.getAmount(), equalTo(4));
-        assertThat(j2.getRecipe(), equalTo(recipeIngot));
-        assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j2.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_SAND.withAmount(4)
-        )));
-
-        CraftingJob j1 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j2), null);
-        assertThat(craftingJobDependencyGraph.getDependencies(j1).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j1).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j1).contains(j2), equalTo(true));
-        assertThat(j1.getId(), equalTo(1));
-        assertThat(j1.getAmount(), equalTo(4));
-        assertThat(j1.getRecipe(), equalTo(recipeElectrumFluxed));
-        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_ELECTRUM.withAmount(4)
-        )));
-
-        CraftingJob j0 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j1), null);
-        assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
-        assertThat(craftingJobDependencyGraph.getDependents(j0).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j0).contains(j1), equalTo(true));
-        assertThat(j0.getId(), equalTo(0));
-        assertThat(j0.getAmount(), equalTo(20));
-        assertThat(j0.getRecipe(), equalTo(recipeRedstoneFluid));
-        assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_REDSTONE_ITEM.withAmount(20)
-        )));
+        try (Transaction transaction = Transaction.openRoot()) {
+            // We have exactly enough for crafting one plating
+            IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+            storage.insert(C_REDSTONE_ITEM.withAmount(20), transaction);
+            storage.insert(C_ELECTRUM.withAmount(4), transaction);
+            storage.insert(C_SAND.withAmount(4), transaction);
+            storage.insert(C_GEM, transaction);
+            storageGetter = (c) -> storage;
+    
+            CraftingJob j4 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+                    IngredientComponentStubs.COMPLEX, C_PLATING, ComplexStack.Match.EXACT, true,
+                    simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true, transaction);
+    
+            assertThat(j4.getId(), equalTo(4));
+            assertThat(j4.getChannel(), equalTo(0));
+            assertThat(j4.getAmount(), equalTo(1));
+            assertThat(j4.getRecipe(), equalTo(recipePlating));
+            assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(j4.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_GEM
+            )));
+    
+            assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(5));
+            assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j4), equalTo(true));
+            assertThat(craftingJobDependencyGraph.getDependencies(j4).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j4).size(), equalTo(0));
+    
+            CraftingJob j3 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j4), null);
+            assertThat(craftingJobDependencyGraph.getDependencies(j3).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j3).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j3).contains(j4), equalTo(true));
+            assertThat(j3.getId(), equalTo(3));
+            assertThat(j3.getAmount(), equalTo(4));
+            assertThat(j3.getRecipe(), equalTo(recipePlate));
+            assertThat(j3.getIngredientsStorage().getComponents().size(), equalTo(0));
+    
+            CraftingJob j2 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j3), null);
+            assertThat(craftingJobDependencyGraph.getDependencies(j2).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j2).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j2).contains(j3), equalTo(true));
+            assertThat(j2.getId(), equalTo(2));
+            assertThat(j2.getAmount(), equalTo(4));
+            assertThat(j2.getRecipe(), equalTo(recipeIngot));
+            assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(j2.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_SAND.withAmount(4)
+            )));
+    
+            CraftingJob j1 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j2), null);
+            assertThat(craftingJobDependencyGraph.getDependencies(j1).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j1).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j1).contains(j2), equalTo(true));
+            assertThat(j1.getId(), equalTo(1));
+            assertThat(j1.getAmount(), equalTo(4));
+            assertThat(j1.getRecipe(), equalTo(recipeElectrumFluxed));
+            assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_ELECTRUM.withAmount(4)
+            )));
+    
+            CraftingJob j0 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j1), null);
+            assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
+            assertThat(craftingJobDependencyGraph.getDependents(j0).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j0).contains(j1), equalTo(true));
+            assertThat(j0.getId(), equalTo(0));
+            assertThat(j0.getAmount(), equalTo(20));
+            assertThat(j0.getRecipe(), equalTo(recipeRedstoneFluid));
+            assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_REDSTONE_ITEM.withAmount(20)
+            )));
+        }
     }
 
     @Test
     public void testCraft1DirectValid() throws RecursiveCraftingRecipeException {
-        // We have exactly enough for crafting one plating
-        IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
-        storage.insert(C_REDSTONE_ITEM.withAmount(20), false);
-        storage.insert(C_ELECTRUM.withAmount(4), false);
-        storage.insert(C_SAND.withAmount(4), false);
-        storage.insert(C_GEM, false);
-        storageGetter = (c) -> storage;
-
-        PartialCraftingJobCalculation calculation = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
-                recipePlating, 1, true,
-                simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
-        assertThat(calculation.getPartialCraftingJobs(), nullValue());
-        assertThat(calculation.getIngredientsStorage().keySet().size(), equalTo(1));
-        assertThat(calculation.getIngredientsStorage().get(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_GEM
-        )));
-        assertThat(calculation.getMissingDependencies(), nullValue());
-        CraftingJob j4 = calculation.getCraftingJob();
-
-        assertThat(j4.getId(), equalTo(4));
-        assertThat(j4.getChannel(), equalTo(0));
-        assertThat(j4.getAmount(), equalTo(1));
-        assertThat(j4.getRecipe(), equalTo(recipePlating));
-        assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j4.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_GEM
-        )));
-
-        assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(5));
-        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j4), equalTo(true));
-        assertThat(craftingJobDependencyGraph.getDependencies(j4).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j4).size(), equalTo(0));
-
-        CraftingJob j3 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j4), null);
-        assertThat(craftingJobDependencyGraph.getDependencies(j3).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j3).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j3).contains(j4), equalTo(true));
-        assertThat(j3.getId(), equalTo(3));
-        assertThat(j3.getAmount(), equalTo(4));
-        assertThat(j3.getRecipe(), equalTo(recipePlate));
-        assertThat(j3.getIngredientsStorage().getComponents().size(), equalTo(0));
-
-        CraftingJob j2 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j3), null);
-        assertThat(craftingJobDependencyGraph.getDependencies(j2).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j2).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j2).contains(j3), equalTo(true));
-        assertThat(j2.getId(), equalTo(2));
-        assertThat(j2.getAmount(), equalTo(4));
-        assertThat(j2.getRecipe(), equalTo(recipeIngot));
-        assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j2.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_SAND.withAmount(4)
-        )));
-
-        CraftingJob j1 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j2), null);
-        assertThat(craftingJobDependencyGraph.getDependencies(j1).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j1).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j1).contains(j2), equalTo(true));
-        assertThat(j1.getId(), equalTo(1));
-        assertThat(j1.getAmount(), equalTo(4));
-        assertThat(j1.getRecipe(), equalTo(recipeElectrumFluxed));
-        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_ELECTRUM.withAmount(4)
-        )));
-
-        CraftingJob j0 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j1), null);
-        assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
-        assertThat(craftingJobDependencyGraph.getDependents(j0).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j0).contains(j1), equalTo(true));
-        assertThat(j0.getId(), equalTo(0));
-        assertThat(j0.getAmount(), equalTo(20));
-        assertThat(j0.getRecipe(), equalTo(recipeRedstoneFluid));
-        assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_REDSTONE_ITEM.withAmount(20)
-        )));
+        try (Transaction transaction = Transaction.openRoot()) {
+            // We have exactly enough for crafting one plating
+            IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+            storage.insert(C_REDSTONE_ITEM.withAmount(20), transaction);
+            storage.insert(C_ELECTRUM.withAmount(4), transaction);
+            storage.insert(C_SAND.withAmount(4), transaction);
+            storage.insert(C_GEM, transaction);
+            storageGetter = (c) -> storage;
+    
+            PartialCraftingJobCalculation calculation = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+                    recipePlating, 1, true,
+                    simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true, transaction);
+            assertThat(calculation.getPartialCraftingJobs(), nullValue());
+            assertThat(calculation.getIngredientsStorage().keySet().size(), equalTo(1));
+            assertThat(calculation.getIngredientsStorage().get(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_GEM
+            )));
+            assertThat(calculation.getMissingDependencies(), nullValue());
+            CraftingJob j4 = calculation.getCraftingJob();
+    
+            assertThat(j4.getId(), equalTo(4));
+            assertThat(j4.getChannel(), equalTo(0));
+            assertThat(j4.getAmount(), equalTo(1));
+            assertThat(j4.getRecipe(), equalTo(recipePlating));
+            assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(j4.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_GEM
+            )));
+    
+            assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(5));
+            assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j4), equalTo(true));
+            assertThat(craftingJobDependencyGraph.getDependencies(j4).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j4).size(), equalTo(0));
+    
+            CraftingJob j3 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j4), null);
+            assertThat(craftingJobDependencyGraph.getDependencies(j3).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j3).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j3).contains(j4), equalTo(true));
+            assertThat(j3.getId(), equalTo(3));
+            assertThat(j3.getAmount(), equalTo(4));
+            assertThat(j3.getRecipe(), equalTo(recipePlate));
+            assertThat(j3.getIngredientsStorage().getComponents().size(), equalTo(0));
+    
+            CraftingJob j2 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j3), null);
+            assertThat(craftingJobDependencyGraph.getDependencies(j2).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j2).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j2).contains(j3), equalTo(true));
+            assertThat(j2.getId(), equalTo(2));
+            assertThat(j2.getAmount(), equalTo(4));
+            assertThat(j2.getRecipe(), equalTo(recipeIngot));
+            assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(j2.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_SAND.withAmount(4)
+            )));
+    
+            CraftingJob j1 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j2), null);
+            assertThat(craftingJobDependencyGraph.getDependencies(j1).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j1).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j1).contains(j2), equalTo(true));
+            assertThat(j1.getId(), equalTo(1));
+            assertThat(j1.getAmount(), equalTo(4));
+            assertThat(j1.getRecipe(), equalTo(recipeElectrumFluxed));
+            assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_ELECTRUM.withAmount(4)
+            )));
+    
+            CraftingJob j0 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j1), null);
+            assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
+            assertThat(craftingJobDependencyGraph.getDependents(j0).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j0).contains(j1), equalTo(true));
+            assertThat(j0.getId(), equalTo(0));
+            assertThat(j0.getAmount(), equalTo(20));
+            assertThat(j0.getRecipe(), equalTo(recipeRedstoneFluid));
+            assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_REDSTONE_ITEM.withAmount(20)
+            )));
+        }
     }
 
     @Test
     public void testCraft4Valid() throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
-        // We have exactly enough for crafting one plating
-        IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
-        storage.insert(C_REDSTONE_ITEM.withAmount(80), false);
-        storage.insert(C_ELECTRUM.withAmount(16), false);
-        storage.insert(C_SAND.withAmount(16), false);
-        storage.insert(C_GEM.withAmount(4), false);
-        storageGetter = (c) -> storage;
-
-        CraftingJob j4 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
-                IngredientComponentStubs.COMPLEX, C_PLATING.withAmount(4), ComplexStack.Match.EXACT, true,
-                simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
-
-        assertThat(j4.getId(), equalTo(4));
-        assertThat(j4.getChannel(), equalTo(0));
-        assertThat(j4.getAmount(), equalTo(4));
-        assertThat(j4.getRecipe(), equalTo(recipePlating));
-        assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j4.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_GEM.withAmount(4)
-        )));
-
-        assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(5));
-        assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j4), equalTo(true));
-        assertThat(craftingJobDependencyGraph.getDependencies(j4).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j4).size(), equalTo(0));
-
-        CraftingJob j3 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j4), null);
-        assertThat(craftingJobDependencyGraph.getDependencies(j3).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j3).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j3).contains(j4), equalTo(true));
-        assertThat(j3.getId(), equalTo(3));
-        assertThat(j3.getAmount(), equalTo(16));
-        assertThat(j3.getRecipe(), equalTo(recipePlate));
-        assertThat(j3.getIngredientsStorage().getComponents().size(), equalTo(0));
-
-        CraftingJob j2 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j3), null);
-        assertThat(craftingJobDependencyGraph.getDependencies(j2).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j2).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j2).contains(j3), equalTo(true));
-        assertThat(j2.getId(), equalTo(2));
-        assertThat(j2.getAmount(), equalTo(16));
-        assertThat(j2.getRecipe(), equalTo(recipeIngot));
-        assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j2.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_SAND.withAmount(16)
-        )));
-
-        CraftingJob j1 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j2), null);
-        assertThat(craftingJobDependencyGraph.getDependencies(j1).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j1).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j1).contains(j2), equalTo(true));
-        assertThat(j1.getId(), equalTo(1));
-        assertThat(j1.getAmount(), equalTo(16));
-        assertThat(j1.getRecipe(), equalTo(recipeElectrumFluxed));
-        assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_ELECTRUM.withAmount(16)
-        )));
-
-        CraftingJob j0 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j1), null);
-        assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
-        assertThat(craftingJobDependencyGraph.getDependents(j0).size(), equalTo(1));
-        assertThat(craftingJobDependencyGraph.getDependents(j0).contains(j1), equalTo(true));
-        assertThat(j0.getId(), equalTo(0));
-        assertThat(j0.getAmount(), equalTo(80));
-        assertThat(j0.getRecipe(), equalTo(recipeRedstoneFluid));
-        assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
-        assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
-                C_REDSTONE_ITEM.withAmount(80)
-        )));
+        try (Transaction transaction = Transaction.openRoot()) {
+            // We have exactly enough for crafting one plating
+            IngredientComponentStorageCollectionWrapper<ComplexStack, Integer> storage = new IngredientComponentStorageCollectionWrapper<>(new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX));
+            storage.insert(C_REDSTONE_ITEM.withAmount(80), transaction);
+            storage.insert(C_ELECTRUM.withAmount(16), transaction);
+            storage.insert(C_SAND.withAmount(16), transaction);
+            storage.insert(C_GEM.withAmount(4), transaction);
+            storageGetter = (c) -> storage;
+    
+            CraftingJob j4 = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
+                    IngredientComponentStubs.COMPLEX, C_PLATING.withAmount(4), ComplexStack.Match.EXACT, true,
+                    simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true, transaction);
+    
+            assertThat(j4.getId(), equalTo(4));
+            assertThat(j4.getChannel(), equalTo(0));
+            assertThat(j4.getAmount(), equalTo(4));
+            assertThat(j4.getRecipe(), equalTo(recipePlating));
+            assertThat(j4.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(j4.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_GEM.withAmount(4)
+            )));
+    
+            assertThat(craftingJobDependencyGraph.getCraftingJobs().size(), equalTo(5));
+            assertThat(craftingJobDependencyGraph.getCraftingJobs().contains(j4), equalTo(true));
+            assertThat(craftingJobDependencyGraph.getDependencies(j4).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j4).size(), equalTo(0));
+    
+            CraftingJob j3 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j4), null);
+            assertThat(craftingJobDependencyGraph.getDependencies(j3).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j3).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j3).contains(j4), equalTo(true));
+            assertThat(j3.getId(), equalTo(3));
+            assertThat(j3.getAmount(), equalTo(16));
+            assertThat(j3.getRecipe(), equalTo(recipePlate));
+            assertThat(j3.getIngredientsStorage().getComponents().size(), equalTo(0));
+    
+            CraftingJob j2 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j3), null);
+            assertThat(craftingJobDependencyGraph.getDependencies(j2).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j2).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j2).contains(j3), equalTo(true));
+            assertThat(j2.getId(), equalTo(2));
+            assertThat(j2.getAmount(), equalTo(16));
+            assertThat(j2.getRecipe(), equalTo(recipeIngot));
+            assertThat(j2.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(j2.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_SAND.withAmount(16)
+            )));
+    
+            CraftingJob j1 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j2), null);
+            assertThat(craftingJobDependencyGraph.getDependencies(j1).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j1).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j1).contains(j2), equalTo(true));
+            assertThat(j1.getId(), equalTo(1));
+            assertThat(j1.getAmount(), equalTo(16));
+            assertThat(j1.getRecipe(), equalTo(recipeElectrumFluxed));
+            assertThat(j1.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(j1.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_ELECTRUM.withAmount(16)
+            )));
+    
+            CraftingJob j0 = Iterables.getFirst(craftingJobDependencyGraph.getDependencies(j1), null);
+            assertThat(craftingJobDependencyGraph.getDependencies(j0).size(), equalTo(0));
+            assertThat(craftingJobDependencyGraph.getDependents(j0).size(), equalTo(1));
+            assertThat(craftingJobDependencyGraph.getDependents(j0).contains(j1), equalTo(true));
+            assertThat(j0.getId(), equalTo(0));
+            assertThat(j0.getAmount(), equalTo(80));
+            assertThat(j0.getRecipe(), equalTo(recipeRedstoneFluid));
+            assertThat(j0.getIngredientsStorage().getComponents().size(), equalTo(1));
+            assertThat(j0.getIngredientsStorage().getInstances(IngredientComponentStubs.COMPLEX), equalTo(Lists.newArrayList(
+                    C_REDSTONE_ITEM.withAmount(80)
+            )));
+        }
     }
 
 
