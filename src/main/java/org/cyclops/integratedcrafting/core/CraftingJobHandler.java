@@ -13,6 +13,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
@@ -247,7 +248,12 @@ public class CraftingJobHandler {
         // If this job has dependencies, skip reusable ingredients so that they remain available for other jobs.
         // They will be lazily extracted in the update loop once the dependencies have finished.
         boolean skipReusableIngredients = !craftingJob.getDependencyCraftingJobs().isEmpty();
-        Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputResult = CraftingHelpers.getRecipeInputs(storageGetter, craftingJob.getRecipe(), false, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), true, craftingJob.getAmount(), skipReusableIngredients);
+        Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputResult;
+        try (Transaction tx = Transaction.openRoot()) {
+            inputResult = CraftingHelpers.getRecipeInputs(storageGetter, craftingJob.getRecipe(), tx,
+                    null, null, true, craftingJob.getAmount(), skipReusableIngredients);
+            tx.commit();
+        }
         IMixedIngredients buffer = new MixedIngredients(inputResult.getLeft());
         craftingJob.setIngredientsStorageBuffer(CraftingHelpers.compressMixedIngredients(buffer));
         craftingJob.setLastMissingIngredients(inputResult.getRight());
@@ -444,9 +450,12 @@ public class CraftingJobHandler {
                 // Check if pendingCraftingJob can start and set as startingCraftingJob
                 // This requires checking the available ingredients AND if the crafting handler can accept it.
                 IRecipeDefinition recipe = pendingCraftingJob.getRecipe();
-                Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputs = CraftingHelpers.getRecipeInputs(
-                        CraftingHelpers.getCraftingJobBufferStorageGetter(pendingCraftingJob),
-                        recipe, true, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), true, 1);
+                Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputs;
+                try (Transaction tx = Transaction.openRoot()) {
+                    inputs = CraftingHelpers.getRecipeInputs(
+                            CraftingHelpers.getCraftingJobBufferStorageGetter(pendingCraftingJob),
+                            recipe, tx, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), true, 1);
+                }
                 if (inputs.getRight().isEmpty()) { // If we have no missing ingredients
                     if (insertCrafting(targetPos, new MixedIngredients(inputs.getLeft()), recipe, pendingCraftingJob, network, channel, true)) {
                         startingCraftingJob = pendingCraftingJob;
@@ -526,15 +535,24 @@ public class CraftingJobHandler {
         }
 
         // Fallback to default crafting insertion
-        return CraftingHelpers.insertCrafting(targetGetter, ingredients, network, channel, simulate);
+        try (Transaction tx = Transaction.openRoot()) {
+            boolean inserted = CraftingHelpers.insertCrafting(targetGetter, ingredients, network, channel, tx);
+            if (!simulate) {
+                tx.commit();
+            }
+            return inserted;
+        }
     }
 
     protected void insertLoopNonBlocking(INetwork network, int channel, PartPos targetPos, CraftingJob craftingJob) {
         // If in non-blocking mode, try to push as much as possible into the target
         while (nonBlockingJobsRunningAmount.get(craftingJob.getId()) < craftingJob.getAmount()) {
             IRecipeDefinition recipe = craftingJob.getRecipe();
-            IMixedIngredients ingredientsSimulated = CraftingHelpers.getRecipeInputsFromCraftingJobBuffer(craftingJob,
-                    recipe, true, 1);
+            IMixedIngredients ingredientsSimulated;
+            try (Transaction tx = Transaction.openRoot()) {
+                ingredientsSimulated = CraftingHelpers.getRecipeInputsFromCraftingJobBuffer(craftingJob,
+                        recipe, tx, 1);
+            }
             if (ingredientsSimulated == null || !insertCrafting(targetPos, ingredientsSimulated, recipe, craftingJob, network, channel, true)) {
                 break;
             }
@@ -548,8 +566,12 @@ public class CraftingJobHandler {
     protected boolean consumeAndInsertCrafting(boolean blockingMode, INetwork network, int channel, PartPos targetPos, CraftingJob startingCraftingJob) {
         // Remove ingredients from network
         IRecipeDefinition recipe = startingCraftingJob.getRecipe();
-        IMixedIngredients ingredients = CraftingHelpers.getRecipeInputsFromCraftingJobBuffer(startingCraftingJob,
-                recipe, false, 1);
+        IMixedIngredients ingredients;
+        try (Transaction tx = Transaction.openRoot()) {
+            ingredients = CraftingHelpers.getRecipeInputsFromCraftingJobBuffer(startingCraftingJob,
+                    recipe, tx, 1);
+            tx.commit();
+        }
 
         // This may not be null, error if it is null!
         if (ingredients != null) {

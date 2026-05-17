@@ -24,6 +24,7 @@ import org.cyclops.integratedcrafting.api.crafting.RecursiveCraftingRecipeExcept
 import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeException;
 import org.cyclops.integratedcrafting.ingredient.ComplexStack;
 import org.cyclops.integratedcrafting.ingredient.IngredientComponentStubs;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -332,361 +333,429 @@ public class TestCraftingHelpers {
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageEmptyRecipe() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeEmpty, true, 1),
-                nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeEmpty, tx, 1),
+                    nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipe1() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimple1, true, 1),
-                nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimple1, tx, 1),
+                    nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipe1() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, true, 1),
-                equalTo(Lists.newArrayList(CA01_)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, tx, 1),
+                    equalTo(Lists.newArrayList(CA01_)));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipe1Surplus() {
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        simulatedExtractionMemory.setQuantity(CA01_, -1);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, true, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
-                false, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
-        assertThat(simulatedExtractionMemory.isEmpty(), is(true));
-        assertThat(inputs.getRight(), nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            simulatedExtractionMemory.setQuantity(CA01_, -1);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, tx, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
+                    false, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
+            assertThat(simulatedExtractionMemory.isEmpty(), is(true));
+            assertThat(inputs.getRight(), nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipe1SurplusCollectMissing() {
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        simulatedExtractionMemory.setQuantity(CA01_, -1);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, true, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
-                true, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
-        assertThat(simulatedExtractionMemory.isEmpty(), is(true));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList())));
+        try (Transaction tx = Transaction.openRoot()) {
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            simulatedExtractionMemory.setQuantity(CA01_, -1);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, tx, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
+                    true, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
+            assertThat(simulatedExtractionMemory.isEmpty(), is(true));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList())));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipe1Surplus() {
-        // The surplus should be used up first, and only after that, the storage should be queried
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        simulatedExtractionMemory.setQuantity(CA01_, -2);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, true, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
-                false, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(CA03_)));
-        assertThat(inputs.getRight(), nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            // The surplus should be used up first, and only after that, the storage should be queried
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            simulatedExtractionMemory.setQuantity(CA01_, -2);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, tx, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
+                    false, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(CA03_)));
+            assertThat(inputs.getRight(), nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipe1SurplusCollectMissing() {
-        // The surplus should be used up first, and only after that, the storage should be queried
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        simulatedExtractionMemory.setQuantity(CA01_, -2);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, true, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
-                true, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(CA03_)));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList())));
+        try (Transaction tx = Transaction.openRoot()) {
+            // The surplus should be used up first, and only after that, the storage should be queried
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            simulatedExtractionMemory.setQuantity(CA01_, -2);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, tx, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
+                    true, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(CA03_)));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList())));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipe1SurplusNotEnough() {
-        // The surplus should be used up first, and only after that, the storage should be queried, but it is just not enough
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        simulatedExtractionMemory.setQuantity(CA01_, -1);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, true, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
-                false, 3);
-        assertThat(inputs.getLeft(), equalTo(null));
-        assertThat(inputs.getRight(), nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            // The surplus should be used up first, and only after that, the storage should be queried, but it is just not enough
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            simulatedExtractionMemory.setQuantity(CA01_, -1);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, tx, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
+                    false, 3);
+            assertThat(inputs.getLeft(), equalTo(null));
+            assertThat(inputs.getRight(), nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipe1SurplusNotEnoughCollectMissing() {
-        // The surplus should be used up first, and only after that, the storage should be queried, but it is just not enough
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        simulatedExtractionMemory.setQuantity(CA01_, -1);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, true, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
-                true, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
-                CA02_ // We want to take into account the surplus!
-        )));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA03_, ComplexStack.Match.EXACT),
-                                1
-                        )
-                ), false)
-        ))));
+        try (Transaction tx = Transaction.openRoot()) {
+            // The surplus should be used up first, and only after that, the storage should be queried, but it is just not enough
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            simulatedExtractionMemory.setQuantity(CA01_, -1);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, tx, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
+                    true, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
+                    CA02_ // We want to take into account the surplus!
+            )));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA03_, ComplexStack.Match.EXACT),
+                                    1
+                            )
+                    ), false)
+            ))));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipe1CollectMissing() {
-        // The storage contents are not sufficient
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, true, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
-                true, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
-                CA01_
-        )));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA03_, ComplexStack.Match.EXACT),
-                                2
-                        )
-                ), false)
-        ))));
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are not sufficient
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, tx, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
+                    true, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
+                    CA01_
+            )));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA03_, ComplexStack.Match.EXACT),
+                                    2
+                            )
+                    ), false)
+            ))));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipe3CollectMissing() {
-        // The storage contents are not sufficient
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple3, true, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
-                true, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
-                CA01_,
-                CB02_,
-                CA91B
-        )));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA03_, ComplexStack.Match.EXACT),
-                                2
-                        )
-                ), false),
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB06_, ComplexStack.Match.EXACT),
-                                4
-                        )
-                ), false),
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA93B, ComplexStack.Match.EXACT),
-                                2
-                        )
-                ), false)
-        ))));
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are not sufficient
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimple3, tx, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
+                    true, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
+                    CA01_,
+                    CB02_,
+                    CA91B
+            )));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA03_, ComplexStack.Match.EXACT),
+                                    2
+                            )
+                    ), false),
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB06_, ComplexStack.Match.EXACT),
+                                    4
+                            )
+                    ), false),
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA93B, ComplexStack.Match.EXACT),
+                                    2
+                            )
+                    ), false)
+            ))));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageRecipeComplexCollectMissing() {
-        // The storage contents are not sufficient
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeComplex, true, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
-                true, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
-                null,
-                CB02_,
-                CA01_
-        )));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB06_, ComplexStack.Match.EXACT),
-                                4
-                        ),
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA027_, ComplexStack.Match.EXACT),
-                                26
-                        )
-                ), false),
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA03_, ComplexStack.Match.EXACT),
-                                2
-                        ),
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA93B, ComplexStack.Match.EXACT),
-                                2
-                        )
-                ), false)
-        ))));
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are not sufficient
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeComplex, tx, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
+                    true, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
+                    null,
+                    CB02_,
+                    CA01_
+            )));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB06_, ComplexStack.Match.EXACT),
+                                    4
+                            ),
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA027_, ComplexStack.Match.EXACT),
+                                    26
+                            )
+                    ), false),
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA03_, ComplexStack.Match.EXACT),
+                                    2
+                            ),
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA93B, ComplexStack.Match.EXACT),
+                                    2
+                            )
+                    ), false)
+            ))));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageRecipeComplexCollectMissingOneOfTwoWithAlts() {
-        // The storage contains just one instance, while two are needed for the recipe.
-        // Additionally, the recipe has alternatives for the two slots
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple2Alt, true, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
-                true, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
-                CA01_
-        )));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
-                                1
-                        ),
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT),
-                                1
-                        )
-                ), false)
-        ))));
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contains just one instance, while two are needed for the recipe.
+            // Additionally, the recipe has alternatives for the two slots
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimple2Alt, tx, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
+                    true, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
+                    CA01_
+            )));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
+                                    1
+                            ),
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT),
+                                    1
+                            )
+                    ), false)
+            ))));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageRecipeComplexCollectMissingOneOfTwoWithAltsRev() {
-        // The storage contains just one instance, while two are needed for the recipe.
-        // Additionally, the recipe has alternatives for the two slots
-        // Compared to the previous test, only the SECOND alternative is present, instead of the FIRST.
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple2AltRev, true, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
-                true, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
-                CA01_
-        )));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT),
-                                1
-                        ),
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
-                                1
-                        )
-                ), false)
-        ))));
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contains just one instance, while two are needed for the recipe.
+            // Additionally, the recipe has alternatives for the two slots
+            // Compared to the previous test, only the SECOND alternative is present, instead of the FIRST.
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimple2AltRev, tx, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
+                    true, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
+                    CA01_
+            )));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT),
+                                    1
+                            ),
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
+                                    1
+                            )
+                    ), false)
+            ))));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageRecipeComplexCollectMissingOneOfTwoWithAltsRevMultiple() {
-        // The storage contains just one instance, while two are needed for the recipe.
-        // Additionally, the recipe has alternatives for the two slots
-        // Like to the previous test, only the SECOND alternative is present, instead of the FIRST.
-        // Also, the two slots are separated by another slot with instance that IS present
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimple2AltMultiple, true, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
-                true, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
-                CA01_,
-                CB01_
-        )));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT),
-                                1
-                        ),
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
-                                1
-                        )
-                ), false)
-        ))));
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contains just one instance, while two are needed for the recipe.
+            // Additionally, the recipe has alternatives for the two slots
+            // Like to the previous test, only the SECOND alternative is present, instead of the FIRST.
+            // Also, the two slots are separated by another slot with instance that IS present
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimple2AltMultiple, tx, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
+                    true, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
+                    CA01_,
+                    CB01_
+            )));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA11_, ComplexStack.Match.EXACT),
+                                    1
+                            ),
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
+                                    1
+                            )
+                    ), false)
+            ))));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipe3() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimple3, true, 1),
-                equalTo(Lists.newArrayList(CA01_, CB02_, CA91B)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimple3, tx, 1),
+                    equalTo(Lists.newArrayList(CA01_, CB02_, CA91B)));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipe1Alt() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidB, IngredientComponentStubs.COMPLEX, recipeSimple1Alt, true, 1),
-                equalTo(Lists.newArrayList(CB02_)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidB, IngredientComponentStubs.COMPLEX, recipeSimple1Alt, tx, 1),
+                    equalTo(Lists.newArrayList(CB02_)));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeComplexInvalid() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidB, IngredientComponentStubs.COMPLEX, recipeComplex, true, 1),
-                nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidB, IngredientComponentStubs.COMPLEX, recipeComplex, tx, 1),
+                    nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeComplexValid() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeComplex, true, 1),
-                equalTo(Lists.newArrayList(null, CB02_, CA01_)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeComplex, tx, 1),
+                    equalTo(Lists.newArrayList(null, CB02_, CA01_)));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeEqualInputsInvalid() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidMore, IngredientComponentStubs.COMPLEX, recipeEquals, true, 1),
-                nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidMore, IngredientComponentStubs.COMPLEX, recipeEquals, tx, 1),
+                    nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeEqualInputsVvalid() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidMany, IngredientComponentStubs.COMPLEX, recipeEquals, true, 1),
-                equalTo(Lists.newArrayList(CA01_, CA02_, CA01_, CA01_)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidMany, IngredientComponentStubs.COMPLEX, recipeEquals, tx, 1),
+                    equalTo(Lists.newArrayList(CA01_, CA02_, CA01_, CA01_)));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageEmptyRecipeActual() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeEmpty, false, 1),
-                nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeEmpty, tx, 1),
+                    nullValue());
+            tx.commit();
+        }
         assertThat(Sets.newHashSet(storageEmpty.iterator()), equalTo(Sets.newHashSet()));
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipe1Actual() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimple1, false, 1),
-                nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimple1, tx, 1),
+                    nullValue());
+            tx.commit();
+        }
         assertThat(Sets.newHashSet(storageEmpty.iterator()), equalTo(Sets.newHashSet()));
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipe1Actual() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, false, 1),
-                equalTo(Lists.newArrayList(CA01_)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimple1, tx, 1),
+                    equalTo(Lists.newArrayList(CA01_)));
+            tx.commit();
+        }
         assertThat(Sets.newHashSet(storageValid.iterator()), equalTo(Sets.newHashSet(CB02_, CA91B)));
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipe1ActualMultiplied() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimple1, false, 3),
-                equalTo(Lists.newArrayList(CA03_)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimple1, tx, 3),
+                    equalTo(Lists.newArrayList(CA03_)));
+            tx.commit();
+        }
         assertThat(Sets.newHashSet(storageValidTriple.iterator()), equalTo(Sets.newHashSet(CB06_, CA93B)));
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipe3Actual() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimple3, false, 1),
-                equalTo(Lists.newArrayList(CA01_, CB02_, CA91B)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimple3, tx, 1),
+                    equalTo(Lists.newArrayList(CA01_, CB02_, CA91B)));
+            tx.commit();
+        }
         assertThat(Sets.newHashSet(storageValid.iterator()), equalTo(Sets.newHashSet()));
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipe1AltActual() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidB, IngredientComponentStubs.COMPLEX, recipeSimple1Alt, false, 1),
-                equalTo(Lists.newArrayList(CB02_)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidB, IngredientComponentStubs.COMPLEX, recipeSimple1Alt, tx, 1),
+                    equalTo(Lists.newArrayList(CB02_)));
+            tx.commit();
+        }
         assertThat(Sets.newHashSet(storageValidB.iterator()), equalTo(Sets.newHashSet()));
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeComplexInvalidActual() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidB, IngredientComponentStubs.COMPLEX, recipeComplex, false, 1),
-                nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            List<ComplexStack> result = CraftingHelpers.getIngredientRecipeInputs(storageValidB, IngredientComponentStubs.COMPLEX, recipeComplex, tx, 1);
+            assertThat(result, nullValue());
+            if (result != null) {
+                tx.commit();
+            }
+        }
         assertThat(Sets.newHashSet(storageValidB.iterator()), equalTo(Sets.newHashSet(CB02_)));
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeComplexValidActual() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeComplex, false, 1),
-                equalTo(Lists.newArrayList(null, CB02_, CA01_)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeComplex, tx, 1),
+                    equalTo(Lists.newArrayList(null, CB02_, CA01_)));
+            tx.commit();
+        }
         assertThat(Sets.newHashSet(storageValid.iterator()), equalTo(Sets.newHashSet(CA91B)));
     }
 
@@ -694,406 +763,477 @@ public class TestCraftingHelpers {
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleReusableRecipe1() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, true, 1),
-                nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, 1),
+                    nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleReusableRecipe1Actual() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, false, 1),
-                nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, 1),
+                    nullValue());
+            tx.commit();
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipeReusable1CollectMissing() {
-        // The storage is empty
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> extractionMemoryReusable = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, true, simulatedExtractionMemory, extractionMemoryReusable,
-                true, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList()));
-        assertThat(extractionMemoryReusable.isEmpty(), is(true));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
-                                1
-                        )
-                ), true)
-        ))));
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage is empty
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> extractionMemoryReusable = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    true, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList()));
+            assertThat(extractionMemoryReusable.isEmpty(), is(true));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
+                                    1
+                            )
+                    ), true)
+            ))));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidBStorageSimpleRecipeReusable1CollectMissing() {
-        // The storage contents are not sufficient (contains only other ingreds)
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> extractionMemoryReusable = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValidB, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, true, simulatedExtractionMemory, extractionMemoryReusable,
-                true, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList()));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
-                                1
-                        )
-                ), true)
-        ))));
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are not sufficient (contains only other ingreds)
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> extractionMemoryReusable = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValidB, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    true, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList()));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
+                                    1
+                            )
+                    ), true)
+            ))));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable1() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, true, 1),
-                equalTo(Lists.newArrayList(CA01_)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, 1),
+                    equalTo(Lists.newArrayList(CA01_)));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipeReusable1Actual() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, false, 1),
-                nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, 1),
+                    nullValue());
+            tx.commit();
+        }
         assertThat(Sets.newHashSet(storageEmpty.iterator()), equalTo(Sets.newHashSet()));
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable1Actual() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, false, 1),
-                equalTo(Lists.newArrayList(CA01_)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, 1),
+                    equalTo(Lists.newArrayList(CA01_)));
+            tx.commit();
+        }
         assertThat(Sets.newHashSet(storageValid.iterator()), equalTo(Sets.newHashSet(CB02_, CA91B)));
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable1Multiplied() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, true, 3),
-                equalTo(Lists.newArrayList(CA01_)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, 3),
+                    equalTo(Lists.newArrayList(CA01_)));
+        }
         assertThat(Sets.newHashSet(storageValidTriple.iterator()), equalTo(Sets.newHashSet(CA03_, CB06_, CA93B)));
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable1ActualMultiplied() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, false, 3),
-                equalTo(Lists.newArrayList(CA01_)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, 3),
+                    equalTo(Lists.newArrayList(CA01_)));
+            tx.commit();
+        }
         assertThat(Sets.newHashSet(storageValidTriple.iterator()), equalTo(Sets.newHashSet(CA02_, CB06_, CA93B)));
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable3CollectMissing() {
-        // The storage contents are not sufficient, but CA is valid, since that is reusable, and we only need 1
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable3, true, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
-                true, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
-                CA01_,
-                CB02_,
-                CA91B
-        )));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB06_, ComplexStack.Match.EXACT),
-                                4
-                        )
-                ), false),
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA93B, ComplexStack.Match.EXACT),
-                                2
-                        )
-                ), false)
-        ))));
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are not sufficient, but CA is valid, since that is reusable, and we only need 1
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable3, tx, simulatedExtractionMemory, new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX),
+                    true, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(
+                    CA01_,
+                    CB02_,
+                    CA91B
+            )));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CB06_, ComplexStack.Match.EXACT),
+                                    4
+                            )
+                    ), false),
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA93B, ComplexStack.Match.EXACT),
+                                    2
+                            )
+                    ), false)
+            ))));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable3() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable3, true, 1),
-                equalTo(Lists.newArrayList(CA01_, CB02_, CA91B)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable3, tx, 1),
+                    equalTo(Lists.newArrayList(CA01_, CB02_, CA91B)));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable3Actual() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable3, false, 1),
-                equalTo(Lists.newArrayList(CA01_, CB02_, CA91B)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable3, tx, 1),
+                    equalTo(Lists.newArrayList(CA01_, CB02_, CA91B)));
+            tx.commit();
+        }
         assertThat(Sets.newHashSet(storageValid.iterator()), equalTo(Sets.newHashSet()));
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable3Multiplied() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimpleReusable3, true, 3),
-                equalTo(Lists.newArrayList(CA01_, CB06_, CA93B)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimpleReusable3, tx, 3),
+                    equalTo(Lists.newArrayList(CA01_, CB06_, CA93B)));
+        }
         assertThat(Sets.newHashSet(storageValidTriple.iterator()), equalTo(Sets.newHashSet(CA03_, CB06_, CA93B)));
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable3MultipliedActual() {
-        assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimpleReusable3, false, 3),
-                equalTo(Lists.newArrayList(CA01_, CB06_, CA93B)));
+        try (Transaction tx = Transaction.openRoot()) {
+            assertThat(CraftingHelpers.getIngredientRecipeInputs(storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimpleReusable3, tx, 3),
+                    equalTo(Lists.newArrayList(CA01_, CB06_, CA93B)));
+            tx.commit();
+        }
         assertThat(Sets.newHashSet(storageValidTriple.iterator()), equalTo(Sets.newHashSet(CA02_)));
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable1UsedBefore() {
-        // The storage contents are sufficient, but not used because the reusable ingredient was used before
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        extractionMemoryReusable.add(CA01_);
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are sufficient, but not used because the reusable ingredient was used before
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            extractionMemoryReusable.add(CA01_);
 
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, true, simulatedExtractionMemory, extractionMemoryReusable,
-                false, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
-        assertThat(inputs.getRight(), equalTo(null));
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    false, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
+            assertThat(inputs.getRight(), equalTo(null));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable1UsedBeforeActual() {
-        // The storage contents are sufficient, but not used because the reusable ingredient was used before
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        extractionMemoryReusable.add(CA01_);
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are sufficient, but not used because the reusable ingredient was used before
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            extractionMemoryReusable.add(CA01_);
 
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, false, simulatedExtractionMemory, extractionMemoryReusable,
-                false, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
-        assertThat(inputs.getRight(), equalTo(null));
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    false, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
+            assertThat(inputs.getRight(), equalTo(null));
+            tx.commit();
+        }
         assertThat(Sets.newHashSet(storageValidTriple.iterator()), equalTo(Sets.newHashSet(CA03_, CB06_, CA93B)));
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipeReusable1UsedBefore() {
-        // The storage contents are sufficient, but not used because the reusable ingredient was used before
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        extractionMemoryReusable.add(CA01_);
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are sufficient, but not used because the reusable ingredient was used before
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            extractionMemoryReusable.add(CA01_);
 
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, true, simulatedExtractionMemory, extractionMemoryReusable,
-                false, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
-        assertThat(inputs.getRight(), equalTo(null));
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    false, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
+            assertThat(inputs.getRight(), equalTo(null));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipeReusable1UsedBeforeActual() {
-        // The storage contents are sufficient, but not used because the reusable ingredient was used before
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        extractionMemoryReusable.add(CA01_);
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are sufficient, but not used because the reusable ingredient was used before
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            extractionMemoryReusable.add(CA01_);
 
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, false, simulatedExtractionMemory, extractionMemoryReusable,
-                false, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
-        assertThat(inputs.getRight(), equalTo(null));
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    false, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
+            assertThat(inputs.getRight(), equalTo(null));
+            tx.commit();
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable1UsedBeforeCollectMissing() {
-        // The storage contents are sufficient, but not used because the reusable ingredient was used before
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        extractionMemoryReusable.add(CA01_);
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are sufficient, but not used because the reusable ingredient was used before
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            extractionMemoryReusable.add(CA01_);
 
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, true, simulatedExtractionMemory, extractionMemoryReusable,
-                true, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList())));
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    true, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList())));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipeReusable1UsedBeforeCollectMissing() {
-        // The storage contents are sufficient, but not used because the reusable ingredient was used before
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        extractionMemoryReusable.add(CA01_);
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are sufficient, but not used because the reusable ingredient was used before
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            extractionMemoryReusable.add(CA01_);
 
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, true, simulatedExtractionMemory, extractionMemoryReusable,
-                true, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList())));
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    true, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList())));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipeReusable1UsedBeforeMultiplied() {
-        // The storage contents are sufficient, but not used because the reusable ingredient was used before
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        extractionMemoryReusable.add(CA01_);
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are sufficient, but not used because the reusable ingredient was used before
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            extractionMemoryReusable.add(CA01_);
 
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, true, simulatedExtractionMemory, extractionMemoryReusable,
-                false, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
-        assertThat(inputs.getRight(), equalTo(null));
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    false, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
+            assertThat(inputs.getRight(), equalTo(null));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipeReusable1UsedBeforeMultipliedActual() {
-        // The storage contents are sufficient, but not used because the reusable ingredient was used before
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        extractionMemoryReusable.add(CA01_);
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are sufficient, but not used because the reusable ingredient was used before
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            extractionMemoryReusable.add(CA01_);
 
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, false, simulatedExtractionMemory, extractionMemoryReusable,
-                false, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
-        assertThat(inputs.getRight(), equalTo(null));
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    false, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
+            assertThat(inputs.getRight(), equalTo(null));
+            tx.commit();
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipeReusable1UsedBeforeMultipliedCollectMissing() {
-        // The storage contents are sufficient, but not used because the reusable ingredient was used before
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        extractionMemoryReusable.add(CA01_);
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are sufficient, but not used because the reusable ingredient was used before
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            extractionMemoryReusable.add(CA01_);
 
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, true, simulatedExtractionMemory, extractionMemoryReusable,
-                true, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList())));
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    true, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList())));
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsEmptyStorageSimpleRecipeReusable1Surplus() {
-        // Surplus is used first instead of extracting, but extractionMemoryReusable is still set
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        simulatedExtractionMemory.setQuantity(CA01_, -1);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, true, simulatedExtractionMemory, extractionMemoryReusable,
-                false, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
-        assertThat(simulatedExtractionMemory.isEmpty(), is(true));
-        assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
-        assertThat(inputs.getRight(), nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            // Surplus is used first instead of extracting, but extractionMemoryReusable is still set
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            simulatedExtractionMemory.setQuantity(CA01_, -1);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable1, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    false, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList((Object) null)));
+            assertThat(simulatedExtractionMemory.isEmpty(), is(true));
+            assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
+            assertThat(inputs.getRight(), nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable2Surplus() {
-        // The surplus should be used up first, and only after that, the storage should be queried
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        simulatedExtractionMemory.setQuantity(CA01_, -1);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable2, true, simulatedExtractionMemory, extractionMemoryReusable,
-                false, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(null, CA01_)));
-        assertThat(Sets.newHashSet(simulatedExtractionMemory), equalTo(Sets.newHashSet(CA01_)));
-        assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
-        assertThat(inputs.getRight(), nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            // The surplus should be used up first, and only after that, the storage should be queried
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            simulatedExtractionMemory.setQuantity(CA01_, -1);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable2, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    false, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(null, CA01_)));
+            assertThat(Sets.newHashSet(simulatedExtractionMemory), equalTo(Sets.newHashSet(CA01_)));
+            assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
+            assertThat(inputs.getRight(), nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable2SurplusPartial() {
-        // The surplus should be used up first, and only after that, the storage should be queried
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        simulatedExtractionMemory.setQuantity(CA01_, -2);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable2, true, simulatedExtractionMemory, extractionMemoryReusable,
-                false, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(null, null)));
-        assertThat(Sets.newHashSet(simulatedExtractionMemory), equalTo(Sets.newHashSet()));
-        assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
-        assertThat(inputs.getRight(), nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            // The surplus should be used up first, and only after that, the storage should be queried
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            simulatedExtractionMemory.setQuantity(CA01_, -2);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable2, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    false, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(null, null)));
+            assertThat(Sets.newHashSet(simulatedExtractionMemory), equalTo(Sets.newHashSet()));
+            assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
+            assertThat(inputs.getRight(), nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable2SurplusPartialMultiplied() {
-        // The surplus should be used up first, and only after that, the storage should be queried
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        simulatedExtractionMemory.setQuantity(CA01_, -2);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimpleReusable2, true, simulatedExtractionMemory, extractionMemoryReusable,
-                false, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(null, CA03_)));
-        assertThat(Sets.newHashSet(simulatedExtractionMemory), equalTo(Sets.newHashSet(CA02_)));
-        assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
-        assertThat(inputs.getRight(), nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            // The surplus should be used up first, and only after that, the storage should be queried
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            simulatedExtractionMemory.setQuantity(CA01_, -2);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimpleReusable2, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    false, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(null, CA03_)));
+            assertThat(Sets.newHashSet(simulatedExtractionMemory), equalTo(Sets.newHashSet(CA02_)));
+            assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
+            assertThat(inputs.getRight(), nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable2ReverseSurplus() {
-        // The surplus should be used up first, and only after that, the storage should be queried
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        simulatedExtractionMemory.setQuantity(CA01_, -1);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable2Reverse, true, simulatedExtractionMemory, extractionMemoryReusable,
-                false, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(null, CA01_)));
-        assertThat(Sets.newHashSet(simulatedExtractionMemory), equalTo(Sets.newHashSet(CA01_)));
-        assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
-        assertThat(inputs.getRight(), nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            // The surplus should be used up first, and only after that, the storage should be queried
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            simulatedExtractionMemory.setQuantity(CA01_, -1);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable2Reverse, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    false, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(null, CA01_)));
+            assertThat(Sets.newHashSet(simulatedExtractionMemory), equalTo(Sets.newHashSet(CA01_)));
+            assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
+            assertThat(inputs.getRight(), nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable2ReverseSurplusPartial() {
-        // The surplus should be used up first, and only after that, the storage should be queried
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        simulatedExtractionMemory.setQuantity(CA01_, -2);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable2Reverse, true, simulatedExtractionMemory, extractionMemoryReusable,
-                false, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(null, null)));
-        assertThat(Sets.newHashSet(simulatedExtractionMemory), equalTo(Sets.newHashSet()));
-        assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
-        assertThat(inputs.getRight(), nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            // The surplus should be used up first, and only after that, the storage should be queried
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            simulatedExtractionMemory.setQuantity(CA01_, -2);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValid, IngredientComponentStubs.COMPLEX, recipeSimpleReusable2Reverse, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    false, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(null, null)));
+            assertThat(Sets.newHashSet(simulatedExtractionMemory), equalTo(Sets.newHashSet()));
+            assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
+            assertThat(inputs.getRight(), nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable2ReverseSurplusPartialMultiplied() {
-        // The surplus should be used up first, and only after that, the storage should be queried
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        simulatedExtractionMemory.setQuantity(CA01_, -2);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimpleReusable2Reverse, true, simulatedExtractionMemory, extractionMemoryReusable,
-                false, 3);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(CA03_, CA01_)));
-        assertThat(Sets.newHashSet(simulatedExtractionMemory), equalTo(Sets.newHashSet(CA02_)));
-        assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
-        assertThat(inputs.getRight(), nullValue());
+        try (Transaction tx = Transaction.openRoot()) {
+            // The surplus should be used up first, and only after that, the storage should be queried
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            simulatedExtractionMemory.setQuantity(CA01_, -2);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageValidTriple, IngredientComponentStubs.COMPLEX, recipeSimpleReusable2Reverse, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    false, 3);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList(CA03_, CA01_)));
+            assertThat(Sets.newHashSet(simulatedExtractionMemory), equalTo(Sets.newHashSet(CA02_)));
+            assertThat(Sets.newHashSet(extractionMemoryReusable), equalTo(Sets.newHashSet(CA01_)));
+            assertThat(inputs.getRight(), nullValue());
+        }
     }
 
     @Test
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable3CollectMissingMarked() {
-        // The storage contents are not, so we collect missing ingredients, but expect reusable ingredient to be marked
-        IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
-        IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
+        try (Transaction tx = Transaction.openRoot()) {
+            // The storage contents are not, so we collect missing ingredients, but expect reusable ingredient to be marked
+            IngredientCollectionPrototypeMap<ComplexStack, Integer> simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(IngredientComponentStubs.COMPLEX, true);
+            IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
 
-        Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
-                storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable3Same, true, simulatedExtractionMemory, extractionMemoryReusable,
-                true, 1);
-        assertThat(inputs.getLeft(), equalTo(Lists.newArrayList()));
-        assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
-                                1
-                        )
-                ), true),
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
-                                1
-                        )
-                ), true),
-                new MissingIngredients.Element<>(Lists.newArrayList(
-                        new MissingIngredients.PrototypedWithRequested<>(
-                                new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
-                                1
-                        )
-                ), true)
-        ))));
+            Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
+                    storageEmpty, IngredientComponentStubs.COMPLEX, recipeSimpleReusable3Same, tx, simulatedExtractionMemory, extractionMemoryReusable,
+                    true, 1);
+            assertThat(inputs.getLeft(), equalTo(Lists.newArrayList()));
+            assertThat(inputs.getRight(), equalTo(new MissingIngredients<>(Lists.newArrayList(
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
+                                    1
+                            )
+                    ), true),
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
+                                    1
+                            )
+                    ), true),
+                    new MissingIngredients.Element<>(Lists.newArrayList(
+                            new MissingIngredients.PrototypedWithRequested<>(
+                                    new PrototypedIngredient<>(IngredientComponentStubs.COMPLEX, CA01_, ComplexStack.Match.EXACT),
+                                    1
+                            )
+                    ), true)
+            ))));
+        }
     }
 
     /* ------------ getCompressedIngredients ------------ */
