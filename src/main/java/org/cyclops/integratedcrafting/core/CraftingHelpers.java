@@ -279,6 +279,27 @@ public class CraftingHelpers {
                                                               Set<IPrototypedIngredient> parentDependencies,
                                                               boolean collectMissingRecipes)
             throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
+        // Create a root planning transaction that spans the entire calculation.
+        // All ingredient extractions during planning are done within this transaction,
+        // so that sub-dependency planning correctly sees already-"consumed" items.
+        // The transaction is never committed, so storage is never actually modified.
+        try (Transaction planningTx = Transaction.openRoot()) {
+            return calculateCraftingJobsWithPlanningTx(recipeIndex, channel, storageGetter, ingredientComponent, instance, matchCondition, craftMissing, extractionMemoryReusable, identifierGenerator, craftingJobsGraph, parentDependencies, collectMissingRecipes, planningTx);
+        }
+    }
+
+    private static <T, M> CraftingJob calculateCraftingJobsWithPlanningTx(IRecipeIndex recipeIndex, int channel,
+                                                              Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
+                                                              IngredientComponent<T, M> ingredientComponent,
+                                                              T instance, M matchCondition, boolean craftMissing,
+                                                              Map<IngredientComponent<?, ?>,
+                                                                      IIngredientCollectionMutable<?, ?>> extractionMemoryReusable,
+                                                              IIdentifierGenerator identifierGenerator,
+                                                              CraftingJobDependencyGraph craftingJobsGraph,
+                                                              Set<IPrototypedIngredient> parentDependencies,
+                                                              boolean collectMissingRecipes,
+                                                              TransactionContext planningTx)
+            throws UnknownCraftingRecipeException, RecursiveCraftingRecipeException {
         IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
         // This matching condition makes it so that the recipe output does not have to match with the requested input by quantity.
         M quantifierlessCondition = matcher.withoutCondition(matchCondition,
@@ -299,26 +320,33 @@ public class CraftingHelpers {
             // Based on the quantity of the recipe output, calculate the amount of required recipe jobs.
             int amount = (int) Math.ceil(((float) instanceQuantity) / (float) recipeOutputQuantity);
 
-            // Calculate jobs for the given recipe
-            try {
-                PartialCraftingJobCalculation result = calculateCraftingJobs(recipeIndex, channel,
-                        storageGetter, recipe, amount, craftMissing,
-                        extractionMemoryReusable, identifierGenerator, craftingJobsGraph, parentDependencies,
-                        collectMissingRecipes && firstMissingDependencies.isEmpty());
-                if (result.getCraftingJob() == null) {
-                    firstMissingDependencies = result.getMissingDependencies();
-                    firstIngredientsStorage = result.getIngredientsStorage();
-                    if (result.getPartialCraftingJobs() != null) {
-                        firstPartialCraftingJobs = result.getPartialCraftingJobs();
+            // Calculate jobs for the given recipe.
+            // Each recipe attempt gets its own nested transaction within the planning tx.
+            // If the recipe attempt fails, the nested tx is rolled back (ingredients returned).
+            // If it succeeds, the nested tx is committed into planningTx.
+            try (Transaction recipeTx = Transaction.open(planningTx)) {
+                try {
+                    PartialCraftingJobCalculation result = calculateCraftingJobsWithPlanningTx(recipeIndex, channel,
+                            storageGetter, recipe, amount, craftMissing,
+                            extractionMemoryReusable, identifierGenerator, craftingJobsGraph, parentDependencies,
+                            collectMissingRecipes && firstMissingDependencies.isEmpty(), recipeTx);
+                    if (result.getCraftingJob() == null) {
+                        firstMissingDependencies = result.getMissingDependencies();
+                        firstIngredientsStorage = result.getIngredientsStorage();
+                        if (result.getPartialCraftingJobs() != null) {
+                            firstPartialCraftingJobs = result.getPartialCraftingJobs();
+                        }
+                        // recipeTx is rolled back (auto-close without commit)
+                    } else {
+                        recipeTx.commit(); // This recipe attempt succeeded; commit into planningTx
+                        return result.getCraftingJob();
                     }
-                } else {
-                    return result.getCraftingJob();
+                } catch (RecursiveCraftingRecipeException e) {
+                    if (firstRecursiveException == null) {
+                        firstRecursiveException = e;
+                    }
+                    // recipeTx is rolled back (auto-close without commit)
                 }
-            } catch (RecursiveCraftingRecipeException e) {
-                if (firstRecursiveException == null) {
-                    firstRecursiveException = e;
-                }
-                continue;
             }
         }
 
@@ -371,16 +399,35 @@ public class CraftingHelpers {
             Set<IPrototypedIngredient> parentDependencies,
             boolean collectMissingRecipes)
             throws RecursiveCraftingRecipeException {
+        // Create a root planning transaction that spans the entire calculation.
+        // All ingredient extractions during planning are done within this transaction.
+        // The transaction is never committed, so storage is never actually modified.
+        try (Transaction planningTx = Transaction.openRoot()) {
+            return calculateCraftingJobsWithPlanningTx(recipeIndex, channel, storageGetter, recipe, amount, craftMissing, extractionMemoryReusable, identifierGenerator, craftingJobsGraph, parentDependencies, collectMissingRecipes, planningTx);
+        }
+    }
+
+    private static PartialCraftingJobCalculation calculateCraftingJobsWithPlanningTx(
+            IRecipeIndex recipeIndex, int channel,
+            Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
+            IRecipeDefinition recipe, int amount, boolean craftMissing,
+            Map<IngredientComponent<?, ?>,
+                    IIngredientCollectionMutable<?, ?>> extractionMemoryReusable,
+            IIdentifierGenerator identifierGenerator,
+            CraftingJobDependencyGraph craftingJobsGraph,
+            Set<IPrototypedIngredient> parentDependencies,
+            boolean collectMissingRecipes,
+            TransactionContext planningTx)
+            throws RecursiveCraftingRecipeException {
         List<UnknownCraftingRecipeException> missingDependencies = Lists.newArrayList();
         List<CraftingJob> partialCraftingJobs = Lists.newArrayList();
 
-        // Check if all requirements are met for this recipe, if so return directly (don't schedule yet)
+        // Check if all requirements are met for this recipe using the planning transaction.
+        // Items extracted here remain "consumed" within planningTx, so subsequent dependency
+        // planning correctly sees reduced storage availability.
         Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> simulation;
-        try (Transaction tx = Transaction.openRoot()) {
-            simulation = getRecipeInputs(storageGetter, recipe, tx, extractionMemoryReusable,
-                    true, amount);
-            // Don't commit - this is a simulation to check availability
-        }
+        simulation = getRecipeInputs(storageGetter, recipe, planningTx, extractionMemoryReusable,
+                true, amount);
         Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> missingIngredients = simulation.getRight();
         if (!craftMissing && !missingIngredients.isEmpty()) {
             if (collectMissingRecipes) {
@@ -422,10 +469,10 @@ public class CraftingHelpers {
         // We must be able to find crafting jobs for all dependencies
         for (IngredientComponent dependencyComponent : missingIngredients.keySet()) {
             try {
-                PartialCraftingJobCalculationDependency resultDependency = calculateCraftingJobDependencyComponent(
+                PartialCraftingJobCalculationDependency resultDependency = calculateCraftingJobDependencyComponentWithPlanningTx(
                         dependencyComponent, dependenciesOutputSurplus, missingIngredients.get(dependencyComponent), parentDependencies,
                         dependencies, recipeIndex, channel, storageGetter, extractionMemoryReusable,
-                        identifierGenerator, craftingJobsGraph, collectMissingRecipes);
+                        identifierGenerator, craftingJobsGraph, collectMissingRecipes, planningTx);
                 // Don't check the other components once we have an invalid dependency.
                 if (!resultDependency.isValid()) {
                     missingDependencies.addAll(resultDependency.getUnknownCrafingRecipes());
@@ -445,6 +492,12 @@ public class CraftingHelpers {
         if (!missingDependencies.isEmpty()) {
             return new PartialCraftingJobCalculation(null, missingDependencies, simulation.getLeft(), partialCraftingJobs);
         }
+
+        // Propagate remaining surplus from dep outputs to storage within planningTx.
+        // This is equivalent to the old simulatedExtractionMemory negative tracking:
+        // any surplus produced by sub-recipe planning is made "virtually available" in storage
+        // for subsequent sibling dep planning calls (at the caller's level) to extract.
+        propagateSurplusToStorage(storageGetter, dependenciesOutputSurplus, planningTx);
 
         CraftingJob craftingJob = new CraftingJob(identifierGenerator.getNext(), channel, recipe, amount,
                 compressMixedIngredients(new MixedIngredients(simulation.getLeft())));
@@ -470,6 +523,27 @@ public class CraftingHelpers {
             IIdentifierGenerator identifierGenerator,
             CraftingJobDependencyGraph craftingJobsGraph,
             boolean collectMissingRecipes)
+            throws RecursiveCraftingRecipeException {
+        try (Transaction planningTx = Transaction.openRoot()) {
+            return calculateCraftingJobDependencyComponentWithPlanningTx(dependencyComponent, dependenciesOutputSurplus, missingIngredients, parentDependencies, dependencies, recipeIndex, channel, storageGetter, extractionMemoryReusable, identifierGenerator, craftingJobsGraph, collectMissingRecipes, planningTx);
+        }
+    }
+
+    private static <T, M> PartialCraftingJobCalculationDependency calculateCraftingJobDependencyComponentWithPlanningTx(
+            IngredientComponent<T, M> dependencyComponent,
+            Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> dependenciesOutputSurplus,
+            MissingIngredients<T, M> missingIngredients,
+            Set<IPrototypedIngredient> parentDependencies,
+            Map<IRecipeDefinition, CraftingJob> dependencies,
+            IRecipeIndex recipeIndex,
+            int channel,
+            Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
+            Map<IngredientComponent<?, ?>,
+                    IIngredientCollectionMutable<?, ?>> extractionMemoryReusable,
+            IIdentifierGenerator identifierGenerator,
+            CraftingJobDependencyGraph craftingJobsGraph,
+            boolean collectMissingRecipes,
+            TransactionContext planningTx)
             throws RecursiveCraftingRecipeException {
         IIngredientMatcher<T, M> dependencyMatcher = dependencyComponent.getMatcher();
         List<UnknownCraftingRecipeException> missingDependencies = Lists.newArrayList();
@@ -560,10 +634,10 @@ public class CraftingHelpers {
                         throw new RecursiveCraftingRecipeException(prototype);
                     }
 
-                    dependency = calculateCraftingJobs(recipeIndex, channel, storageGetter,
+                    dependency = calculateCraftingJobsWithPlanningTx(recipeIndex, channel, storageGetter,
                             dependencyComponent, prototype.getPrototype(),
                             prototype.getCondition(), true, extractionMemoryReusable,
-                            identifierGenerator, craftingJobsGraph, childDependencies, collectMissingRecipes);
+                            identifierGenerator, craftingJobsGraph, childDependencies, collectMissingRecipes, planningTx);
                     dependencyInstance = prototype.getPrototype();
 
                     // The prototype is valid,
@@ -592,6 +666,9 @@ public class CraftingHelpers {
                                     .map(instance -> matcher.withQuantity(instance, matcher.getQuantity(instance) * recipeAmount))
                                     .collect(Collectors.toList());
                         }
+                        addRemainderAsSurplusForComponent(outputComponent, (List) instances, componentSurplus,
+                                (IngredientComponent) prototype.getComponent(), prototype.getPrototype(), dependencyQuantifierlessCondition,
+                                requestedQuantity);
                     }
 
                     break;
@@ -640,6 +717,63 @@ public class CraftingHelpers {
         }
 
         return new PartialCraftingJobCalculationDependency(missingDependencies, dependencies.values());
+    }
+
+    // Helper function for calculateCraftingJobDependencyComponent: adds the remainder (surplus) of recipe outputs
+    // to the surplus tracking map after subtracting what was requested.
+    protected static <T1, M1, T2, M2> void addRemainderAsSurplusForComponent(IngredientComponent<T1, M1> ingredientComponent,
+                                                                             List<T1> instances,
+                                                                             IngredientCollectionPrototypeMap<T1, M1> componentSurplus,
+                                                                             IngredientComponent<T2, M2> blackListComponent,
+                                                                             T2 blacklistInstance, M2 blacklistCondition,
+                                                                             long blacklistQuantity) {
+        IIngredientMatcher<T2, M2> blacklistMatcher = blackListComponent.getMatcher();
+        for (T1 instance : instances) {
+            IIngredientMatcher<T1, M1> outputMatcher = ingredientComponent.getMatcher();
+            long reduceQuantity = 0;
+            if (blackListComponent == ingredientComponent
+                    && blacklistMatcher.matches(blacklistInstance, (T2) instance, blacklistCondition)) {
+                reduceQuantity = blacklistQuantity;
+            }
+            long quantity = componentSurplus.getQuantity(instance) + (outputMatcher.getQuantity(instance) - reduceQuantity);
+            if (quantity > 0) {
+                componentSurplus.setQuantity(instance, quantity);
+            }
+        }
+    }
+
+    /**
+     * Propagates surplus items from dep-loop output surplus tracking into the storage within {@code planningTx}.
+     * This is the transaction-based equivalent of the old simulatedExtractionMemory negative tracking:
+     * any surplus produced by sub-recipe dep outputs is made "virtually available" in storage
+     * so that subsequent sibling plannings (at the caller's recipe level) can extract it via normal storage access.
+     */
+    @SuppressWarnings("unchecked")
+    private static void propagateSurplusToStorage(
+            Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
+            Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> dependenciesOutputSurplus,
+            TransactionContext planningTx) {
+        for (Map.Entry<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> entry : dependenciesOutputSurplus.entrySet()) {
+            IngredientComponent surplusComponent = entry.getKey();
+            IngredientCollectionPrototypeMap surplusInstances = entry.getValue();
+            if (surplusInstances == null) continue;
+            IIngredientComponentStorage surplusStorage = storageGetter.apply(surplusComponent);
+            if (surplusStorage == null) continue;
+            // Ensure the storage handles the same component type to avoid type-mismatch errors
+            if (surplusStorage.getComponent() != surplusComponent) continue;
+            IIngredientMatcher matcher = surplusComponent.getMatcher();
+            for (Object instance : surplusInstances) {
+                long quantity = surplusInstances.getQuantity(instance);
+                if (quantity > 0) {
+                    Object surplusInstance = matcher.withQuantity(instance, quantity);
+                    if (surplusStorage instanceof IngredientChannelAdapter)
+                        ((IngredientChannelAdapter) surplusStorage).disableLimits();
+                    surplusStorage.insert(surplusInstance, planningTx);
+                    if (surplusStorage instanceof IngredientChannelAdapter)
+                        ((IngredientChannelAdapter) surplusStorage).enableLimits();
+                }
+            }
+        }
     }
 
     /**
@@ -1020,6 +1154,12 @@ public class CraftingHelpers {
 
             // Iterate over all alternatives for this input slot, and take the first matching ingredient.
             List<MissingIngredients.PrototypedWithRequested<T, M>> missingAlternatives = Lists.newArrayList();
+            // Track the first partial-success alternative to re-extract into the main transaction after the loop.
+            // This prevents "alternative pollution" where probing an alternative consumes items that
+            // would have been needed by subsequent alternatives or other slots.
+            IPrototypedIngredient<T, M> chosenPartialAlternative = null;
+            M chosenPartialMatchCondition = null;
+            boolean chosenPartialIsReusable = false;
             for (IPrototypedIngredient<T, M> inputPrototype : inputPrototypes.getAlternatives()) {
                 boolean inputReusable = recipe.isInputReusable(ingredientComponent, inputIndex);
                 IIngredientCollectionMutable<T, M> extractionMemoryReusableBuffer = inputReusable ? new IngredientHashSet<>(ingredientComponent) : null;
@@ -1034,6 +1174,8 @@ public class CraftingHelpers {
                 if (matcher.isEmpty(inputPrototype.getPrototype())) {
                     inputInstance = inputPrototype.getPrototype();
                     hasInputInstance = true;
+                    setFirstInputInstance = true;
+                    firstInputInstance = inputInstance;
                     break;
                 }
 
@@ -1043,41 +1185,68 @@ public class CraftingHelpers {
                     inputInstance = inputPrototype.getComponent().getMatcher().getEmptyInstance();
                     hasInputInstance = true;
                     shouldBreak = true;
+                    setFirstInputInstance = true;
+                    firstInputInstance = inputInstance;
+                    extractionMemoryReusableBufferFirst = extractionMemoryReusableBuffer;
                 } else {
                     M matchCondition = matcher.withoutCondition(inputPrototype.getCondition(),
                             ingredientComponent.getPrimaryQuantifier().getMatchCondition());
-                    if (storage instanceof IngredientChannelAdapter)
-                        ((IngredientChannelAdapter) storage).disableLimits();
-                    T extracted = storage.extract(inputPrototype.getPrototype(), matchCondition, transaction);
-                    if (storage instanceof IngredientChannelAdapter)
-                        ((IngredientChannelAdapter) storage).enableLimits();
-                    long quantityExtracted = matcher.getQuantity(extracted);
-                    inputInstance = extracted;
-                    if (prototypeQuantity == quantityExtracted) {
+                    // Each alternative is probed in a nested transaction to prevent "alternative pollution":
+                    // if alternative A partially extracts items, alternative B should not see reduced storage.
+                    // Only the CHOSEN alternative's extraction is committed into the main transaction.
+                    T altExtracted;
+                    long quantityExtracted;
+                    try (Transaction altTx = Transaction.open(transaction)) {
+                        if (storage instanceof IngredientChannelAdapter)
+                            ((IngredientChannelAdapter) storage).disableLimits();
+                        altExtracted = storage.extract(inputPrototype.getPrototype(), matchCondition, altTx);
+                        if (storage instanceof IngredientChannelAdapter)
+                            ((IngredientChannelAdapter) storage).enableLimits();
+                        quantityExtracted = matcher.getQuantity(altExtracted);
+                        if (quantityExtracted == prototypeQuantity) {
+                            altTx.commit(); // Full success - commit this alternative's extraction
+                        }
+                        // Else: partial or zero - altTx is rolled back on close
+                    }
+                    if (quantityExtracted == prototypeQuantity) {
+                        // Full success - altExtracted was committed into the main transaction
+                        inputInstance = altExtracted;
                         hasInputInstance = true;
                         shouldBreak = true;
+                        setFirstInputInstance = true;
+                        firstInputInstance = inputInstance;
                         if (inputReusable) {
                             extractionMemoryReusableBuffer.add(inputPrototype.getPrototype());
+                            extractionMemoryReusableBufferFirst = extractionMemoryReusableBuffer;
+                        } else {
+                            extractionMemoryReusableBufferFirst = null;
                         }
                     } else if (collectMissingIngredients) {
                         long quantityMissing = prototypeQuantity - quantityExtracted;
                         missingAlternatives.add(new MissingIngredients.PrototypedWithRequested<>(inputPrototype, quantityMissing));
-                    }
-                }
-
-                if (!setFirstInputInstance || shouldBreak) {
-                    setFirstInputInstance = true;
-                    firstInputInstance = inputInstance;
-                    if (inputReusable) {
-                        extractionMemoryReusableBufferFirst = extractionMemoryReusableBuffer;
-                    } else {
-                        extractionMemoryReusableBufferFirst = null;
+                        // Track the first partial alternative (quantityExtracted > 0) for re-extraction after loop
+                        if (quantityExtracted > 0 && chosenPartialAlternative == null) {
+                            chosenPartialAlternative = inputPrototype;
+                            chosenPartialMatchCondition = matchCondition;
+                            chosenPartialIsReusable = inputReusable;
+                        }
                     }
                 }
 
                 if (shouldBreak) {
                     break;
                 }
+            }
+
+            // If no alternative fully succeeded but a partial was available,
+            // re-extract the first partial alternative into the main transaction.
+            if (!hasInputInstance && chosenPartialAlternative != null) {
+                if (storage instanceof IngredientChannelAdapter)
+                    ((IngredientChannelAdapter) storage).disableLimits();
+                firstInputInstance = storage.extract(chosenPartialAlternative.getPrototype(), chosenPartialMatchCondition, transaction);
+                if (storage instanceof IngredientChannelAdapter)
+                    ((IngredientChannelAdapter) storage).enableLimits();
+                setFirstInputInstance = true;
             }
 
             if (extractionMemoryReusableBufferFirst != null) {

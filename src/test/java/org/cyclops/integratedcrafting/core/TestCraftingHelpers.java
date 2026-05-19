@@ -994,7 +994,7 @@ public class TestCraftingHelpers {
     public void testGetIngredientRecipeInputsValidStorageSimpleRecipeReusable3CollectMissingMarked() {
         try (Transaction tx = Transaction.openRoot()) {
             // The storage contents are not, so we collect missing ingredients, but expect reusable ingredient to be marked
-            
+
             IIngredientCollectionMutable<ComplexStack, Integer> extractionMemoryReusable = new IngredientHashSet<>(IngredientComponentStubs.COMPLEX);
 
             Pair<List<ComplexStack>, MissingIngredients<ComplexStack, Integer>> inputs = CraftingHelpers.getIngredientRecipeInputs(
