@@ -60,7 +60,6 @@ public class TestCaseJobCalculationBronzeDrillHead {
     private IRecipeDefinition recipeBolt;
 
     private Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter;
-    private Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemory;
     private Map<IngredientComponent<?, ?>, IIngredientCollectionMutable<?, ?>> simulatedExtractionMemoryReusable;
     private CraftingHelpers.IIdentifierGenerator identifierGenerator;
     private CraftingJobDependencyGraph craftingJobDependencyGraph;
@@ -124,7 +123,6 @@ public class TestCaseJobCalculationBronzeDrillHead {
         );
         recipeIndex.addRecipe(recipeBolt);
 
-        simulatedExtractionMemory = Maps.newIdentityHashMap();
         simulatedExtractionMemoryReusable = Maps.newIdentityHashMap();
         Wrapper<Integer> id = new Wrapper<>(0);
         identifierGenerator = () -> {
@@ -147,7 +145,7 @@ public class TestCaseJobCalculationBronzeDrillHead {
 
         CraftingJob jobMain = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, C_DRILL_HEAD, ComplexStack.Match.EXACT, true,
-                simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
+                simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
 
         assertThat(jobMain.getId(), equalTo(21));
         assertThat(jobMain.getChannel(), equalTo(0));

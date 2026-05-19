@@ -48,7 +48,6 @@ public class TestCaseJobCalculationRedstoneComparator {
     private IRecipeDefinition recipeRedstoneComparator;
 
     private Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter;
-    private Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemory;
     private Map<IngredientComponent<?, ?>, IIngredientCollectionMutable<?, ?>> simulatedExtractionMemoryReusable;
     private CraftingHelpers.IIdentifierGenerator identifierGenerator;
     private CraftingJobDependencyGraph craftingJobDependencyGraph;
@@ -76,7 +75,6 @@ public class TestCaseJobCalculationRedstoneComparator {
         );
         recipeIndex.addRecipe(recipeRedstoneComparator);
 
-        simulatedExtractionMemory = Maps.newIdentityHashMap();
         simulatedExtractionMemoryReusable = Maps.newIdentityHashMap();
         Wrapper<Integer> id = new Wrapper<>(0);
         identifierGenerator = () -> {
@@ -100,7 +98,7 @@ public class TestCaseJobCalculationRedstoneComparator {
 
         CraftingJob jobMain = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, C_REDSTONE_COMPARATOR, ComplexStack.Match.EXACT, true,
-                simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
+                simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
 
         assertThat(jobMain.getId(), equalTo(2));
         assertThat(jobMain.getChannel(), equalTo(0));
@@ -154,7 +152,7 @@ public class TestCaseJobCalculationRedstoneComparator {
 
         CraftingJob jobMain = CraftingHelpers.calculateCraftingJobs(recipeIndex, 0, storageGetter,
                 IngredientComponentStubs.COMPLEX, C_REDSTONE_COMPARATOR.withAmount(4), ComplexStack.Match.EXACT, true,
-                simulatedExtractionMemory, simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
+                simulatedExtractionMemoryReusable, identifierGenerator, craftingJobDependencyGraph, parentDependencies, true);
 
         assertThat(jobMain.getId(), equalTo(2));
         assertThat(jobMain.getChannel(), equalTo(0));

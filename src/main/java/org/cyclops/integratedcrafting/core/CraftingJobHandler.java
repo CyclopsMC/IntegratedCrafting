@@ -251,7 +251,7 @@ public class CraftingJobHandler {
         Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> inputResult;
         try (Transaction tx = Transaction.openRoot()) {
             inputResult = CraftingHelpers.getRecipeInputs(storageGetter, craftingJob.getRecipe(), tx,
-                    null, null, true, craftingJob.getAmount(), skipReusableIngredients);
+                    null, true, craftingJob.getAmount(), skipReusableIngredients);
             tx.commit();
         }
         IMixedIngredients buffer = new MixedIngredients(inputResult.getLeft());
@@ -454,7 +454,7 @@ public class CraftingJobHandler {
                 try (Transaction tx = Transaction.openRoot()) {
                     inputs = CraftingHelpers.getRecipeInputs(
                             CraftingHelpers.getCraftingJobBufferStorageGetter(pendingCraftingJob),
-                            recipe, tx, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), true, 1);
+                            recipe, tx, Maps.newIdentityHashMap(), true, 1);
                 }
                 if (inputs.getRight().isEmpty()) { // If we have no missing ingredients
                     if (insertCrafting(targetPos, new MixedIngredients(inputs.getLeft()), recipe, pendingCraftingJob, network, channel, true)) {

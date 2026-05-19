@@ -169,7 +169,7 @@ public class CraftingHelpers {
         Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel, true);
 
         CraftingJob craftingJob = calculateCraftingJobs(recipeIndex, channel, storageGetter, ingredientComponent, instance, matchCondition,
-                craftMissing, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),
+                craftMissing, Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),
                 collectMissingRecipes);
         craftingJobsGraph.addCraftingJobId(craftingJob);
         return craftingJob;
@@ -202,7 +202,7 @@ public class CraftingHelpers {
         Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter = getNetworkStorageGetter(network, channel, true);
 
         PartialCraftingJobCalculation result = calculateCraftingJobs(recipeIndex, channel, storageGetter, recipe, amount,
-                craftMissing, Maps.newIdentityHashMap(), Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),
+                craftMissing, Maps.newIdentityHashMap(), identifierGenerator, craftingJobsGraph, Sets.newHashSet(),
                 collectMissingRecipes);
         if (result.getCraftingJob() == null) {
             throw new FailedCraftingRecipeException(recipe, amount, result.getMissingDependencies(),
@@ -254,10 +254,7 @@ public class CraftingHelpers {
      * @param instance The instance to craft.
      * @param matchCondition The match condition of the instance.
      * @param craftMissing If the missing required ingredients should also be crafted.
-     * @param simulatedExtractionMemory This map remembers all extracted instances in simulation mode.
-     *                                  This is to make sure that instances can not be extracted multiple times
-     *                                  when simulating.
-     * @param extractionMemoryReusable Like simulatedExtractionMemory, but it stores the reusable ingredients.
+     * @param extractionMemoryReusable Stores the reusable ingredients.
      * @param identifierGenerator An ID generator for crafting jobs.
      * @param craftingJobsGraph The target graph where all dependencies will be stored.
      * @param parentDependencies A set of parent recipe dependencies that are pending.
@@ -275,8 +272,6 @@ public class CraftingHelpers {
                                                               Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
                                                               IngredientComponent<T, M> ingredientComponent,
                                                               T instance, M matchCondition, boolean craftMissing,
-                                                              Map<IngredientComponent<?, ?>,
-                                                                      IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemory,
                                                               Map<IngredientComponent<?, ?>,
                                                                       IIngredientCollectionMutable<?, ?>> extractionMemoryReusable,
                                                               IIdentifierGenerator identifierGenerator,
@@ -308,7 +303,7 @@ public class CraftingHelpers {
             try {
                 PartialCraftingJobCalculation result = calculateCraftingJobs(recipeIndex, channel,
                         storageGetter, recipe, amount, craftMissing,
-                        simulatedExtractionMemory, extractionMemoryReusable, identifierGenerator, craftingJobsGraph, parentDependencies,
+                        extractionMemoryReusable, identifierGenerator, craftingJobsGraph, parentDependencies,
                         collectMissingRecipes && firstMissingDependencies.isEmpty());
                 if (result.getCraftingJob() == null) {
                     firstMissingDependencies = result.getMissingDependencies();
@@ -349,10 +344,12 @@ public class CraftingHelpers {
      * @param recipe The recipe to calculate a job for.
      * @param amount The amount of times the recipe should be crafted.
      * @param craftMissing If the missing required ingredients should also be crafted.
-     * @param simulatedExtractionMemory This map remembers all extracted instances in simulation mode.
-     *                                  This is to make sure that instances can not be extracted multiple times
-     *                                  when simulating.
-     * @param extractionMemoryReusable Like simulatedExtractionMemory, but it stores the reusable ingredients.
+     * @param extractionMemoryReusable This map remembers all extracted reusable instances.
+     *                                 This is to make sure that instances can not be extracted multiple times
+     *                                 when simulating.
+     *                                 The quantities can also go negatives,
+     *                                 which means that a surplus of the given instance is present,
+     *                                 which will be used up first before a call to the storage.
      * @param identifierGenerator An ID generator for crafting jobs.
      * @param craftingJobsGraph The target graph where all dependencies will be stored.
      * @param parentDependencies A set of parent recipe dependencies that are pending.
@@ -368,8 +365,6 @@ public class CraftingHelpers {
             Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
             IRecipeDefinition recipe, int amount, boolean craftMissing,
             Map<IngredientComponent<?, ?>,
-                    IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemory,
-            Map<IngredientComponent<?, ?>,
                     IIngredientCollectionMutable<?, ?>> extractionMemoryReusable,
             IIdentifierGenerator identifierGenerator,
             CraftingJobDependencyGraph craftingJobsGraph,
@@ -382,7 +377,7 @@ public class CraftingHelpers {
         // Check if all requirements are met for this recipe, if so return directly (don't schedule yet)
         Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> simulation;
         try (Transaction tx = Transaction.openRoot()) {
-            simulation = getRecipeInputs(storageGetter, recipe, tx, simulatedExtractionMemory, extractionMemoryReusable,
+            simulation = getRecipeInputs(storageGetter, recipe, tx, extractionMemoryReusable,
                     true, amount);
             // Don't commit - this is a simulation to check availability
         }
@@ -427,10 +422,9 @@ public class CraftingHelpers {
         // We must be able to find crafting jobs for all dependencies
         for (IngredientComponent dependencyComponent : missingIngredients.keySet()) {
             try {
-                // TODO: if we run into weird simulated extraction bugs, we may have to scope simulatedExtractionMemory, but I'm not sure about this (yet)
                 PartialCraftingJobCalculationDependency resultDependency = calculateCraftingJobDependencyComponent(
                         dependencyComponent, dependenciesOutputSurplus, missingIngredients.get(dependencyComponent), parentDependencies,
-                        dependencies, recipeIndex, channel, storageGetter, simulatedExtractionMemory, extractionMemoryReusable,
+                        dependencies, recipeIndex, channel, storageGetter, extractionMemoryReusable,
                         identifierGenerator, craftingJobsGraph, collectMissingRecipes);
                 // Don't check the other components once we have an invalid dependency.
                 if (!resultDependency.isValid()) {
@@ -443,20 +437,6 @@ public class CraftingHelpers {
             } catch (RecursiveCraftingRecipeException e) {
                 e.addRecipe(recipe);
                 throw e;
-            }
-        }
-        // Add remaining surplus as negatives to simulated extraction
-        for (IngredientComponent<?, ?> surplusComponent : dependenciesOutputSurplus.keySet()) {
-            IngredientCollectionPrototypeMap<?, ?> surplusInstances = dependenciesOutputSurplus.get(surplusComponent);
-            if (surplusInstances != null) {
-                for (Object instance : surplusInstances) {
-                    IngredientCollectionPrototypeMap<?, ?> simulatedExtractionMemoryInstances = simulatedExtractionMemory.get(surplusComponent);
-                    if (simulatedExtractionMemoryInstances == null) {
-                        simulatedExtractionMemoryInstances = new IngredientCollectionPrototypeMap<>(surplusComponent, true);
-                        simulatedExtractionMemory.put(surplusComponent, simulatedExtractionMemoryInstances);
-                    }
-                    ((IngredientCollectionPrototypeMap) simulatedExtractionMemoryInstances).remove(instance);
-                }
             }
         }
 
@@ -485,8 +465,6 @@ public class CraftingHelpers {
             IRecipeIndex recipeIndex,
             int channel,
             Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
-            Map<IngredientComponent<?, ?>,
-                    IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemory,
             Map<IngredientComponent<?, ?>,
                     IIngredientCollectionMutable<?, ?>> extractionMemoryReusable,
             IIdentifierGenerator identifierGenerator,
@@ -584,7 +562,7 @@ public class CraftingHelpers {
 
                     dependency = calculateCraftingJobs(recipeIndex, channel, storageGetter,
                             dependencyComponent, prototype.getPrototype(),
-                            prototype.getCondition(), true, simulatedExtractionMemory, extractionMemoryReusable,
+                            prototype.getCondition(), true, extractionMemoryReusable,
                             identifierGenerator, craftingJobsGraph, childDependencies, collectMissingRecipes);
                     dependencyInstance = prototype.getPrototype();
 
@@ -614,9 +592,6 @@ public class CraftingHelpers {
                                     .map(instance -> matcher.withQuantity(instance, matcher.getQuantity(instance) * recipeAmount))
                                     .collect(Collectors.toList());
                         }
-                        addRemainderAsSurplusForComponent(outputComponent, (List) instances, componentSurplus,
-                                (IngredientComponent) prototype.getComponent(), prototype.getPrototype(), dependencyQuantifierlessCondition,
-                                requestedQuantity);
                     }
 
                     break;
@@ -648,11 +623,6 @@ public class CraftingHelpers {
 
             // --- When we reach this point, a valid sub-recipe was found ---
 
-            // Update our simulatedExtractionMemory to indicate that the dependency's
-            // instance should not be extracted anymore.
-            ((IngredientCollectionPrototypeMap<T, M>) simulatedExtractionMemory.get(dependencyComponent))
-                    .remove(dependencyInstance);
-
             // If the dependency instance is reusable, mark it as available in our reusable extraction memory
             if (missingElement.isInputReusable()) {
                 ((IIngredientCollectionMutable<T, M>) extractionMemoryReusable.get(dependencyComponent)).add(dependencyInstance);
@@ -670,28 +640,6 @@ public class CraftingHelpers {
         }
 
         return new PartialCraftingJobCalculationDependency(missingDependencies, dependencies.values());
-    }
-
-    // Helper function for calculateCraftingJobDependencyComponent
-    protected static <T1, M1, T2, M2> void addRemainderAsSurplusForComponent(IngredientComponent<T1, M1> ingredientComponent,
-                                                                             List<T1> instances,
-                                                                             IngredientCollectionPrototypeMap<T1, M1> simulatedExtractionMemory,
-                                                                             IngredientComponent<T2, M2> blackListComponent,
-                                                                             T2 blacklistInstance, M2 blacklistCondition,
-                                                                             long blacklistQuantity) {
-        IIngredientMatcher<T2, M2> blacklistMatcher = blackListComponent.getMatcher();
-        for (T1 instance : instances) {
-            IIngredientMatcher<T1, M1> outputMatcher = ingredientComponent.getMatcher();
-            long reduceQuantity = 0;
-            if (blackListComponent == ingredientComponent
-                    && blacklistMatcher.matches(blacklistInstance, (T2) instance, blacklistCondition)) {
-                reduceQuantity = blacklistQuantity;
-            }
-            long quantity = simulatedExtractionMemory.getQuantity(instance) + (outputMatcher.getQuantity(instance) - reduceQuantity);
-            if (quantity > 0) {
-                simulatedExtractionMemory.setQuantity(instance, quantity);
-            }
-        }
     }
 
     /**
@@ -921,12 +869,6 @@ public class CraftingHelpers {
      * If multiple alternative inputs are possible,
      * then only the first possible match will be taken.
      *
-     * Note: Make sure that you first call in simulation-mode
-     * to see if the ingredients are available.
-     * If you immediately call this non-simulated,
-     * then there might be a chance that ingredients are lost
-     * from the network.
-     *
      * @param storage The target storage.
      * @param ingredientComponent The ingredient component to get the ingredients for.
      * @param recipe The recipe to get the inputs from.
@@ -942,7 +884,6 @@ public class CraftingHelpers {
                                                            IRecipeDefinition recipe, TransactionContext transaction,
                                                            long recipeOutputQuantity) {
         return getIngredientRecipeInputs(storage, ingredientComponent, recipe, transaction,
-                null,
                 new IngredientHashSet<>(ingredientComponent),
                 false, recipeOutputQuantity).getLeft();
     }
@@ -972,23 +913,16 @@ public class CraftingHelpers {
      * If multiple alternative inputs are possible,
      * then only the first possible match will be taken.
      *
-     * Note: Make sure that you first call in simulation-mode
-     * to see if the ingredients are available.
-     * If you immediately call this non-simulated,
-     * then there might be a chance that ingredients are lost
-     * from the network.
-     *
      * @param storage The target storage.
      * @param ingredientComponent The ingredient component to get the ingredients for.
      * @param recipe The recipe to get the inputs from.
      * @param transaction The transaction context.
-     * @param simulatedExtractionMemory This map remembers all extracted instances in simulation mode.
-     *                                  This is to make sure that instances can not be extracted multiple times
-     *                                  when simulating.
-     *                                  The quantities can also go negatives,
-     *                                  which means that a surplus of the given instance is present,
-     *                                  which will be used up first before a call to the storage.
-     * @param extractionMemoryReusable Like simulatedExtractionMemory, but it stores the reusable ingredients.
+     * @param extractionMemoryReusable This map remembers all extracted reusable instances in simulation mode.
+     *                                 This is to make sure that instances can not be extracted multiple times
+     *                                 when simulating.
+     *                                 The quantities can also go negatives,
+     *                                 which means that a surplus of the given instance is present,
+     *                                 which will be used up first before a call to the storage.
      * @param collectMissingIngredients If missing ingredients should be collected.
      *                                  If false, then the first returned list may be null
      *                                  if no valid matches can be found,
@@ -1003,28 +937,26 @@ public class CraftingHelpers {
     public static <T, M> Pair<List<T>, MissingIngredients<T, M>>
     getIngredientRecipeInputs(IIngredientComponentStorage<T, M> storage, IngredientComponent<T, M> ingredientComponent,
                               IRecipeDefinition recipe, TransactionContext transaction,
-                              @Nullable IngredientCollectionPrototypeMap<T, M> simulatedExtractionMemory,
                               IIngredientCollectionMutable<T, M> extractionMemoryReusable,
                               boolean collectMissingIngredients, long recipeOutputQuantity) {
-        return getIngredientRecipeInputs(storage, ingredientComponent, recipe, transaction, simulatedExtractionMemory,
+        return getIngredientRecipeInputs(storage, ingredientComponent, recipe, transaction,
                 extractionMemoryReusable, collectMissingIngredients, recipeOutputQuantity, false);
     }
 
     /**
-     * @deprecated Use {@link #getIngredientRecipeInputs(IIngredientComponentStorage, IngredientComponent, IRecipeDefinition, TransactionContext, IngredientCollectionPrototypeMap, IIngredientCollectionMutable, boolean, long)} instead.
+     * @deprecated Use {@link #getIngredientRecipeInputs(IIngredientComponentStorage, IngredientComponent, IRecipeDefinition, TransactionContext, IIngredientCollectionMutable, boolean, long)} instead.
      */
     @Deprecated // TODO: remove in next major
     public static <T, M> Pair<List<T>, MissingIngredients<T, M>>
     getIngredientRecipeInputs(IIngredientComponentStorage<T, M> storage, IngredientComponent<T, M> ingredientComponent,
                               IRecipeDefinition recipe, boolean simulate,
-                              IngredientCollectionPrototypeMap<T, M> simulatedExtractionMemory,
                               IIngredientCollectionMutable<T, M> extractionMemoryReusable,
                               boolean collectMissingIngredients, long recipeOutputQuantity) {
         try (Transaction tx = Transaction.openRoot()) {
             Pair<List<T>, MissingIngredients<T, M>> result = getIngredientRecipeInputs(storage, ingredientComponent, recipe, tx,
-                    simulate ? simulatedExtractionMemory : null, extractionMemoryReusable,
+                    extractionMemoryReusable,
                     collectMissingIngredients, recipeOutputQuantity);
-            if (!simulate && result.getLeft() != null) {
+            if (!simulate) {
                 tx.commit();
             }
             return result;
@@ -1034,13 +966,9 @@ public class CraftingHelpers {
     public static <T, M> Pair<List<T>, MissingIngredients<T, M>>
     getIngredientRecipeInputs(IIngredientComponentStorage<T, M> storage, IngredientComponent<T, M> ingredientComponent,
                               IRecipeDefinition recipe, TransactionContext transaction,
-                              @Nullable IngredientCollectionPrototypeMap<T, M> simulatedExtractionMemory,
                               IIngredientCollectionMutable<T, M> extractionMemoryReusable,
                               boolean collectMissingIngredients, long recipeOutputQuantity,
                               boolean skipReusableIngredients) {
-        // When simulatedExtractionMemory is non-null, we're in planning mode
-        // and should not modify storage (all storage ops are simulated).
-        boolean simulate = simulatedExtractionMemory != null;
         IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
 
         // Quickly return if the storage is empty
@@ -1088,18 +1016,12 @@ public class CraftingHelpers {
             boolean setFirstInputInstance = false;
             T inputInstance = null;
             boolean hasInputInstance = false;
-            IngredientCollectionPrototypeMap<T, M> simulatedExtractionMemoryBufferFirst = null;
             IIngredientCollectionMutable<T, M> extractionMemoryReusableBufferFirst = null;
 
             // Iterate over all alternatives for this input slot, and take the first matching ingredient.
             List<MissingIngredients.PrototypedWithRequested<T, M>> missingAlternatives = Lists.newArrayList();
-            IngredientCollectionPrototypeMap<T, M> simulatedExtractionMemoryAlternative = simulate ? new IngredientCollectionPrototypeMap<>(ingredientComponent, true) : null;
-            if (simulate) {
-                simulatedExtractionMemoryAlternative.addAll(simulatedExtractionMemory);
-            }
             for (IPrototypedIngredient<T, M> inputPrototype : inputPrototypes.getAlternatives()) {
                 boolean inputReusable = recipe.isInputReusable(ingredientComponent, inputIndex);
-                IngredientCollectionPrototypeMap<T, M> simulatedExtractionMemoryBuffer = simulate ? new IngredientCollectionPrototypeMap<>(ingredientComponent, true) : null;
                 IIngredientCollectionMutable<T, M> extractionMemoryReusableBuffer = inputReusable ? new IngredientHashSet<>(ingredientComponent) : null;
                 boolean shouldBreak = false;
 
@@ -1122,100 +1044,30 @@ public class CraftingHelpers {
                     hasInputInstance = true;
                     shouldBreak = true;
                 } else {
-                    long memoryQuantity;
-                    if (simulate && (memoryQuantity = simulatedExtractionMemoryAlternative
-                            .getQuantity(inputPrototype.getPrototype())) != 0) {
-                        long newQuantity = memoryQuantity + prototypeQuantity;
-                        if (newQuantity > 0) {
-                            // Part of our quantity can be provided via simulatedExtractionMemory,
-                            // but not all of it,
-                            // so we need to extract from storage as well.
-                            T newInstance = matcher.withQuantity(inputPrototype.getPrototype(), newQuantity);
-                            M matchCondition = matcher.withoutCondition(inputPrototype.getCondition(),
-                                    ingredientComponent.getPrimaryQuantifier().getMatchCondition());
-                            if (storage instanceof IngredientChannelAdapter)
-                                ((IngredientChannelAdapter) storage).disableLimits();
-                            T extracted;
-                            try (Transaction nestedTx = Transaction.open(transaction)) {
-                                extracted = storage.extract(newInstance, matchCondition, nestedTx);
-                                // Don't commit - we're just checking availability
-                            }
-                            if (storage instanceof IngredientChannelAdapter)
-                                ((IngredientChannelAdapter) storage).enableLimits();
-                            long quantityExtracted = matcher.getQuantity(extracted);
-                            if (quantityExtracted == newQuantity) {
-                                // All remaining could be extracted from storage, all is fine now
-                                inputInstance = inputPrototype.getPrototype();
-                                simulatedExtractionMemoryAlternative.add(inputInstance);
-                                simulatedExtractionMemoryBuffer.add(inputInstance);
-                                if (inputReusable) {
-                                    extractionMemoryReusableBuffer.add(inputInstance);
-                                }
-                                hasInputInstance = true;
-                                shouldBreak = true;
-                            } else if (collectMissingIngredients) {
-                                // Not everything could be extracted from storage, we *miss* the remaining ingredient.
-                                long quantityMissingPrevious = Math.max(0, memoryQuantity - quantityExtracted);
-                                long quantityMissingTotal = newQuantity - quantityExtracted;
-                                long quantityMissingRelative = quantityMissingTotal - quantityMissingPrevious;
-
-                                missingAlternatives.add(new MissingIngredients.PrototypedWithRequested<>(inputPrototype, quantityMissingRelative));
-                                inputInstance = matcher.withQuantity(inputPrototype.getPrototype(), prototypeQuantity - quantityMissingRelative);
-                                simulatedExtractionMemoryAlternative.setQuantity(inputPrototype.getPrototype(), quantityMissingTotal);
-                                // Original prototype quantity because we what can be extracted from storage and what could NOT be extracted from storage should be added to the simulation extraction memory.
-                                // The part that could NOT be extracted will be removed later when crafting jobs are calculated for the missing elements. (not doing so would lead to over-estimation of what is in storage)
-                                simulatedExtractionMemoryBuffer.add(matcher.withQuantity(inputPrototype.getPrototype(), prototypeQuantity));
-                            }
-                        } else {
-                            // All of our quantity can be provided via our surplus in simulatedExtractionMemory
-                            simulatedExtractionMemoryAlternative.add(inputPrototype.getPrototype());
-                            simulatedExtractionMemoryBuffer.add(inputPrototype.getPrototype());
-                            if (inputReusable) {
-                                extractionMemoryReusableBuffer.add(inputPrototype.getPrototype());
-                            }
-                            inputInstance = inputPrototype.getComponent().getMatcher().getEmptyInstance();
-                            hasInputInstance = true;
-                            shouldBreak = true;
+                    M matchCondition = matcher.withoutCondition(inputPrototype.getCondition(),
+                            ingredientComponent.getPrimaryQuantifier().getMatchCondition());
+                    if (storage instanceof IngredientChannelAdapter)
+                        ((IngredientChannelAdapter) storage).disableLimits();
+                    T extracted = storage.extract(inputPrototype.getPrototype(), matchCondition, transaction);
+                    if (storage instanceof IngredientChannelAdapter)
+                        ((IngredientChannelAdapter) storage).enableLimits();
+                    long quantityExtracted = matcher.getQuantity(extracted);
+                    inputInstance = extracted;
+                    if (prototypeQuantity == quantityExtracted) {
+                        hasInputInstance = true;
+                        shouldBreak = true;
+                        if (inputReusable) {
+                            extractionMemoryReusableBuffer.add(inputPrototype.getPrototype());
                         }
-                    } else {
-                        M matchCondition = matcher.withoutCondition(inputPrototype.getCondition(),
-                                ingredientComponent.getPrimaryQuantifier().getMatchCondition());
-                        if (storage instanceof IngredientChannelAdapter)
-                            ((IngredientChannelAdapter) storage).disableLimits();
-                        T extracted;
-                        if (simulate) {
-                            try (Transaction nestedTx = Transaction.open(transaction)) {
-                                extracted = storage.extract(inputPrototype.getPrototype(), matchCondition, nestedTx);
-                                // Don't commit - we're just checking availability
-                            }
-                        } else {
-                            extracted = storage.extract(inputPrototype.getPrototype(), matchCondition, transaction);
-                        }
-                        if (storage instanceof IngredientChannelAdapter)
-                            ((IngredientChannelAdapter) storage).enableLimits();
-                        long quantityExtracted = matcher.getQuantity(extracted);
-                        inputInstance = extracted;
-                        if (simulate) {
-                            simulatedExtractionMemoryAlternative.add(extracted);
-                            simulatedExtractionMemoryBuffer.add(inputPrototype.getPrototype());
-                        }
-                        if (prototypeQuantity == quantityExtracted) {
-                            hasInputInstance = true;
-                            shouldBreak = true;
-                            if (inputReusable) {
-                                extractionMemoryReusableBuffer.add(inputPrototype.getPrototype());
-                            }
-                        } else if (collectMissingIngredients) {
-                            long quantityMissing = prototypeQuantity - quantityExtracted;
-                            missingAlternatives.add(new MissingIngredients.PrototypedWithRequested<>(inputPrototype, quantityMissing));
-                        }
+                    } else if (collectMissingIngredients) {
+                        long quantityMissing = prototypeQuantity - quantityExtracted;
+                        missingAlternatives.add(new MissingIngredients.PrototypedWithRequested<>(inputPrototype, quantityMissing));
                     }
                 }
 
                 if (!setFirstInputInstance || shouldBreak) {
                     setFirstInputInstance = true;
                     firstInputInstance = inputInstance;
-                    simulatedExtractionMemoryBufferFirst = simulatedExtractionMemoryBuffer;
                     if (inputReusable) {
                         extractionMemoryReusableBufferFirst = extractionMemoryReusableBuffer;
                     } else {
@@ -1228,11 +1080,6 @@ public class CraftingHelpers {
                 }
             }
 
-            if (simulatedExtractionMemoryBufferFirst != null) {
-                for (T instance : simulatedExtractionMemoryBufferFirst) {
-                    simulatedExtractionMemory.add(instance);
-                }
-            }
             if (extractionMemoryReusableBufferFirst != null) {
                 for (T instance : extractionMemoryReusableBufferFirst) {
                     extractionMemoryReusable.add(instance);
@@ -1243,8 +1090,6 @@ public class CraftingHelpers {
             if (!hasInputInstance) {
                 if (!collectMissingIngredients) {
                     // This input failed, return immediately.
-                    // In non-simulate mode, the caller's transaction handles rollback
-                    // of any already-extracted instances.
                     return Pair.of(null, null);
                 } else {
                     // Multiply missing collection if recipe quantity is higher than one
@@ -1275,12 +1120,6 @@ public class CraftingHelpers {
      * If multiple alternative inputs are possible,
      * then only the first possible match will be taken.
      *
-     * Note: Make sure that you first call in simulation-mode
-     * to see if the ingredients are available.
-     * If you immediately call this non-simulated,
-     * then there might be a chance that ingredients are lost
-     * from the network.
-     *
      * @param network The target network.
      * @param channel The target channel.
      * @param recipe The recipe to get the inputs from.
@@ -1293,7 +1132,7 @@ public class CraftingHelpers {
                                                     IRecipeDefinition recipe, TransactionContext transaction,
                                                     long recipeOutputQuantity) {
         Map<IngredientComponent<?, ?>, List<?>> inputs = getRecipeInputs(getNetworkStorageGetter(network, channel, true),
-                recipe, transaction, null, null, false, recipeOutputQuantity).getLeft();
+                recipe, transaction, Maps.newIdentityHashMap(), false, recipeOutputQuantity).getLeft();
         return inputs == null ? null : new MixedIngredients(inputs);
     }
 
@@ -1307,7 +1146,7 @@ public class CraftingHelpers {
                                                     long recipeOutputQuantity) {
         try (Transaction tx = Transaction.openRoot()) {
             IMixedIngredients result = getRecipeInputs(network, channel, recipe, tx, recipeOutputQuantity);
-            if (!simulate && result != null) {
+            if (!simulate) {
                 tx.commit();
             }
             return result;
@@ -1320,12 +1159,6 @@ public class CraftingHelpers {
      * If multiple alternative inputs are possible,
      * then only the first possible match will be taken.
      *
-     * Note: Make sure that you first call in simulation-mode
-     * to see if the ingredients are available.
-     * If you immediately call this non-simulated,
-     * then there might be a chance that ingredients are lost
-     * from the buffer.
-     *
      * @param craftingJob The crafting job.
      * @param recipe The recipe to get the inputs from.
      * @param transaction The transaction context.
@@ -1337,7 +1170,7 @@ public class CraftingHelpers {
                                                     IRecipeDefinition recipe, TransactionContext transaction,
                                                     long recipeOutputQuantity) {
         Map<IngredientComponent<?, ?>, List<?>> inputs = getRecipeInputs(getCraftingJobBufferStorageGetter(craftingJob),
-                recipe, transaction, null, null, false, recipeOutputQuantity).getLeft();
+                recipe, transaction, null, false, recipeOutputQuantity).getLeft();
         return inputs == null ? null : new MixedIngredients(inputs);
     }
 
@@ -1351,7 +1184,7 @@ public class CraftingHelpers {
                                                     long recipeOutputQuantity) {
         try (Transaction tx = Transaction.openRoot()) {
             IMixedIngredients result = getRecipeInputsFromCraftingJobBuffer(craftingJob, recipe, tx, recipeOutputQuantity);
-            if (!simulate && result != null) {
+            if (!simulate) {
                 tx.commit();
             }
             return result;
@@ -1387,19 +1220,15 @@ public class CraftingHelpers {
      * If multiple alternative inputs are possible,
      * then only the first possible match will be taken.
      *
-     * Note: Make sure that you first call in simulation-mode
-     * to see if the ingredients are available.
-     * If you immediately call this non-simulated,
-     * then there might be a chance that ingredients are lost
-     * from the network.
-     *
      * @param storageGetter A callback function to get a storage for the given ingredient component.
      * @param recipe The recipe to get the inputs from.
      * @param transaction The transaction context.
-     * @param simulatedExtractionMemories This map remembers all extracted instances in simulation mode.
-     *                                    This is to make sure that instances can not be extracted multiple times
-     *                                    when simulating.
-     * @param extractionMemoriesReusable Like simulatedExtractionMemories, but it stores the reusable ingredients.
+     * @param extractionMemoriesReusable This map remembers all extracted reusable instances in simulation mode.
+     *                                   This is to make sure that instances can not be extracted multiple times
+     *                                   when simulating.
+     *                                   The quantities can also go negatives,
+     *                                   which means that a surplus of the given instance is present,
+     *                                   which will be used up first before a call to the storage.
      * @param collectMissingIngredients If missing ingredients should be collected.
      *                                  If false, then the first returned mixed ingredients may be null
      *                                  if no valid matches can be found,
@@ -1411,29 +1240,26 @@ public class CraftingHelpers {
      */
     public static Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>>
     getRecipeInputs(Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter, IRecipeDefinition recipe, TransactionContext transaction,
-                    Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemories,
                     Map<IngredientComponent<?, ?>, IIngredientCollectionMutable<?, ?>> extractionMemoriesReusable,
                     boolean collectMissingIngredients, long recipeOutputQuantity) {
-        return getRecipeInputs(storageGetter, recipe, transaction, simulatedExtractionMemories, extractionMemoriesReusable,
+        return getRecipeInputs(storageGetter, recipe, transaction, extractionMemoriesReusable,
                 collectMissingIngredients, recipeOutputQuantity, false);
     }
 
     /**
-     * @deprecated Use {@link #getRecipeInputs(Function, IRecipeDefinition, TransactionContext, Map, Map, boolean, long)} instead.
+     * @deprecated Use {@link #getRecipeInputs(Function, IRecipeDefinition, TransactionContext, Map, boolean, long)} instead.
      */
     @Deprecated // TODO: remove in next major
     public static Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>>
     getRecipeInputs(Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter, IRecipeDefinition recipe, boolean simulate,
-                    Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemories,
                     Map<IngredientComponent<?, ?>, IIngredientCollectionMutable<?, ?>> extractionMemoriesReusable,
                     boolean collectMissingIngredients, long recipeOutputQuantity) {
         try (Transaction tx = Transaction.openRoot()) {
             Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> result =
                     getRecipeInputs(storageGetter, recipe, tx,
-                            simulate ? simulatedExtractionMemories : null,
-                            simulate ? extractionMemoriesReusable : null,
+                            extractionMemoriesReusable,
                             collectMissingIngredients, recipeOutputQuantity);
-            if (!simulate && result.getLeft() != null) {
+            if (!simulate) {
                 tx.commit();
             }
             return result;
@@ -1442,23 +1268,14 @@ public class CraftingHelpers {
 
     public static Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>>
     getRecipeInputs(Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter, IRecipeDefinition recipe, TransactionContext transaction,
-                    @Nullable Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemories,
-                    @Nullable Map<IngredientComponent<?, ?>, IIngredientCollectionMutable<?, ?>> extractionMemoriesReusable,
+                    @Nullable Map<IngredientComponent<?, ?>, IIngredientCollectionMutable<?, ?>> extractionMemoriesReusable, // TODO: is this really nullable?
                     boolean collectMissingIngredients, long recipeOutputQuantity, boolean skipReusableIngredients) {
         // Determine available and missing ingredients
         Map<IngredientComponent<?, ?>, List<?>> ingredientsAvailable = Maps.newIdentityHashMap();
         Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> ingredientsMissing = Maps.newIdentityHashMap();
         for (IngredientComponent<?, ?> ingredientComponent : recipe.getInputComponents()) {
             IIngredientComponentStorage storage = storageGetter.apply(ingredientComponent);
-            IngredientCollectionPrototypeMap<?, ?> simulatedExtractionMemory = null;
-            if (simulatedExtractionMemories != null) {
-                simulatedExtractionMemory = simulatedExtractionMemories.get(ingredientComponent);
-                if (simulatedExtractionMemory == null) {
-                    simulatedExtractionMemory = new IngredientCollectionPrototypeMap<>(ingredientComponent, true);
-                    simulatedExtractionMemories.put(ingredientComponent, simulatedExtractionMemory);
-                }
-            }
-            IIngredientCollectionMutable extractionMemoryReusable = null;
+            IIngredientCollectionMutable extractionMemoryReusable;
             if (extractionMemoriesReusable != null) {
                 extractionMemoryReusable = extractionMemoriesReusable.get(ingredientComponent);
                 if (extractionMemoryReusable == null) {
@@ -1469,7 +1286,7 @@ public class CraftingHelpers {
                 extractionMemoryReusable = new IngredientHashSet<>(ingredientComponent);
             }
             Pair<List<?>, MissingIngredients<?, ?>> subIngredients = getIngredientRecipeInputs(storage,
-                    (IngredientComponent) ingredientComponent, recipe, transaction, simulatedExtractionMemory, extractionMemoryReusable,
+                    (IngredientComponent) ingredientComponent, recipe, transaction, extractionMemoryReusable,
                     collectMissingIngredients, recipeOutputQuantity, skipReusableIngredients);
             List<?> subIngredientAvailable = subIngredients.getLeft();
             MissingIngredients<?, ?> subIngredientsMissing = subIngredients.getRight();
@@ -1497,21 +1314,19 @@ public class CraftingHelpers {
     }
 
     /**
-     * @deprecated Use {@link #getRecipeInputs(Function, IRecipeDefinition, TransactionContext, Map, Map, boolean, long, boolean)} instead.
+     * @deprecated Use {@link #getRecipeInputs(Function, IRecipeDefinition, TransactionContext, Map, boolean, long, boolean)} instead.
      */
     @Deprecated // TODO: remove in next major
     public static Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>>
     getRecipeInputs(Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter, IRecipeDefinition recipe, boolean simulate,
-                    Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> simulatedExtractionMemories,
                     Map<IngredientComponent<?, ?>, IIngredientCollectionMutable<?, ?>> extractionMemoriesReusable,
                     boolean collectMissingIngredients, long recipeOutputQuantity, boolean skipReusableIngredients) {
         try (Transaction tx = Transaction.openRoot()) {
             Pair<Map<IngredientComponent<?, ?>, List<?>>, Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>>> result =
                     getRecipeInputs(storageGetter, recipe, tx,
-                            simulate ? simulatedExtractionMemories : null,
-                            simulate ? extractionMemoriesReusable : null,
+                            extractionMemoriesReusable,
                             collectMissingIngredients, recipeOutputQuantity, skipReusableIngredients);
-            if (!simulate && result.getLeft() != null) {
+            if (!simulate) {
                 tx.commit();
             }
             return result;
