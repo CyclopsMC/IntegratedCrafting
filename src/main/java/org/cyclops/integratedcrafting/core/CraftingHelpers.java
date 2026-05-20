@@ -20,6 +20,7 @@ import org.cyclops.commoncapabilities.api.ingredient.storage.IngredientComponent
 import org.cyclops.cyclopscore.datastructure.DimPos;
 import org.cyclops.cyclopscore.helper.IModHelpers;
 import org.cyclops.cyclopscore.ingredient.collection.*;
+import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageComposite;
 import org.cyclops.cyclopscore.ingredient.storage.IngredientComponentStorageSlottedCollectionWrapper;
 import org.cyclops.integratedcrafting.Capabilities;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
@@ -283,8 +284,12 @@ public class CraftingHelpers {
         // All ingredient extractions during planning are done within this transaction,
         // so that sub-dependency planning correctly sees already-"consumed" items.
         // The transaction is never committed, so storage is never actually modified.
+        // Wrap the storageGetter in a SurplusAwareStorageGetter so that surplus items produced
+        // by sub-recipe planning are stored in an in-memory buffer (not the real external storage),
+        // preventing item loss when the external storage is full.
+        SurplusAwareStorageGetter surplusAwareStorageGetter = new SurplusAwareStorageGetter(storageGetter);
         try (Transaction planningTx = Transaction.openRoot()) {
-            return calculateCraftingJobsWithPlanningTx(recipeIndex, channel, storageGetter, ingredientComponent, instance, matchCondition, craftMissing, extractionMemoryReusable, identifierGenerator, craftingJobsGraph, parentDependencies, collectMissingRecipes, planningTx);
+            return calculateCraftingJobsWithPlanningTx(recipeIndex, channel, surplusAwareStorageGetter, ingredientComponent, instance, matchCondition, craftMissing, extractionMemoryReusable, identifierGenerator, craftingJobsGraph, parentDependencies, collectMissingRecipes, planningTx);
         }
     }
 
@@ -402,8 +407,12 @@ public class CraftingHelpers {
         // Create a root planning transaction that spans the entire calculation.
         // All ingredient extractions during planning are done within this transaction.
         // The transaction is never committed, so storage is never actually modified.
+        // Wrap the storageGetter in a SurplusAwareStorageGetter so that surplus items produced
+        // by sub-recipe planning are stored in an in-memory buffer (not the real external storage),
+        // preventing item loss when the external storage is full.
+        SurplusAwareStorageGetter surplusAwareStorageGetter = new SurplusAwareStorageGetter(storageGetter);
         try (Transaction planningTx = Transaction.openRoot()) {
-            return calculateCraftingJobsWithPlanningTx(recipeIndex, channel, storageGetter, recipe, amount, craftMissing, extractionMemoryReusable, identifierGenerator, craftingJobsGraph, parentDependencies, collectMissingRecipes, planningTx);
+            return calculateCraftingJobsWithPlanningTx(recipeIndex, channel, surplusAwareStorageGetter, recipe, amount, craftMissing, extractionMemoryReusable, identifierGenerator, craftingJobsGraph, parentDependencies, collectMissingRecipes, planningTx);
         }
     }
 
@@ -497,7 +506,7 @@ public class CraftingHelpers {
         // This is equivalent to the old simulatedExtractionMemory negative tracking:
         // any surplus produced by sub-recipe planning is made "virtually available" in storage
         // for subsequent sibling dep planning calls (at the caller's level) to extract.
-        propagateSurplusToStorage(storageGetter, dependenciesOutputSurplus, planningTx);
+        propagateSurplusToStorage((SurplusAwareStorageGetter) storageGetter, dependenciesOutputSurplus, planningTx);
 
         CraftingJob craftingJob = new CraftingJob(identifierGenerator.getNext(), channel, recipe, amount,
                 compressMixedIngredients(new MixedIngredients(simulation.getLeft())));
@@ -743,36 +752,88 @@ public class CraftingHelpers {
     }
 
     /**
-     * Propagates surplus items from dep-loop output surplus tracking into the storage within {@code planningTx}.
+     * Propagates surplus items from dep-loop output surplus tracking into the in-memory buffer of the
+     * {@link SurplusAwareStorageGetter} within {@code planningTx}.
      * This is the transaction-based equivalent of the old simulatedExtractionMemory negative tracking:
      * any surplus produced by sub-recipe dep outputs is made "virtually available" in storage
      * so that subsequent sibling plannings (at the caller's recipe level) can extract it via normal storage access.
+     *
+     * Surplus is inserted into the in-memory buffer (unlimited capacity, transaction-aware) instead of the
+     * real external storage, preventing items from being lost when the external storage is full.
      */
     @SuppressWarnings("unchecked")
     private static void propagateSurplusToStorage(
-            Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
+            SurplusAwareStorageGetter storageGetter,
             Map<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> dependenciesOutputSurplus,
             TransactionContext planningTx) {
         for (Map.Entry<IngredientComponent<?, ?>, IngredientCollectionPrototypeMap<?, ?>> entry : dependenciesOutputSurplus.entrySet()) {
             IngredientComponent surplusComponent = entry.getKey();
             IngredientCollectionPrototypeMap surplusInstances = entry.getValue();
             if (surplusInstances == null) continue;
-            IIngredientComponentStorage surplusStorage = storageGetter.apply(surplusComponent);
-            if (surplusStorage == null) continue;
-            // Ensure the storage handles the same component type to avoid type-mismatch errors
-            if (surplusStorage.getComponent() != surplusComponent) continue;
             IIngredientMatcher matcher = surplusComponent.getMatcher();
             for (Object instance : surplusInstances) {
                 long quantity = surplusInstances.getQuantity(instance);
                 if (quantity > 0) {
                     Object surplusInstance = matcher.withQuantity(instance, quantity);
-                    if (surplusStorage instanceof IngredientChannelAdapter)
-                        ((IngredientChannelAdapter) surplusStorage).disableLimits();
-                    surplusStorage.insert(surplusInstance, planningTx);
-                    if (surplusStorage instanceof IngredientChannelAdapter)
-                        ((IngredientChannelAdapter) surplusStorage).enableLimits();
+                    storageGetter.addSurplus(surplusComponent, surplusInstance, planningTx);
                 }
             }
+        }
+    }
+
+    /**
+     * A storage getter that wraps a real network storage getter and adds an in-memory surplus buffer.
+     *
+     * <p>When retrieving storage for a component, the buffer (if populated) is checked first via a
+     * {@link IngredientComponentStorageComposite}, falling through to the real network storage. This ensures
+     * that surplus items inserted via {@link #addSurplus} are visible to subsequent planning extractions.</p>
+     *
+     * <p>The buffer uses {@link IngredientComponentStorageSlottedCollectionWrapper} which participates in
+     * NeoForge transactions: if a recipe attempt is rolled back, buffer inserts performed within that
+     * transaction's scope are also reverted.</p>
+     */
+    private static class SurplusAwareStorageGetter
+            implements Function<IngredientComponent<?, ?>, IIngredientComponentStorage> {
+
+        private final Function<IngredientComponent<?, ?>, IIngredientComponentStorage> realStorageGetter;
+        private final Map<IngredientComponent<?, ?>, IngredientList<?, ?>> surplusLists = Maps.newIdentityHashMap();
+        private final Map<IngredientComponent<?, ?>, IngredientComponentStorageSlottedCollectionWrapper<?, ?>> surplusWrappers = Maps.newIdentityHashMap();
+
+        SurplusAwareStorageGetter(Function<IngredientComponent<?, ?>, IIngredientComponentStorage> realStorageGetter) {
+            this.realStorageGetter = realStorageGetter;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public IIngredientComponentStorage apply(IngredientComponent<?, ?> component) {
+            IIngredientComponentStorage realStorage = realStorageGetter.apply(component);
+            IngredientComponentStorageSlottedCollectionWrapper bufferWrapper = surplusWrappers.get(component);
+            if (bufferWrapper == null) {
+                return realStorage;
+            }
+            return new IngredientComponentStorageComposite(component, Lists.newArrayList(bufferWrapper, realStorage));
+        }
+
+        /**
+         * Insert a surplus item into the in-memory buffer for the given component.
+         * The insertion is tracked by the given transaction, so it will be rolled back if the transaction fails.
+         */
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        public void addSurplus(IngredientComponent component, Object instance, TransactionContext tx) {
+            IngredientList list = (IngredientList) surplusLists.computeIfAbsent(component,
+                    c -> new IngredientList(c, Lists.newArrayList()));
+            IIngredientMatcher matcher = component.getMatcher();
+            // Add a new empty slot to the backing list so the wrapper has room to insert.
+            // The slot itself is not transaction-tracked (it stays as an empty slot on rollback),
+            // but the slot's content is tracked by the wrapper's SnapshotJournal.
+            list.add(matcher.getEmptyInstance());
+            int newSlot = list.size() - 1;
+            IngredientComponentStorageSlottedCollectionWrapper wrapper =
+                    (IngredientComponentStorageSlottedCollectionWrapper) surplusWrappers.computeIfAbsent(component,
+                            c -> new IngredientComponentStorageSlottedCollectionWrapper(
+                                    (IngredientList) surplusLists.get(c), Integer.MAX_VALUE, Integer.MAX_VALUE));
+            // Insert into the newly added slot using the transaction-aware wrapper.
+            wrapper.insert(newSlot, instance, tx);
         }
     }
 
