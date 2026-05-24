@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.Direction;
@@ -401,6 +402,11 @@ public class CraftingJobHandler {
             finishedCraftingJobs.clear();
         }
 
+        // Fallback completion check for processing jobs with mixed output component types.
+        // This covers cases where output insertion events are not observed,
+        // while the outputs are present in network storage.
+        tryResolveMixedOutputCraftingJobsFromStorage(network, channel);
+
         // The actual output observation of processing jobs is done via the ingredient observers
         int processingJobs = getProcessingCraftingJobs().size();
 
@@ -512,6 +518,52 @@ public class CraftingJobHandler {
         }
     }
 
+    protected void tryResolveMixedOutputCraftingJobsFromStorage(INetwork network, int channel) {
+        ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetworkChecked(network);
+        ObjectIterator<Int2ObjectMap.Entry<List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>>>> jobsIt =
+                this.processingCraftingJobsPendingIngredients.int2ObjectEntrySet().iterator();
+        while (jobsIt.hasNext()) {
+            Int2ObjectMap.Entry<List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>>>> jobsEntry = jobsIt.next();
+            int craftingJobId = jobsEntry.getIntKey();
+            CraftingJob craftingJob = this.allCraftingJobs.get(craftingJobId);
+            if (craftingJob == null || craftingJob.getRecipe().getOutput().getComponents().size() <= 1) {
+                continue;
+            }
+
+            // Only apply this fallback to single-entry jobs.
+            // This is sufficient for default blocking mode processing.
+            List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> pendingEntries = jobsEntry.getValue();
+            if (pendingEntries.size() != 1) {
+                continue;
+            }
+            Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pendingEntry = pendingEntries.getFirst();
+
+            boolean allPendingOutputsAvailable = true;
+            for (Map.Entry<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> componentEntry : pendingEntry.entrySet()) {
+                IngredientComponent<?, ?> component = componentEntry.getKey();
+                IIngredientComponentStorage storage = CraftingHelpers.getNetworkStorage(network, channel, component, true);
+                IIngredientMatcher matcher = component.getMatcher();
+                for (IPrototypedIngredient<?, ?> prototypedIngredient : componentEntry.getValue()) {
+                    Object extracted = storage.extract(prototypedIngredient.getPrototype(), prototypedIngredient.getCondition(), true);
+                    if (matcher.getQuantity(extracted) < matcher.getQuantity(prototypedIngredient.getPrototype())) {
+                        allPendingOutputsAvailable = false;
+                        break;
+                    }
+                }
+                if (!allPendingOutputsAvailable) {
+                    break;
+                }
+            }
+
+            if (allPendingOutputsAvailable) {
+                this.observersPendingDeletion.addAll(pendingEntry.keySet());
+                this.onCraftingJobEntryFinished(craftingNetwork, craftingJobId);
+                this.onCraftingJobFinished(craftingJob);
+                jobsIt.remove();
+            }
+        }
+    }
+
     protected boolean insertCrafting(PartPos target, IMixedIngredients ingredients, IRecipeDefinition recipe, CraftingJob craftingJob, INetwork network, int channel, boolean simulate) {
         Function<IngredientComponent<?, ?>, PartPos> targetGetter = getTargetGetter(target);
         // First check our crafting overrides
@@ -562,6 +614,14 @@ public class CraftingJobHandler {
             // Register listeners for pending ingredients
             for (IngredientComponent<?, ?> component : startingCraftingJob.getRecipe().getOutput().getComponents()) {
                 registerIngredientObserver(component, network);
+            }
+            // For recipes that produce multiple ingredient component types,
+            // schedule observation immediately so very fast machine outputs in the same tick are not missed.
+            if (startingCraftingJob.getRecipe().getOutput().getComponents().size() > 1) {
+                for (IngredientComponent<?, ?> component : startingCraftingJob.getRecipe().getOutput().getComponents()) {
+                    IPositionedAddonsNetworkIngredients<?, ?> ingredientsNetwork = CraftingHelpers.getIngredientsNetworkChecked(network, component);
+                    ingredientsNetwork.scheduleObservation();
+                }
             }
 
             // Push the ingredients to the crafting interface

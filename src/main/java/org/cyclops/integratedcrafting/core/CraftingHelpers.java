@@ -9,6 +9,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
+import org.cyclops.commoncapabilities.api.capability.fluidhandler.FluidMatch;
+import org.cyclops.commoncapabilities.api.capability.itemhandler.ItemMatch;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIngredientAlternatives;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.*;
@@ -1475,8 +1477,23 @@ public class CraftingHelpers {
         Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> outputs = Maps.newHashMap();
 
         IMixedIngredients mixedIngredients = recipe.getOutput();
+        boolean hasMultipleComponents = mixedIngredients.getComponents().size() > 1;
         for (IngredientComponent ingredientComponent : mixedIngredients.getComponents()) {
-            outputs.put(ingredientComponent, getCompressedIngredients(ingredientComponent, mixedIngredients));
+            List<IPrototypedIngredient<?, ?>> compressed = getCompressedIngredients(ingredientComponent, mixedIngredients);
+            if (hasMultipleComponents && ingredientComponent == IngredientComponent.ITEMSTACK) {
+                List<IPrototypedIngredient<?, ?>> normalized = Lists.newArrayListWithCapacity(compressed.size());
+                for (IPrototypedIngredient<?, ?> prototyped : compressed) {
+                    normalized.add(new PrototypedIngredient(ingredientComponent, prototyped.getPrototype(), ItemMatch.ITEM));
+                }
+                compressed = normalized;
+            } else if (hasMultipleComponents && ingredientComponent == IngredientComponent.FLUIDSTACK) {
+                List<IPrototypedIngredient<?, ?>> normalized = Lists.newArrayListWithCapacity(compressed.size());
+                for (IPrototypedIngredient<?, ?> prototyped : compressed) {
+                    normalized.add(new PrototypedIngredient(ingredientComponent, prototyped.getPrototype(), FluidMatch.FLUID));
+                }
+                compressed = normalized;
+            }
+            outputs.put(ingredientComponent, compressed);
         }
 
         return outputs;

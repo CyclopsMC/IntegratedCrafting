@@ -132,6 +132,15 @@ public class GameTestHelpersIntegratedCrafting {
                 helper.setBlock(posi.below().west(), RegistryEntries.BLOCK_CABLE.value());
                 PartHelpers.addPart(helper.getLevel(), helper.absolutePos(posi.below().west()), Direction.UP, org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_ITEM.getItem()));
                 placeVariableInWriter(helper, helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(posi.below().west()), Direction.UP), TunnelAspects.Write.Item.BOOLEAN_IMPORT, new ItemStack(RegistryEntries.ITEM_VARIABLE));
+
+                // Add a dedicated machine with a fluid tank as fluid storage in the network,
+                // and extract fluid output from the target machine.
+                helper.setBlock(posi.below().west().south(), RegistryEntries.BLOCK_CABLE.value());
+                helper.setBlock(posi.west().south(), RegistryEntries.BLOCK_CABLE.value());
+                helper.setBlock(posi.west().south().above(), RegistryEntries.BLOCK_MECHANICAL_DRYING_BASIN.value());
+                PartHelpers.addPart(helper.getLevel(), helper.absolutePos(posi.west().south()), Direction.UP, org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_FLUID, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_FLUID.getItem()));
+                PartHelpers.addPart(helper.getLevel(), helper.absolutePos(posi.west().south()), Direction.NORTH, org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_FLUID, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.IMPORTER_FLUID.getItem()));
+                placeVariableInWriter(helper, helper.getLevel(), PartPos.of(helper.getLevel(), helper.absolutePos(posi.west().south()), Direction.NORTH), TunnelAspects.Write.Fluid.BOOLEAN_IMPORT, new ItemStack(RegistryEntries.ITEM_VARIABLE));
             }
 
             interfaces.add(PartPos.of(helper.getLevel(), helper.absolutePos(posi.above().west()), Direction.DOWN));
@@ -250,6 +259,9 @@ public class GameTestHelpersIntegratedCrafting {
             if (!squeezerOutputItems.isEmpty()) {
                 recipeOut.put(IngredientComponents.ITEMSTACK, squeezerOutputItems);
             }
+            recipeSqueezer.getOutputFluid().ifPresent(outputFluid ->
+                    recipeOut.put(IngredientComponents.FLUIDSTACK, Lists.newArrayList(outputFluid))
+            );
         } else {
             throw new IllegalStateException("Unknown recipe type " + recipeType);
         }
