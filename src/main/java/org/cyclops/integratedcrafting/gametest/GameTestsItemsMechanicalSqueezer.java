@@ -18,6 +18,7 @@ import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
 import org.cyclops.integrateddynamics.RegistryEntries;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.write.IPartStateWriter;
+import org.cyclops.integrateddynamics.blockentity.BlockEntityMechanicalSqueezer;
 import org.cyclops.integrateddynamics.core.block.IgnoredBlockStatus;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 
@@ -90,6 +91,74 @@ public class GameTestsItemsMechanicalSqueezer {
             // Check if items have been crafted
             helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.BRICK, Component.literal("Slot 0 item is incorrect"));
             helper.assertValueEqual(chestIn.getItem(0).getCount(), 4, Component.literal("Slot 0 amount is incorrect"));
+        });
+    }
+
+    /**
+     * Regression test for https://github.com/CyclopsMC/IntegratedCrafting/issues/199
+     * When a squeezer recipe produces both a solid item output AND a fluid output, the
+     * crafting job used to hang indefinitely.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsMechanicalSqueezerAttunedSolidAndFluidOutput(GameTestHelper helper) {
+        // Use the attuned crafting interface so that the recipe is auto-discovered
+        // via the machine's recipe handler, which also advertises the fluid output.
+        INetworkPositions<PartTypeInterfaceCraftingAttuned.State> positions = createBasicNetwork(helper, POS, true, RegistryEntries.BLOCK_MECHANICAL_SQUEEZER.value());
+
+        // Add a (non-mechanical) Drying Basin south of the main cable.
+        // Its fluid tank (1000 mB capacity) serves as network-accessible fluid storage.
+        helper.setBlock(POS.south(), RegistryEntries.BLOCK_DRYING_BASIN.value());
+
+        // Place a Fluid Interface on the south face of the main cable so that the
+        // ingredient network can store fluids in the Drying Basin's tank.
+        PartHelpers.addPart(
+                helper.getLevel(),
+                helper.absolutePos(POS),
+                Direction.SOUTH,
+                org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_FLUID,
+                new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_FLUID.getItem()));
+
+        // Enable auto-eject on the squeezer so fluid is pushed out of the machine's internal
+        // tank towards the crafting-interface face (which exposes the network's fluid storage).
+        // The fluid then flows: squeezer tank → crafting-interface → ingredient network → drying basin.
+        BlockEntityMechanicalSqueezer squeezerBE = helper.getBlockEntity(POS.west(), BlockEntityMechanicalSqueezer.class);
+        squeezerBE.setAutoEjectFluids(true);
+
+        // Insert wet sponge into the interface chest as the crafting ingredient.
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
+        chestIn.setItem(0, new ItemStack(Items.WET_SPONGE, 1));
+
+        // Tell the crafting writer to request "1× sponge" – this triggers the attuned
+        // interface to pick the wet_sponge → sponge + water recipe automatically.
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.SPONGE, 1));
+
+        helper.succeedWhen(() -> {
+            // Check crafting writer state
+            IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(
+                    PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)).getState();
+            helper.assertFalse(partStateWriter.isDeactivated(),
+                    Component.literal("Crafting writer is deactivated"));
+            helper.assertValueEqual(
+                    PartTypes.CRAFTING_WRITER.getBlockState(
+                            PartHelpers.getPartContainerChecked(PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH)),
+                            Direction.NORTH).getValue(IgnoredBlockStatus.STATUS),
+                    IgnoredBlockStatus.Status.ACTIVE,
+                    Component.literal("Block status is incorrect"));
+            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.ITEMSTACK_CRAFT,
+                    Component.literal("Active aspect is incorrect"));
+            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(),
+                    Component.literal("Active aspect has errors"));
+
+            // The sponge (solid output) must have arrived in the output chest.
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.SPONGE,
+                    Component.literal("Slot 0 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 1,
+                    Component.literal("Slot 0 amount is incorrect"));
+
+            // The crafting job must be fully finished – no jobs should remain in the queue.
+            helper.assertValueEqual(
+                    positions.interfaceStates().get(0).getCraftingJobsCount(), 0,
+                    Component.literal("Crafting job did not complete (job is stuck waiting for fluid output)"));
         });
     }
 
