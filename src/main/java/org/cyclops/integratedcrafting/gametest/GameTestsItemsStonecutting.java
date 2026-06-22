@@ -35,13 +35,13 @@ public class GameTestsItemsStonecutting {
 
         // Insert items in interface chest
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
-        chestIn.setItem(0, new ItemStack(Items.COPPER_BLOCK, 1));
+        chestIn.setItem(0, new ItemStack(Items.COPPER_BLOCK.weathering().unaffected(), 1));
 
         // Add chest recipe to crafting interface
         positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.STONECUTTING, Identifier.fromNamespaceAndPath("minecraft", "copper_grate_from_copper_block_stonecutting")));
 
         // Enable crafting aspect in crafting writer
-        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.COPPER_GRATE));
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.COPPER_GRATE.weathering().unaffected()));
 
         helper.succeedWhen(() -> {
             // Check crafting interface state
@@ -59,7 +59,7 @@ public class GameTestsItemsStonecutting {
             helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), Component.literal("Active aspect has errors"));
 
             // Check if items have been crafted
-            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.COPPER_GRATE, Component.literal("Slot 0 item is incorrect"));
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.COPPER_GRATE.weathering().unaffected(), Component.literal("Slot 0 item is incorrect"));
             helper.assertValueEqual(chestIn.getItem(0).getCount(), 4, Component.literal("Slot 0 amount is incorrect"));
         });
     }
