@@ -278,15 +278,15 @@ public class GameTestHelpersIntegratedCrafting {
     }
 
     public static void chestContains(GameTestHelper helper, ChestBlockEntity chest, ItemStack itemStack) {
-        boolean found = false;
+        int remainingCount = itemStack.getCount();
         for (int i = 0; i < chest.getContainerSize(); i++) {
-            if (ItemStack.matches(chest.getItem(i), itemStack)) {
-                found = true;
+            if (ItemStack.isSameItemSameComponents(chest.getItem(i), itemStack)) {
+                remainingCount -= itemStack.getCount();
                 break;
             }
         }
-        if (!found) {
-            throw new GameTestAssertException(Component.literal("Could not find " + itemStack + " in chest"), (int) helper.getTick());
+        if (remainingCount != 0) {
+            throw new GameTestAssertException(Component.literal("Could not find " + itemStack + " in chest. Still missing " + remainingCount + " items."), (int) helper.getTick());
         }
     }
 
