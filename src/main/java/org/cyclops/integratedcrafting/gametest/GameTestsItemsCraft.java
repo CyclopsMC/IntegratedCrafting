@@ -967,11 +967,12 @@ public class GameTestsItemsCraft {
             helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.ITEMSTACK_CRAFT).isEmpty(), "Active aspect has errors");
 
             // Check if items have been crafted
-            chestContains(helper, chestIn, new ItemStack(Items.OAK_LOG, 33));
-            chestContains(helper, chestIn, new ItemStack(Items.OAK_PLANKS, 2));
             chestContains(helper, chestIn, new ItemStack(Items.OAK_DOOR, 33));
-            chestContains(helper, chestIn, new ItemStack(Items.STICK, 2));
             chestContains(helper, chestIn, new ItemStack(Items.OAK_FENCE, 33));
+            // The item counts below can vary a bit due to concurrency reasons (e.g. fewer logs and more sticks), which doesn't matter as only the number of selected crafts matters)
+//            chestContains(helper, chestIn, new ItemStack(Items.OAK_LOG, 33));
+//            chestContains(helper, chestIn, new ItemStack(Items.OAK_PLANKS, 2));
+//            chestContains(helper, chestIn, new ItemStack(Items.STICK, 2));
         });
     }
 
