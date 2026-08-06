@@ -1,8 +1,18 @@
 # Changelog for Minecraft 26.1.2
 All notable changes to this project will be documented in this file.
 
+<a name="26.1.2-1.4.8"></a>
+## [26.1.2-1.4.8](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.4.7...26.1.2-1.4.8) - 2026-08-06 08:57:02
+
+
+### Added
+* Add translations through Crowdin (#209)
+
+### Fixed
+* Fix item dupe from replacing crafting interfaces with crafting buffers, Closes #212
+
 <a name="26.1.2-1.4.7"></a>
-## [26.1.2-1.4.7](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.4.6...26.1.2-1.4.7) - 2026-04-29 19:25:44
+## [26.1.2-1.4.7](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.4.6...26.1.2-1.4.7) - 2026-04-29 19:25:44 +0200
 
 
 ### Fixed
