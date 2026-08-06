@@ -1,6 +1,7 @@
 package org.cyclops.integratedcrafting.core.part;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -13,6 +14,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
+import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
@@ -179,6 +181,7 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
             for (ItemStack instance : craftingJob.getIngredientsStorageBuffer().getInstances(IngredientComponent.ITEMSTACK)) {
                 itemStacks.add(instance);
             }
+            craftingJob.setIngredientsStorageBuffer(new MixedIngredients(Maps.newIdentityHashMap()));
         }
 
         super.addDrops(target, state, itemStacks, dropMainElement, saveState);
