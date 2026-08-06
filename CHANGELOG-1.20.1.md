@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.20.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.20.1-1.4.7"></a>
+## [1.20.1-1.4.7](/compare/1.20.1-1.4.6...1.20.1-1.4.7) - 2026-08-06 08:54:23
+
+
+### Fixed
+* Fix item dupe from replacing crafting interfaces with crafting buffers, Closes #212
+
 <a name="1.20.1-1.4.6"></a>
-## [1.20.1-1.4.6](/compare/1.20.1-1.4.5...1.20.1-1.4.6) - 2026-04-26 13:55:14
+## [1.20.1-1.4.6](/compare/1.20.1-1.4.5...1.20.1-1.4.6) - 2026-04-26 13:55:14 +0200
 
 
 ### Fixed
