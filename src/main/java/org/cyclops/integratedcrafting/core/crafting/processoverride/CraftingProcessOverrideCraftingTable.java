@@ -20,10 +20,11 @@ import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverride;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingResultsSink;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 
+import com.google.common.collect.MapMaker;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.WeakHashMap;
 import java.util.function.Function;
 
 /**
@@ -33,7 +34,9 @@ import java.util.function.Function;
 public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOverride {
 
     private static GameProfile PROFILE = new GameProfile(UUID.fromString("41C82C87-7AfB-4024-BB57-13D2C99CAE77"), "[IntegratedCrafting]");
-    private static final Map<ServerLevel, FakePlayer> FAKE_PLAYERS = new WeakHashMap<ServerLevel, FakePlayer>();
+    // Weak keys AND values: the FakePlayer value holds a reference to its ServerLevel key,
+    // so a WeakHashMap (weak keys only) would keep the key alive forever and leak.
+    private static final Map<ServerLevel, FakePlayer> FAKE_PLAYERS = new MapMaker().weakKeys().weakValues().makeMap();
 
     public static FakePlayer getFakePlayer(ServerLevel world) {
         FakePlayer fakePlayer = FAKE_PLAYERS.get(world);
