@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
@@ -34,6 +35,8 @@ import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
 import org.cyclops.integrateddynamics.RegistryEntries;
 import org.cyclops.integrateddynamics.api.evaluate.variable.IValue;
 import org.cyclops.integrateddynamics.api.evaluate.variable.IValueType;
+import org.cyclops.integrateddynamics.api.part.IPartState;
+import org.cyclops.integrateddynamics.api.part.IPartType;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
 import org.cyclops.integrateddynamics.api.part.aspect.IAspectWrite;
@@ -239,6 +242,24 @@ public class GameTestHelpersIntegratedCrafting {
     public static <T extends IValueType<V>, V extends IValue> void setCraftingInterfaceBlockingMode(PartPos writerPos, boolean blocking) {
         PartHelpers.PartStateHolder partStateHolder = PartHelpers.getPart(writerPos);
         ((PartTypeInterfaceCrafting.State) partStateHolder.getState()).getCraftingJobHandler().setBlockingJobsMode(blocking);
+    }
+
+    /**
+     * Make the part at the given position target another position via an offset.
+     *
+     * This also increases the max offset of the part,
+     * just like applying part offset enhancement items would do.
+     *
+     * @param partPos The (center) position of the part.
+     * @param offset The target offset.
+     */
+    public static void setPartOffset(PartPos partPos, Vec3i offset) {
+        PartHelpers.PartStateHolder partStateHolder = PartHelpers.getPart(partPos);
+        IPartState partState = partStateHolder.getState();
+        partState.setMaxOffset(Math.max(Math.abs(offset.getX()), Math.max(Math.abs(offset.getY()), Math.abs(offset.getZ()))));
+        if (!((IPartType) partStateHolder.getPart()).setTargetOffset(partState, partPos, offset)) {
+            throw new GameTestAssertException("Could not set target offset " + offset + " on the part at " + partPos);
+        }
     }
 
     public static <T extends IValueType<V>, V extends IValue> void setCraftingInterfaceUpdateInterval(PartPos writerPos, int updateInterval) {

@@ -12,14 +12,17 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.client.gui.component.button.ButtonCheckbox;
+import org.cyclops.cyclopscore.client.gui.component.button.ButtonImage;
 import org.cyclops.cyclopscore.client.gui.component.input.IInputListener;
 import org.cyclops.cyclopscore.client.gui.component.input.WidgetArrowedListField;
 import org.cyclops.cyclopscore.client.gui.component.input.WidgetNumberField;
+import org.cyclops.cyclopscore.client.gui.image.IImage;
 import org.cyclops.cyclopscore.helper.Helpers;
 import org.cyclops.cyclopscore.helper.L10NHelpers;
 import org.cyclops.cyclopscore.helper.ValueNotifierHelpers;
 import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettings;
+import org.cyclops.integrateddynamics.client.gui.image.Images;
 import org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown;
 import org.cyclops.integrateddynamics.core.client.gui.container.ContainerScreenPartSettings;
 import org.lwjgl.glfw.GLFW;
@@ -94,6 +97,17 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     @Override
     public void init() {
         super.init();
+
+        if (getMenu().getPartType().supportsOffsets()) {
+            addRenderableWidget(new ButtonImage(this.leftPos - 20, this.topPos, 18, 18,
+                    Component.translatable("gui.integrateddynamics.part_offsets"),
+                    createServerPressable(ContainerPartInterfaceCraftingSettings.BUTTON_OFFSETS, (button) -> {}),
+                    new IImage[]{
+                            Images.BUTTON_BACKGROUND_INACTIVE,
+                            Images.BUTTON_MIDDLE_OFFSET
+                    },
+                    false, 0, 0));
+        }
 
         ingredientComponentSideSelector = new WidgetArrowedListField<IngredientComponent<?, ?>>(font,
                 leftPos + 106, topPos + 9, 68, 15, true,
@@ -200,6 +214,16 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
                 leftPos + 8, topPos + 162, 0, false,
                 guiGraphics.pose().last().pose(), guiGraphics.bufferSource(), Font.DisplayMode.NORMAL, 0, 15728880);
         checkboxFieldBlockingMode.render(guiGraphics, mouseX, mouseY, partialTicks);
+    }
+
+    @Override
+    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        super.renderLabels(guiGraphics, mouseX, mouseY);
+
+        if (getMenu().getPartType().supportsOffsets() && isHovering(-20, 0, 18, 18, mouseX, mouseY)) {
+            drawTooltip(Lists.newArrayList(Component.translatable("gui.integrateddynamics.part_offsets")),
+                    guiGraphics.pose(), mouseX - leftPos, mouseY - topPos);
+        }
     }
 
     @Override

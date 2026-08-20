@@ -13,6 +13,7 @@ import org.cyclops.cyclopscore.client.gui.image.Images;
 import org.cyclops.cyclopscore.helper.GuiHelpers;
 import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCrafting;
+import org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipart;
 import org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects;
 
 import java.util.Collections;
@@ -35,6 +36,12 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
                 Component.translatable("gui.integrateddynamics.part_settings"),
                 createServerPressable(ContainerMultipartAspects.BUTTON_SETTINGS, b -> {}), true,
                 Images.CONFIG_BOARD, -2, -3));
+        if (getMenu().getPartType().supportsOffsets()) {
+            addRenderableWidget(new ButtonImage(this.leftPos + 138, this.topPos + 4, 15, 15,
+                    Component.translatable("gui.integrateddynamics.part_offsets"),
+                    createServerPressable(ContainerMultipart.BUTTON_OFFSETS, b -> {}), true,
+                    org.cyclops.integrateddynamics.client.gui.image.Images.BUTTON_MIDDLE_OFFSET, -2, -3));
+        }
     }
 
     @Override
