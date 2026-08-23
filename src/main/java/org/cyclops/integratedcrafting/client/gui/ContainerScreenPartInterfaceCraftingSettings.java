@@ -99,7 +99,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
         super.init();
 
         if (getMenu().getPartType().supportsOffsets()) {
-            addRenderableWidget(new ButtonImage(this.leftPos - 20, this.topPos, 18, 18,
+            addRenderableWidget(new ButtonImage(this.leftPos - 20, this.topPos + 10, 18, 18,
                     Component.translatable("gui.integrateddynamics.part_offsets"),
                     createServerPressable(ContainerPartInterfaceCraftingSettings.BUTTON_OFFSETS, (button) -> {}),
                     new IImage[]{
@@ -220,7 +220,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         super.renderLabels(guiGraphics, mouseX, mouseY);
 
-        if (getMenu().getPartType().supportsOffsets() && isHovering(-20, 0, 18, 18, mouseX, mouseY)) {
+        if (getMenu().getPartType().supportsOffsets() && isHovering(-20, 0 + 10, 18, 18, mouseX, mouseY)) {
             drawTooltip(Lists.newArrayList(Component.translatable("gui.integrateddynamics.part_offsets")),
                     guiGraphics.pose(), mouseX - leftPos, mouseY - topPos);
         }
