@@ -92,6 +92,36 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
                 });
     }
 
+    /**
+     * Update the target of the given part state, and make the crafting network aware of it.
+     *
+     * Contrary to {@link #removeTargetFromNetwork(INetwork, PartPos, S)} followed by
+     * {@link #addTargetToNetwork(INetwork, PartTarget, S, boolean)},
+     * this retains the network and channel of the part,
+     * as only the targeted position changes.
+     *
+     * @param network The network.
+     * @param newTarget The new target.
+     * @param state The part state.
+     */
+    protected void retarget(INetwork network, PartTarget newTarget, S state) {
+        ICraftingNetwork craftingNetwork = state.getCraftingNetwork();
+
+        // Unregister the recipes for the old target from the crafting network.
+        // This must happen before the recipes are reloaded, as the old recipes are needed for a proper removal.
+        if (craftingNetwork != null) {
+            craftingNetwork.removeCraftingInterface(state.getChannelCrafting(), state);
+        }
+
+        // Update the target, and reload all recipes based on this new target.
+        state.setTarget(newTarget);
+        state.setNetworks(network, craftingNetwork, NetworkHelpers.getPartNetworkChecked(network), state.getChannel(),
+                ValueDeseralizationContext.of(newTarget.getCenter().getPos().getLevel(true)), false);
+
+        // Re-register to the crafting network, so that the recipes for the new target are picked up.
+        state.setShouldAddToCraftingNetwork(true);
+    }
+
     protected void removeTargetFromNetwork(INetwork network, PartPos pos, S state) {
         ICraftingNetwork craftingNetwork = state.getCraftingNetwork();
         if (craftingNetwork != null) {
@@ -139,6 +169,13 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
         // This can occur when the part chunk is being reloaded.
         if (state.getCraftingNetwork() == null) {
             addTargetToNetwork(network, target, state, false);
+        } else {
+            // Detect changes to our target, which can occur when the target offset is changed.
+            // The target is recalculated here, as offset variables may have changed it during this update.
+            PartTarget currentTarget = getTarget(target.getCenter(), state);
+            if (!currentTarget.equals(state.getTarget())) {
+                retarget(network, currentTarget, state);
+            }
         }
 
         int channelCrafting = state.getChannelCrafting();
