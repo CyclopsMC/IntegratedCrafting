@@ -1,8 +1,18 @@
 # Changelog for Minecraft 26.1.2
 All notable changes to this project will be documented in this file.
 
+<a name="26.1.2-1.5.0"></a>
+## [26.1.2-1.5.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.4.8...26.1.2-1.5.0) - 2026-08-24 21:16:22
+
+
+### Added
+* Add part offset support to crafting interfaces (#215), Closes #138, Closes #152
+
+### Fixed
+* Fix memory leak in per-level FakePlayer cache
+
 <a name="26.1.2-1.4.8"></a>
-## [26.1.2-1.4.8](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.4.7...26.1.2-1.4.8) - 2026-08-06 08:57:02
+## [26.1.2-1.4.8](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.4.7...26.1.2-1.4.8) - 2026-08-06 08:57:02 +0200
 
 
 ### Added
