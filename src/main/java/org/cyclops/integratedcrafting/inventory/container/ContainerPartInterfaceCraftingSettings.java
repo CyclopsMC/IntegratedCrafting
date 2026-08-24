@@ -6,6 +6,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -29,6 +30,8 @@ import java.util.Optional;
  */
 public class ContainerPartInterfaceCraftingSettings extends ContainerPartSettings {
 
+    public static final String BUTTON_OFFSETS = "button_offsets";
+
     private final int lastChannelInterfaceCraftingValueId;
     private final Map<IngredientComponent<?, ?>, Integer> targetSideOverrideValueIds;
     private final int lastDisableCraftingCheckValueId;
@@ -49,6 +52,14 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
         }
         lastDisableCraftingCheckValueId = getNextValueId();
         lastBlockingModeValueId = getNextValueId();
+
+        // Expose the offsets gui from within the settings gui,
+        // as some crafting interfaces (such as the attuned one) show the settings gui as their main gui.
+        putButtonAction(ContainerPartInterfaceCraftingSettings.BUTTON_OFFSETS, (s, containerExtended) -> {
+            if (!player.level().isClientSide()) {
+                PartHelpers.openContainerPartOffsets((ServerPlayer) player, getTarget().getCenter(), getPartType());
+            }
+        });
     }
 
     @Override

@@ -25,6 +25,7 @@ import org.cyclops.integratedcrafting.gametest.GameTestsItemsMechanicalDryingBas
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsMechanicalSqueezer;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsSmithing;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsStonecutting;
+import org.cyclops.integratedcrafting.gametest.GameTestsPartOffsets;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingConfig;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettingsConfig;
 import org.cyclops.integratedcrafting.part.PartTypes;
@@ -132,7 +133,8 @@ public class IntegratedCrafting extends ModBaseNeoForge<IntegratedCrafting> {
                 GameTestsItemsMechanicalDryingBasin.class,
                 GameTestsItemsSmithing.class,
                 GameTestsItemsMechanicalSqueezer.class,
-                GameTestsItemsStonecutting.class
+                GameTestsItemsStonecutting.class,
+                GameTestsPartOffsets.class
         };
     }
 
