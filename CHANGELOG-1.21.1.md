@@ -1,8 +1,18 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.5.0"></a>
+## [1.21.1-1.5.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.7...1.21.1-1.5.0) - 2026-08-24 21:07:04
+
+
+### Added
+* Add part offset support to crafting interfaces (#215), Closes #138, Closes #152
+
+### Fixed
+* Fix memory leak in per-level FakePlayer cache
+
 <a name="1.21.1-1.4.7"></a>
-## [1.21.1-1.4.7](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.6...1.21.1-1.4.7) - 2026-08-06 08:56:03
+## [1.21.1-1.4.7](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.6...1.21.1-1.4.7) - 2026-08-06 08:56:03 +0200
 
 
 ### Fixed
