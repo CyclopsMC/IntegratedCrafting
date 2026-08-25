@@ -1,6 +1,10 @@
 package org.cyclops.integratedcrafting;
 
 import com.google.common.collect.Lists;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
@@ -18,6 +22,7 @@ import org.cyclops.cyclopscore.proxy.IClientProxy;
 import org.cyclops.cyclopscore.proxy.ICommonProxy;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverrideRegistry;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkCapabilityConstructors;
+import org.cyclops.integratedcrafting.command.CommandGenerateCrafting;
 import org.cyclops.integratedcrafting.capability.network.NetworkCraftingHandlerCraftingNetwork;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrideRegistry;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
@@ -64,6 +69,15 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
         CraftingAspects.load();
         PartTypes.load();
         CraftingProcessOverrides.load();
+    }
+
+    @Override
+    protected LiteralArgumentBuilder<CommandSourceStack> constructBaseCommand(Commands.CommandSelection selection, CommandBuildContext context) {
+        LiteralArgumentBuilder<CommandSourceStack> root = super.constructBaseCommand(selection, context);
+
+        root.then(CommandGenerateCrafting.make());
+
+        return root;
     }
 
     @Override
