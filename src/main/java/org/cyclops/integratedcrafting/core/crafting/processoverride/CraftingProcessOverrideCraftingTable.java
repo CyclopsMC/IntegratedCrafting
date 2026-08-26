@@ -60,11 +60,14 @@ public class CraftingProcessOverrideCraftingTable implements ICraftingProcessOve
         CraftingInput gridInput = gridFull.asCraftInput();
         Level level = target.getPos().getLevel(true);
 
-        return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, gridInput, level)
+        // Look the recipe up via the cache, as an uncached lookup is a linear scan over every crafting recipe.
+        // This method is called at least twice for every craft:
+        // once to simulate the craft, and once to actually perform it.
+        return CraftingHelpers.findRecipeCached(RecipeType.CRAFTING, gridInput, level, false)
                 .or(() -> {
                     try {
                         CraftingGrid gridSmall = new CraftingGrid(ingredients, 2, 2);
-                        return CraftingHelpers.findServerRecipe(RecipeType.CRAFTING, gridSmall.asCraftInput(), level);
+                        return CraftingHelpers.findRecipeCached(RecipeType.CRAFTING, gridSmall.asCraftInput(), level, false);
                     } catch (IllegalArgumentException e) {
                         // This can occur if the ingredients don't fit in a 2x2 grid.
                         return Optional.empty();
