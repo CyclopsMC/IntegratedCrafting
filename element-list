@@ -4,6 +4,7 @@ org.cyclops.integratedcrafting.api.network
 org.cyclops.integratedcrafting.api.recipe
 org.cyclops.integratedcrafting.capability.network
 org.cyclops.integratedcrafting.client.gui
+org.cyclops.integratedcrafting.command
 org.cyclops.integratedcrafting.core
 org.cyclops.integratedcrafting.core.crafting.processoverride
 org.cyclops.integratedcrafting.core.network
