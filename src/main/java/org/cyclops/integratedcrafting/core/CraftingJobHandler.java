@@ -429,10 +429,10 @@ public class CraftingJobHandler {
 
         // Notify the network of finalized crafting jobs
         if (finishedCraftingJobs.size() > 0) {
+            ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetworkChecked(network);
             for (CraftingJob finishedCraftingJob : finishedCraftingJobs.values()) {
                 if (finishedCraftingJob.getAmount() == 0) {
                     // If the job is fully finished, remove it from the network
-                    ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetworkChecked(network);
                     craftingNetwork.onCraftingJobFinished(finishedCraftingJob);
                     allCraftingJobs.remove(finishedCraftingJob.getId());
                     nonBlockingJobsRunningAmount.remove(finishedCraftingJob.getId());
@@ -471,7 +471,9 @@ public class CraftingJobHandler {
             }
         }
 
-        if (processingJobs < this.maxProcessingJobs) {
+        // Only look for a job to start if this handler has room for one, and has something to start.
+        // Skipping this block for an idle handler avoids a crafting network lookup for every idle tick.
+        if (processingJobs < this.maxProcessingJobs && !this.pendingCraftingJobs.isEmpty()) {
             // Handle crafting jobs
             CraftingJob startingCraftingJob = null;
             ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetworkChecked(network);
