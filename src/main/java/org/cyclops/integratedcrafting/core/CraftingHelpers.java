@@ -37,7 +37,6 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Helpers related to handling crafting jobs.
@@ -986,6 +985,45 @@ public class CraftingHelpers {
                 extractionMemoryReusable, collectMissingIngredients, recipeOutputQuantity, false);
     }
 
+    /**
+     * Check if the given storage has no capacity at all, and can therefore never contain anything.
+     *
+     * {@link IIngredientComponentStorage#getMaxQuantity()} is not a cheap call for a network channel:
+     * it aggregates the capacity of every storage position in the channel,
+     * which costs a capability lookup and a slot enumeration per position.
+     * A channel that is indexed and holds at least one instance is guaranteed to have capacity,
+     * so its index can answer this question without touching any position.
+     *
+     * @param storage A storage.
+     * @param <T> The instance type.
+     * @param <M> The matching condition parameter.
+     * @return If the storage has no capacity.
+     */
+    protected static <T, M> boolean hasNoStorageCapacity(IIngredientComponentStorage<T, M> storage) {
+        if (storage instanceof IngredientChannelIndexed
+                && !((IngredientChannelIndexed<T, M>) storage).getIndex().isEmpty()) {
+            return false;
+        }
+        return storage.getMaxQuantity() == 0;
+    }
+
+    /**
+     * @param recipe A recipe.
+     * @param ingredientComponent An ingredient component type.
+     * @param <T> The instance type.
+     * @param <M> The matching condition parameter.
+     * @return If at least one of the recipe's inputs of the given component type is reusable.
+     */
+    protected static <T, M> boolean hasReusableInput(IRecipeDefinition recipe, IngredientComponent<T, M> ingredientComponent) {
+        int inputCount = recipe.getInputs(ingredientComponent).size();
+        for (int i = 0; i < inputCount; i++) {
+            if (recipe.isInputReusable(ingredientComponent, i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static <T, M> Pair<List<T>, MissingIngredients<T, M>>
     getIngredientRecipeInputs(IIngredientComponentStorage<T, M> storage, IngredientComponent<T, M> ingredientComponent,
                               IRecipeDefinition recipe, boolean simulate,
@@ -997,10 +1035,9 @@ public class CraftingHelpers {
 
         // Quickly return if the storage is empty
         // We can't take this shortcut if we have a reusable ingredient AND extractionMemoryReusable is not empty
-        if (storage.getMaxQuantity() == 0 &&
+        if (hasNoStorageCapacity(storage) &&
                 extractionMemoryReusable.isEmpty() &&
-                IntStream.range(0, recipe.getInputs(ingredientComponent).size())
-                        .noneMatch(i -> recipe.isInputReusable(ingredientComponent, i))) {
+                !hasReusableInput(recipe, ingredientComponent)) {
             if (collectMissingIngredients) {
                 List<IPrototypedIngredientAlternatives<T, M>> recipeInputs = recipe.getInputs(ingredientComponent);
                 MissingIngredients<T, M> missing = new MissingIngredients<>(recipeInputs.stream().map(IPrototypedIngredientAlternatives::getAlternatives)
