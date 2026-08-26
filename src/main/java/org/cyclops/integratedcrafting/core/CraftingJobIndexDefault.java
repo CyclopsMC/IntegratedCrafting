@@ -9,6 +9,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.datastructure.MultitransformIterator;
 import org.cyclops.cyclopscore.ingredient.collection.IIngredientMapMutable;
 import org.cyclops.cyclopscore.ingredient.collection.IngredientHashMap;
+import org.cyclops.cyclopscore.ingredient.collection.IngredientMapSingleClassified;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.recipe.ICraftingJobIndex;
 import org.cyclops.integratedcrafting.api.recipe.ICraftingJobIndexModifiable;
@@ -57,7 +58,13 @@ public class CraftingJobIndexDefault implements ICraftingJobIndexModifiable {
 
     @Nullable
     protected <T, M> IIngredientMapMutable<T, M, Collection<CraftingJob>> initializeIndex(IngredientComponent<T, M> recipeComponent) {
-        return new IngredientHashMap<>(recipeComponent);
+        // Classify by the component's primary category, just like RecipeIndexDefault does.
+        // Lookups in this index are done with quantity-less match conditions,
+        // which a plain hash map can only answer by filtering over every indexed crafting job.
+        if (recipeComponent.getCategoryTypes().size() == 1) {
+            return new IngredientHashMap<>(recipeComponent);
+        }
+        return new IngredientMapSingleClassified<>(recipeComponent, () -> new IngredientHashMap<>(recipeComponent), recipeComponent.getCategoryTypes().get(0));
     }
 
     @Override
