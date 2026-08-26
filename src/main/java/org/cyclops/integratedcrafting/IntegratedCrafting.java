@@ -1,6 +1,10 @@
 package org.cyclops.integratedcrafting;
 
 import com.google.common.collect.Lists;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
@@ -16,6 +20,7 @@ import org.cyclops.cyclopscore.proxy.IClientProxy;
 import org.cyclops.cyclopscore.proxy.ICommonProxy;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingProcessOverrideRegistry;
 import org.cyclops.integratedcrafting.capability.network.CraftingNetworkCapabilityConstructors;
+import org.cyclops.integratedcrafting.command.CommandGenerateCrafting;
 import org.cyclops.integratedcrafting.capability.network.NetworkCraftingHandlerCraftingNetwork;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrideRegistry;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
@@ -26,6 +31,7 @@ import org.cyclops.integratedcrafting.gametest.GameTestsItemsMechanicalSqueezer;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsSmithing;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsStonecutting;
 import org.cyclops.integratedcrafting.gametest.GameTestsPartOffsets;
+import org.cyclops.integratedcrafting.gametest.GameTestsPerformance;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingConfig;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettingsConfig;
 import org.cyclops.integratedcrafting.part.PartTypes;
@@ -69,6 +75,15 @@ public class IntegratedCrafting extends ModBaseNeoForge<IntegratedCrafting> {
         CraftingAspects.load();
         PartTypes.load();
         CraftingProcessOverrides.load();
+    }
+
+    @Override
+    protected LiteralArgumentBuilder<CommandSourceStack> constructBaseCommand(Commands.CommandSelection selection, CommandBuildContext context) {
+        LiteralArgumentBuilder<CommandSourceStack> root = super.constructBaseCommand(selection, context);
+
+        root.then(CommandGenerateCrafting.make());
+
+        return root;
     }
 
     @Override
@@ -134,7 +149,8 @@ public class IntegratedCrafting extends ModBaseNeoForge<IntegratedCrafting> {
                 GameTestsItemsSmithing.class,
                 GameTestsItemsMechanicalSqueezer.class,
                 GameTestsItemsStonecutting.class,
-                GameTestsPartOffsets.class
+                GameTestsPartOffsets.class,
+                GameTestsPerformance.class
         };
     }
 
