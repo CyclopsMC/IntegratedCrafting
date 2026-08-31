@@ -1,9 +1,16 @@
 package org.cyclops.integratedcrafting.gametest;
 
+import io.netty.buffer.Unpooled;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntArrayTag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
@@ -19,8 +26,11 @@ import org.cyclops.integratedcrafting.api.crafting.RecursiveCraftingRecipeExcept
 import org.cyclops.integratedcrafting.api.crafting.UnknownCraftingRecipeException;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.RecipeKey;
+import org.cyclops.cyclopscore.helper.ValueNotifierHelpers;
 import org.cyclops.integratedcrafting.core.CraftingHelpers;
+import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingAttunedRecipes;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCraftingAttuned;
+import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integrateddynamics.api.evaluate.variable.ValueDeseralizationContext;
 import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetwork;
@@ -29,6 +39,7 @@ import org.cyclops.integrateddynamics.core.helper.NetworkHelpers;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.createBasicNetwork;
 import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.enableRecipeInWriter;
@@ -51,6 +62,25 @@ public class GameTestsAttunedRecipes {
     protected static boolean containsRecipeId(Collection<IRecipeDefinition> recipes, String recipeId) {
         return recipes.stream()
                 .anyMatch(recipe -> recipe.getRecipeId() != null && recipe.getRecipeId().toString().equals(recipeId));
+    }
+
+    protected static int indexOfRecipeId(List<IRecipeDefinition> recipes, String recipeId) {
+        for (int i = 0; i < recipes.size(); i++) {
+            IRecipeDefinition recipe = recipes.get(i);
+            if (recipe.getRecipeId() != null && recipe.getRecipeId().toString().equals(recipeId)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Wrap a gui payload the way {@link ValueNotifierHelpers} does, so that it can be fed to a container.
+     */
+    protected static CompoundTag wrapValue(CompoundTag payload) {
+        CompoundTag tag = new CompoundTag();
+        tag.put(ValueNotifierHelpers.KEY, payload);
+        return tag;
     }
 
     protected static INetwork getNetwork(GameTestHelper helper, PartPos partPos) {
@@ -234,6 +264,169 @@ public class GameTestsAttunedRecipes {
                             "The wrong number of disabled recipes was persisted");
                 })
                 .thenSucceed();
+    }
+
+    /**
+     * All recipes must survive the trip to the client through the gui data buffer,
+     * together with which of them are disabled.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testAttunedRecipesReachTheGui(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingAttuned.State> positions =
+                createBasicNetwork(helper, POS, true);
+        PartTypeInterfaceCraftingAttuned.State partState = positions.interfaceStates().get(0);
+        RecipeKey chestKey = RecipeKey.ofRecipeId(RECIPE_CHEST);
+
+        helper.startSequence()
+                .thenWaitUntil(() -> {
+                    helper.assertTrue(partState.getCraftingNetwork() != null, "The interface has no crafting network");
+                    helper.assertTrue(containsRecipeId(partState.getAllRecipes(), RECIPE_CHEST),
+                            "The chest recipe is not read yet");
+                })
+                .thenExecute(() -> {
+                    partState.setRecipesEnabled(Collections.singleton(chestKey), false);
+
+                    ContainerPartInterfaceCraftingAttunedRecipes container = openGuiContainer(helper, positions);
+
+                    helper.assertValueEqual(container.getUnfilteredItemCount(), partState.getAllRecipes().size(),
+                            "Not all recipes reached the gui");
+
+                    // The search matches recipe ids, so this isolates the chest recipe
+                    container.updateFilter(RECIPE_CHEST);
+                    IRecipeDefinition chestRecipe = null;
+                    for (int i = 0; i < container.getPageSize(); i++) {
+                        if (container.isElementVisible(i)) {
+                            IRecipeDefinition recipe = container.getVisibleElement(i);
+                            if (RECIPE_CHEST.equals(container.getEntry(recipe).identifier())) {
+                                chestRecipe = recipe;
+                            }
+                        }
+                    }
+                    helper.assertTrue(chestRecipe != null, "The chest recipe was not found through the gui search");
+                    helper.assertFalse(container.isRecipeEnabled(chestRecipe),
+                            "The gui does not show the chest recipe as disabled");
+                    helper.assertValueEqual(container.getEntry(chestRecipe).serverIndex(),
+                            indexOfRecipeId(partState.getAllRecipes(), RECIPE_CHEST),
+                            "The gui has the wrong server index for the chest recipe");
+
+                    // Recipes that do not match the search must not be shown
+                    container.updateFilter("this recipe does not exist");
+                    helper.assertValueEqual(container.getFilteredItemCount(), 0,
+                            "The gui shows recipes that do not match the search");
+
+                    // The part must also hand out the same container to a player opening it
+                    ServerPlayer player = helper.makeMockServerPlayerInLevel();
+                    MenuProvider menuProvider = PartTypes.INTERFACE_CRAFTING_ATTUNED
+                            .getContainerProvider(positions.interfaces().get(0)).orElse(null);
+                    helper.assertTrue(menuProvider != null, "The part has no gui");
+                    helper.assertValueEqual(menuProvider.getDisplayName().getString(),
+                            Component.translatable(PartTypes.INTERFACE_CRAFTING_ATTUNED.getTranslationKey()).getString(),
+                            "The gui has the wrong title");
+                    AbstractContainerMenu menu = menuProvider.createMenu(2, player.getInventory(), player);
+                    helper.assertTrue(menu instanceof ContainerPartInterfaceCraftingAttunedRecipes,
+                            "The part opened the wrong gui");
+                    helper.assertValueEqual(((ContainerPartInterfaceCraftingAttunedRecipes) menu).getUnfilteredItemCount(),
+                            partState.getAllRecipes().size(), "The opened gui has the wrong number of recipes");
+                })
+                .thenSucceed();
+    }
+
+    /**
+     * The gui toggles recipes by sending the recipe key, and applies bulk actions
+     * by sending the server-side indexes of the recipes that match its search.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testAttunedRecipesGuiActionsAreApplied(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingAttuned.State> positions =
+                createBasicNetwork(helper, POS, true);
+        PartTypeInterfaceCraftingAttuned.State partState = positions.interfaceStates().get(0);
+        RecipeKey chestKey = RecipeKey.ofRecipeId(RECIPE_CHEST);
+
+        helper.startSequence()
+                .thenWaitUntil(() -> {
+                    helper.assertTrue(partState.getCraftingNetwork() != null, "The interface has no crafting network");
+                    helper.assertTrue(containsRecipeId(partState.getAllRecipes(), RECIPE_CHEST),
+                            "The chest recipe is not read yet");
+                })
+                .thenExecute(() -> {
+                    ContainerPartInterfaceCraftingAttunedRecipes container = openGuiContainer(helper, positions);
+                    int chestIndex = indexOfRecipeId(partState.getAllRecipes(), RECIPE_CHEST);
+
+                    // Single toggle, keyed by recipe key
+                    container.onUpdate(container.getToggleRecipeValueId(),
+                            wrapValue(toggleTag(chestKey, false, 0)));
+                    helper.assertFalse(partState.isRecipeEnabled(chestKey),
+                            "The gui toggle did not disable the chest recipe");
+
+                    // Repeating the same toggle after re-enabling it must not be swallowed,
+                    // which is what the sequence number in the payload is for.
+                    container.onUpdate(container.getToggleRecipeValueId(),
+                            wrapValue(toggleTag(chestKey, true, 1)));
+                    helper.assertTrue(partState.isRecipeEnabled(chestKey),
+                            "The gui toggle did not enable the chest recipe");
+                    container.onUpdate(container.getToggleRecipeValueId(),
+                            wrapValue(toggleTag(chestKey, false, 2)));
+                    helper.assertFalse(partState.isRecipeEnabled(chestKey),
+                            "The repeated gui toggle was swallowed");
+
+                    // Bulk actions
+                    container.onUpdate(container.getBulkActionValueId(), wrapValue(bulkTag(
+                            ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_ENABLE,
+                            partState.getRecipesVersion(), new int[]{chestIndex}, 3)));
+                    helper.assertTrue(partState.isRecipeEnabled(chestKey), "The bulk enable was not applied");
+
+                    container.onUpdate(container.getBulkActionValueId(), wrapValue(bulkTag(
+                            ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_INVERT,
+                            partState.getRecipesVersion(), new int[]{chestIndex}, 4)));
+                    helper.assertFalse(partState.isRecipeEnabled(chestKey), "The bulk invert was not applied");
+
+                    // Indexes from a recipe list the server no longer has must be ignored
+                    container.onUpdate(container.getBulkActionValueId(), wrapValue(bulkTag(
+                            ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_ENABLE,
+                            partState.getRecipesVersion() + 1, new int[]{chestIndex}, 5)));
+                    helper.assertFalse(partState.isRecipeEnabled(chestKey),
+                            "A bulk action with stale indexes was applied");
+
+                    // Out-of-range indexes must be ignored instead of throwing
+                    container.onUpdate(container.getBulkActionValueId(), wrapValue(bulkTag(
+                            ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_ENABLE,
+                            partState.getRecipesVersion(),
+                            new int[]{-1, partState.getAllRecipes().size(), chestIndex}, 6)));
+                    helper.assertTrue(partState.isRecipeEnabled(chestKey),
+                            "The bulk enable with out-of-range indexes was not applied");
+                })
+                .thenSucceed();
+    }
+
+    /**
+     * Open the part's gui container the way a player would, by writing its gui data
+     * and constructing the container from it.
+     */
+    protected ContainerPartInterfaceCraftingAttunedRecipes openGuiContainer(
+            GameTestHelper helper,
+            GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingAttuned.State> positions) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        RegistryFriendlyByteBuf packetBuffer = new RegistryFriendlyByteBuf(Unpooled.buffer(),
+                helper.getLevel().registryAccess());
+        PartTypes.INTERFACE_CRAFTING_ATTUNED.writeExtraGuiData(packetBuffer, positions.interfaces().get(0), player);
+        return new ContainerPartInterfaceCraftingAttunedRecipes(1, player.getInventory(), packetBuffer);
+    }
+
+    protected static CompoundTag toggleTag(RecipeKey key, boolean enabled, int sequence) {
+        CompoundTag tag = new CompoundTag();
+        tag.put("key", key.serialize());
+        tag.putBoolean("enabled", enabled);
+        tag.putInt("seq", sequence);
+        return tag;
+    }
+
+    protected static CompoundTag bulkTag(int action, int version, int[] indexes, int sequence) {
+        CompoundTag tag = new CompoundTag();
+        tag.putInt("action", action);
+        tag.putInt("version", version);
+        tag.put("indexes", new IntArrayTag(indexes));
+        tag.putInt("seq", sequence);
+        return tag;
     }
 
     /**

@@ -136,6 +136,20 @@ public class ContainerPartInterfaceCraftingAttunedRecipes extends ScrollingInven
         return (PartTypeInterfaceCraftingAttuned.State) this.partContainer.getPartState(getTarget().getCenter().getSide());
     }
 
+    /**
+     * @return The value id under which single recipe toggles are sent to the server.
+     */
+    public int getToggleRecipeValueId() {
+        return this.toggleRecipeValueId;
+    }
+
+    /**
+     * @return The value id under which bulk actions are sent to the server.
+     */
+    public int getBulkActionValueId() {
+        return this.bulkActionValueId;
+    }
+
     @Override
     public int getPageSize() {
         return PAGE_SIZE;
@@ -331,7 +345,7 @@ public class ContainerPartInterfaceCraftingAttunedRecipes extends ScrollingInven
         }
     }
 
-    protected static GuiRecipes readRecipes(RegistryFriendlyByteBuf packetBuffer) {
+    public static GuiRecipes readRecipes(RegistryFriendlyByteBuf packetBuffer) {
         HolderLookup.Provider lookupProvider = packetBuffer.registryAccess();
 
         int recipesVersion = packetBuffer.readVarInt();
@@ -455,7 +469,7 @@ public class ContainerPartInterfaceCraftingAttunedRecipes extends ScrollingInven
     /**
      * All recipe data that an instance of this container is constructed from.
      */
-    protected static class GuiRecipes {
+    public static class GuiRecipes {
 
         private final List<IRecipeDefinition> recipes;
         private final Map<IRecipeDefinition, RecipeEntry> entries;
