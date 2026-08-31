@@ -1,6 +1,19 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="Unreleased"></a>
+## Unreleased
+
+
+### Added
+* Allow individual recipes to be enabled or disabled in the Attuned Crafting Interface, Closes #162, Closes #219
+  The Attuned Crafting Interface now has a gui that lists all recipes of its target machine.
+  Recipes can be toggled by clicking them, and bulk actions apply to the current search filter.
+  Disabled recipes are not registered in the crafting network, so no crafting job will use them.
+
+### Changed
+* Bump CommonCapabilities to 2.11.5, which is required for identifying recipes by their recipe id
+
 <a name="1.21.1-1.5.0"></a>
 ## [1.21.1-1.5.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.7...1.21.1-1.5.0) - 2026-08-24 21:07:04
 

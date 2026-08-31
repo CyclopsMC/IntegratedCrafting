@@ -26,6 +26,7 @@ import org.cyclops.integratedcrafting.command.CommandGenerateCrafting;
 import org.cyclops.integratedcrafting.capability.network.NetworkCraftingHandlerCraftingNetwork;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrideRegistry;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
+import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingAttunedRecipesConfig;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingConfig;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettingsConfig;
 import org.cyclops.integratedcrafting.part.PartTypes;
@@ -131,6 +132,7 @@ public class IntegratedCrafting extends ModBaseVersionable<IntegratedCrafting> {
 
         configHandler.addConfigurable(new ContainerPartInterfaceCraftingConfig());
         configHandler.addConfigurable(new ContainerPartInterfaceCraftingSettingsConfig());
+        configHandler.addConfigurable(new ContainerPartInterfaceCraftingAttunedRecipesConfig());
 
         configHandler.addConfigurable(new RecipeSerializerDeadBushConfig()); // This one is only used in game tests.
     }
