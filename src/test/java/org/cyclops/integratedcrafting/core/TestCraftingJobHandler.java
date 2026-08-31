@@ -138,6 +138,39 @@ public class TestCraftingJobHandler {
     }
 
     @Test
+    public void testCraftingOperationsAreForgottenWhenTheJobIsCancelled() {
+        CraftingJob craftingJob = newCraftingJob(1, 1);
+
+        handler.setCurrentTick(100);
+        handler.addCraftingJobProcessingPendingIngredientsEntry(craftingJob, newPendingIngredients());
+        handler.markCraftingJobFinished(1);
+
+        assertThat(handler.getCraftingJobEntryStartTick(1), equalTo(-1L));
+    }
+
+    @Test
+    public void testCraftingOperationsAreForgottenWhenTheJobFinishes() {
+        CraftingJob craftingJob = newCraftingJob(1, 1);
+
+        handler.setCurrentTick(100);
+        handler.addCraftingJobProcessingPendingIngredientsEntry(craftingJob, newPendingIngredients());
+        handler.onCraftingJobFinished(craftingJob);
+
+        assertThat(handler.getCraftingJobEntryStartTick(1), equalTo(-1L));
+    }
+
+    @Test
+    public void testCraftingOperationsAreForgottenWithoutPendingIngredients() {
+        CraftingJob craftingJob = newCraftingJob(1, 1);
+
+        handler.setCurrentTick(100);
+        handler.addCraftingJobProcessingPendingIngredientsEntry(craftingJob, newPendingIngredients());
+        handler.addCraftingJobProcessingPendingIngredientsEntry(craftingJob, Maps.newIdentityHashMap());
+
+        assertThat(handler.getCraftingJobEntryStartTick(1), equalTo(-1L));
+    }
+
+    @Test
     public void testRecipeDurationsSurviveSerialization() {
         handler.reportRecipeDuration(recipeA, 100);
 
