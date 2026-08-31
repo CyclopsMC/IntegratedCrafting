@@ -7,8 +7,6 @@ import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
-import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
@@ -272,7 +270,7 @@ public class CraftingNetwork implements ICraftingNetwork {
     }
 
     protected long getCurrentTick() {
-        return ServerLifecycleHooks.getCurrentServer().getLevel(Level.OVERWORLD).getGameTime();
+        return CraftingHelpers.getCurrentTick();
     }
 
     @Override
@@ -445,6 +443,21 @@ public class CraftingNetwork implements ICraftingNetwork {
     @Override
     public long getRunningTicks(CraftingJob craftingJob) {
         return getCurrentTick() - craftingJob.getStartTick();
+    }
+
+    @Override
+    public long getEstimatedRecipeDuration(int channel, IRecipeDefinition recipe) {
+        // Average the durations of all interfaces that can craft this recipe and that measured it before
+        long totalDuration = 0;
+        int durationCount = 0;
+        for (ICraftingInterface craftingInterface : getRecipeCraftingInterfaces(channel).get(recipe)) {
+            long duration = craftingInterface.getEstimatedRecipeDuration(recipe);
+            if (duration >= 0) {
+                totalDuration += duration;
+                durationCount++;
+            }
+        }
+        return durationCount == 0 ? -1 : totalDuration / durationCount;
     }
 
     protected void cleanupChannelIfEmpty(int channel) {

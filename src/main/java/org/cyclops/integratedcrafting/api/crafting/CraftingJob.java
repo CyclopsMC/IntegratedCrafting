@@ -35,6 +35,7 @@ public class CraftingJob {
     private final IntList dependencyCraftingJobs;
     private final IntList dependentCraftingJobs;
     private int amount;
+    private int amountTotal;
     private IMixedIngredients ingredientsStorage; // Total to extract from storage (simulated and immutable)
     private IMixedIngredients ingredientsStorageBuffer; // The actual ingredients from storage, which are consumed over time.
     private Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients;
@@ -49,6 +50,7 @@ public class CraftingJob {
         this.channel = channel;
         this.recipe = recipe;
         this.amount = amount;
+        this.amountTotal = amount;
         this.ingredientsStorage = ingredientsStorage;
         this.ingredientsStorageBuffer = new MixedIngredients(Maps.newIdentityHashMap());
         this.lastMissingIngredients = Maps.newIdentityHashMap();
@@ -84,6 +86,18 @@ public class CraftingJob {
 
     public void setAmount(int amount) {
         this.amount = amount;
+    }
+
+    /**
+     * @return The amount this job started with, including the amount that was crafted already.
+     *         Contrary to {@link #getAmount()}, this value is not decremented while crafting.
+     */
+    public int getAmountTotal() {
+        return amountTotal;
+    }
+
+    public void setAmountTotal(int amountTotal) {
+        this.amountTotal = amountTotal;
     }
 
     public void addDependency(CraftingJob dependency) {
@@ -239,6 +253,7 @@ public class CraftingJob {
         tag.put("dependencies", new IntArrayTag(craftingJob.getDependencyCraftingJobs()));
         tag.put("dependents", new IntArrayTag(craftingJob.getDependentCraftingJobs()));
         tag.putInt("amount", craftingJob.amount);
+        tag.putInt("amountTotal", craftingJob.amountTotal);
         tag.put("ingredientsStorage", IMixedIngredients.serialize(lookupProvider, craftingJob.ingredientsStorage));
         tag.put("ingredientsStorageBuffer", IMixedIngredients.serialize(lookupProvider, craftingJob.ingredientsStorageBuffer));
         tag.put("lastMissingIngredients", MissingIngredients.serialize(lookupProvider, craftingJob.lastMissingIngredients));
@@ -298,6 +313,8 @@ public class CraftingJob {
         Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients = MissingIngredients
                 .deserialize(lookupProvider, tag.getCompound("lastMissingIngredients"));
         craftingJob.setLastMissingIngredients(lastMissingIngredients);
+        craftingJob.setAmountTotal(tag.contains("amountTotal", Tag.TAG_INT)
+                ? tag.getInt("amountTotal") : amount); // TODO: rm backwards-compat in next major
         craftingJob.setStartTick(tag.getLong("startTick"));
         craftingJob.setInvalidInputs(tag.getBoolean("invalidInputs"));
         if (tag.contains("initiatorUuid", Tag.TAG_STRING)) {
@@ -333,12 +350,14 @@ public class CraftingJob {
         if (!this.getIngredientsStorageBuffer().isEmpty()) {
             throw new IllegalStateException("Cloning a job with an ingredient buffer is illegal");
         }
-        return new CraftingJob(
+        CraftingJob clone = new CraftingJob(
                 identifierGenerator.getNext(),
                 getChannel(),
                 getRecipe(),
                 getAmount(),
                 getIngredientsStorage()
         );
+        clone.setAmountTotal(getAmountTotal());
+        return clone;
     }
 }

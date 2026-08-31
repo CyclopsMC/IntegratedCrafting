@@ -6,6 +6,10 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.Direction;
@@ -49,6 +53,11 @@ import java.util.function.Function;
  */
 public class CraftingJobHandler {
 
+    /**
+     * The weight of the latest crafting operation duration within the running average for a recipe.
+     */
+    protected static final double RECIPE_DURATION_SMOOTHING = 0.25D;
+
     private final int maxProcessingJobs;
     private boolean blockingJobsMode;
     private final ICraftingResultsSink resultsSink;
@@ -65,6 +74,8 @@ public class CraftingJobHandler {
     private final Int2ObjectMap<CraftingJob> finishedCraftingJobs;
     private final Map<IngredientComponent<?, ?>, Direction> ingredientComponentTargetOverrides;
     private final Int2IntMap nonBlockingJobsRunningAmount;
+    private final Int2ObjectMap<LongList> processingCraftingJobsStartTicks;
+    private final Object2DoubleMap<IRecipeDefinition> recipeDurations;
 
     public CraftingJobHandler(int maxProcessingJobs, boolean blockingJobsMode,
                               Collection<ICraftingProcessOverride> craftingProcessOverrides,
@@ -85,6 +96,8 @@ public class CraftingJobHandler {
         this.finishedCraftingJobs = new Int2ObjectOpenHashMap<>();
         this.ingredientComponentTargetOverrides = Maps.newIdentityHashMap();
         this.nonBlockingJobsRunningAmount = new Int2IntOpenHashMap();
+        this.processingCraftingJobsStartTicks = new Int2ObjectOpenHashMap<>();
+        this.recipeDurations = new Object2DoubleOpenHashMap<>();
     }
 
     public void writeToNBT(HolderLookup.Provider lookupProvider, CompoundTag tag) {
@@ -120,6 +133,12 @@ public class CraftingJobHandler {
                 pendingEntries.add(pendingIngredientInstances);
             }
             entriesTag.put("pendingIngredientInstanceEntries", pendingEntries);
+
+            LongList startTicks = this.processingCraftingJobsStartTicks.get(processingCraftingJob.getId());
+            if (startTicks != null) {
+                entriesTag.putLongArray("pendingIngredientInstanceEntryStartTicks", startTicks.toLongArray());
+            }
+
             processingCraftingJobs.add(entriesTag);
         }
         tag.put("processingCraftingJobs", processingCraftingJobs);
@@ -147,6 +166,15 @@ public class CraftingJobHandler {
             nonBlockingJobsRunningAmount.putInt(String.valueOf(entry.getIntKey()), entry.getIntValue());
         }
         tag.put("nonBlockingJobsRunningAmount", nonBlockingJobsRunningAmount);
+
+        ListTag recipeDurations = new ListTag();
+        for (Object2DoubleMap.Entry<IRecipeDefinition> entry : this.recipeDurations.object2DoubleEntrySet()) {
+            CompoundTag recipeDuration = new CompoundTag();
+            recipeDuration.put("recipe", IRecipeDefinition.serialize(lookupProvider, entry.getKey()));
+            recipeDuration.putDouble("duration", entry.getDoubleValue());
+            recipeDurations.add(recipeDuration);
+        }
+        tag.put("recipeDurations", recipeDurations);
     }
 
     public void readFromNBT(HolderLookup.Provider lookupProvider, CompoundTag tag) {
@@ -221,6 +249,12 @@ public class CraftingJobHandler {
                     craftingJob.getId(),
                     pendingIngredientInstanceEntries);
 
+            if (entryTag.contains("pendingIngredientInstanceEntryStartTicks", Tag.TAG_LONG_ARRAY)) {
+                this.processingCraftingJobsStartTicks.put(
+                        craftingJob.getId(),
+                        new LongArrayList(entryTag.getLongArray("pendingIngredientInstanceEntryStartTicks")));
+            }
+
         }
 
         ListTag pendingCraftingJobs = tag.getList("pendingCraftingJobs", Tag.TAG_COMPOUND);
@@ -259,6 +293,14 @@ public class CraftingJobHandler {
             int craftingJobId = Integer.parseInt(key);
             int amount = nonBlockingJobsRunningAmount.getInt(key);
             this.nonBlockingJobsRunningAmount.put(craftingJobId, amount);
+        }
+
+        this.recipeDurations.clear();
+        for (Tag recipeDuration : tag.getList("recipeDurations", Tag.TAG_COMPOUND)) {
+            CompoundTag recipeDurationTag = (CompoundTag) recipeDuration;
+            this.recipeDurations.put(
+                    IRecipeDefinition.deserialize(lookupProvider, recipeDurationTag.getCompound("recipe")),
+                    recipeDurationTag.getDouble("duration"));
         }
     }
 
@@ -316,9 +358,46 @@ public class CraftingJobHandler {
         return pendingCraftingJobs.values();
     }
 
+    /**
+     * @param craftingJobId A crafting job id.
+     * @return The tick at which the oldest running crafting operation of the given job was started,
+     *         or -1 if no operation is running.
+     */
+    public long getCraftingJobEntryStartTick(int craftingJobId) {
+        LongList startTicks = this.processingCraftingJobsStartTicks.get(craftingJobId);
+        return startTicks == null || startTicks.isEmpty() ? -1 : startTicks.getLong(0);
+    }
+
+    /**
+     * @param recipe A recipe.
+     * @return The estimated duration in ticks of a single crafting operation of the given recipe,
+     *         based on the operations that were performed by this handler before, or -1 if unknown.
+     */
+    public long getEstimatedRecipeDuration(IRecipeDefinition recipe) {
+        return this.recipeDurations.containsKey(recipe) ? Math.round(this.recipeDurations.getDouble(recipe)) : -1;
+    }
+
+    /**
+     * Take the duration of a finished crafting operation into account for future estimations.
+     * @param recipe The recipe that was crafted.
+     * @param durationTicks The number of ticks the crafting operation took.
+     */
+    protected void reportRecipeDuration(IRecipeDefinition recipe, long durationTicks) {
+        if (this.recipeDurations.containsKey(recipe)) {
+            // Smooth out the duration over the previous operations,
+            // as crafting durations can vary due to for example varying machine speeds.
+            double previousDuration = this.recipeDurations.getDouble(recipe);
+            this.recipeDurations.put(recipe,
+                    previousDuration + (durationTicks - previousDuration) * RECIPE_DURATION_SMOOTHING);
+        } else {
+            this.recipeDurations.put(recipe, (double) durationTicks);
+        }
+    }
+
     public void unmarkCraftingJobProcessing(CraftingJob craftingJob) {
         if (this.processingCraftingJobs.remove(craftingJob.getId()) != null) {
             this.processingCraftingJobsPendingIngredients.remove(craftingJob.getId());
+            this.processingCraftingJobsStartTicks.remove(craftingJob.getId());
             this.pendingCraftingJobs.put(craftingJob.getId(), craftingJob);
         }
     }
@@ -331,6 +410,7 @@ public class CraftingJobHandler {
             this.allCraftingJobs.remove(craftingJob.getId());
             this.nonBlockingJobsRunningAmount.remove(craftingJob.getId());
             this.processingCraftingJobsPendingIngredients.remove(craftingJob.getId());
+            this.processingCraftingJobsStartTicks.remove(craftingJob.getId());
 
         } else {
             this.processingCraftingJobs.put(craftingJob.getId(), craftingJob);
@@ -342,6 +422,14 @@ public class CraftingJobHandler {
                 this.processingCraftingJobsPendingIngredients.put(craftingJob.getId(), pendingIngredientsEntries);
             }
             pendingIngredientsEntries.add(pendingIngredients);
+
+            // Remember when this crafting operation started, so that its duration can be measured once it finishes
+            LongList startTicks = this.processingCraftingJobsStartTicks.get(craftingJob.getId());
+            if (startTicks == null) {
+                startTicks = new LongArrayList();
+                this.processingCraftingJobsStartTicks.put(craftingJob.getId(), startTicks);
+            }
+            startTicks.add(CraftingHelpers.getCurrentTick());
         }
     }
 
@@ -378,6 +466,7 @@ public class CraftingJobHandler {
 
     public void onCraftingJobFinished(CraftingJob craftingJob) {
         this.processingCraftingJobs.remove(craftingJob.getId());
+        this.processingCraftingJobsStartTicks.remove(craftingJob.getId());
         this.pendingCraftingJobs.remove(craftingJob.getId());
         this.finishedCraftingJobs.put(craftingJob.getId(), craftingJob);
         this.allCraftingJobs.put(craftingJob.getId(), craftingJob);
@@ -386,6 +475,7 @@ public class CraftingJobHandler {
     // This does the same as above, just based on crafting job id
     public void markCraftingJobFinished(int craftingJobId) {
         this.processingCraftingJobsPendingIngredients.remove(craftingJobId);
+        this.processingCraftingJobsStartTicks.remove(craftingJobId);
         this.processingCraftingJobs.remove(craftingJobId);
         this.pendingCraftingJobs.remove(craftingJobId);
 
@@ -398,6 +488,17 @@ public class CraftingJobHandler {
     public void onCraftingJobEntryFinished(ICraftingNetwork craftingNetwork, int craftingJobId) {
         CraftingJob craftingJob = this.allCraftingJobs.get(craftingJobId);
         craftingJob.setAmount(craftingJob.getAmount() - 1);
+
+        // Measure how long this crafting operation took, so that future jobs for this recipe can be estimated.
+        // Operations don't necessarily finish in the order in which they were started,
+        // but as they all apply to the same recipe, the oldest one can safely be used.
+        LongList startTicks = this.processingCraftingJobsStartTicks.get(craftingJobId);
+        if (startTicks != null && !startTicks.isEmpty()) {
+            reportRecipeDuration(craftingJob.getRecipe(), CraftingHelpers.getCurrentTick() - startTicks.removeLong(0));
+            if (startTicks.isEmpty()) {
+                this.processingCraftingJobsStartTicks.remove(craftingJobId);
+            }
+        }
 
         if (this.nonBlockingJobsRunningAmount.containsKey(craftingJobId)) {
             this.nonBlockingJobsRunningAmount.put(craftingJobId, this.nonBlockingJobsRunningAmount.get(craftingJobId) - 1);

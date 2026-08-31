@@ -9,6 +9,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
@@ -371,6 +372,16 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
         @Override
         public CraftingJobStatus getCraftingJobStatus(ICraftingNetwork network, int channel, int craftingJobId) {
             return craftingJobHandler.getCraftingJobStatus(network, channel, craftingJobId);
+        }
+
+        @Override
+        public long getCraftingJobEntryStartTick(int craftingJobId) {
+            return craftingJobHandler.getCraftingJobEntryStartTick(craftingJobId);
+        }
+
+        @Override
+        public long getEstimatedRecipeDuration(IRecipeDefinition recipe) {
+            return craftingJobHandler.getEstimatedRecipeDuration(recipe);
         }
 
         @Override
