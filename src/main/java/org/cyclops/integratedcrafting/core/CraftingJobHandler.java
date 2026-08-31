@@ -378,6 +378,13 @@ public class CraftingJobHandler {
     }
 
     /**
+     * @return The current game tick.
+     */
+    protected long getCurrentTick() {
+        return CraftingHelpers.getCurrentTick();
+    }
+
+    /**
      * Take the duration of a finished crafting operation into account for future estimations.
      * @param recipe The recipe that was crafted.
      * @param durationTicks The number of ticks the crafting operation took.
@@ -429,7 +436,7 @@ public class CraftingJobHandler {
                 startTicks = new LongArrayList();
                 this.processingCraftingJobsStartTicks.put(craftingJob.getId(), startTicks);
             }
-            startTicks.add(CraftingHelpers.getCurrentTick());
+            startTicks.add(getCurrentTick());
         }
     }
 
@@ -494,7 +501,7 @@ public class CraftingJobHandler {
         // but as they all apply to the same recipe, the oldest one can safely be used.
         LongList startTicks = this.processingCraftingJobsStartTicks.get(craftingJobId);
         if (startTicks != null && !startTicks.isEmpty()) {
-            reportRecipeDuration(craftingJob.getRecipe(), CraftingHelpers.getCurrentTick() - startTicks.removeLong(0));
+            reportRecipeDuration(craftingJob.getRecipe(), getCurrentTick() - startTicks.removeLong(0));
             if (startTicks.isEmpty()) {
                 this.processingCraftingJobsStartTicks.remove(craftingJobId);
             }
