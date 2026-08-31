@@ -8,8 +8,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
-import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
-import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.Direction;
@@ -53,11 +51,6 @@ import java.util.function.Function;
  */
 public class CraftingJobHandler {
 
-    /**
-     * The weight of the latest crafting operation duration within the running average for a recipe.
-     */
-    protected static final double RECIPE_DURATION_SMOOTHING = 0.25D;
-
     private final int maxProcessingJobs;
     private boolean blockingJobsMode;
     private final ICraftingResultsSink resultsSink;
@@ -75,7 +68,7 @@ public class CraftingJobHandler {
     private final Map<IngredientComponent<?, ?>, Direction> ingredientComponentTargetOverrides;
     private final Int2IntMap nonBlockingJobsRunningAmount;
     private final Int2ObjectMap<LongList> processingCraftingJobsStartTicks;
-    private final Object2DoubleMap<IRecipeDefinition> recipeDurations;
+    private RecipeDurationStatistics recipeDurationStatistics;
 
     public CraftingJobHandler(int maxProcessingJobs, boolean blockingJobsMode,
                               Collection<ICraftingProcessOverride> craftingProcessOverrides,
@@ -97,7 +90,6 @@ public class CraftingJobHandler {
         this.ingredientComponentTargetOverrides = Maps.newIdentityHashMap();
         this.nonBlockingJobsRunningAmount = new Int2IntOpenHashMap();
         this.processingCraftingJobsStartTicks = new Int2ObjectOpenHashMap<>();
-        this.recipeDurations = new Object2DoubleOpenHashMap<>();
     }
 
     public void writeToNBT(HolderLookup.Provider lookupProvider, CompoundTag tag) {
@@ -167,14 +159,9 @@ public class CraftingJobHandler {
         }
         tag.put("nonBlockingJobsRunningAmount", nonBlockingJobsRunningAmount);
 
-        ListTag recipeDurations = new ListTag();
-        for (Object2DoubleMap.Entry<IRecipeDefinition> entry : this.recipeDurations.object2DoubleEntrySet()) {
-            CompoundTag recipeDuration = new CompoundTag();
-            recipeDuration.put("recipe", IRecipeDefinition.serialize(lookupProvider, entry.getKey()));
-            recipeDuration.putDouble("duration", entry.getDoubleValue());
-            recipeDurations.add(recipeDuration);
-        }
-        tag.put("recipeDurations", recipeDurations);
+        CompoundTag recipeDurationStatistics = new CompoundTag();
+        getRecipeDurationStatistics().writeToNBT(recipeDurationStatistics);
+        tag.put("recipeDurationStatistics", recipeDurationStatistics);
     }
 
     public void readFromNBT(HolderLookup.Provider lookupProvider, CompoundTag tag) {
@@ -295,13 +282,7 @@ public class CraftingJobHandler {
             this.nonBlockingJobsRunningAmount.put(craftingJobId, amount);
         }
 
-        this.recipeDurations.clear();
-        for (Tag recipeDuration : tag.getList("recipeDurations", Tag.TAG_COMPOUND)) {
-            CompoundTag recipeDurationTag = (CompoundTag) recipeDuration;
-            this.recipeDurations.put(
-                    IRecipeDefinition.deserialize(lookupProvider, recipeDurationTag.getCompound("recipe")),
-                    recipeDurationTag.getDouble("duration"));
-        }
+        getRecipeDurationStatistics().readFromNBT(tag.getCompound("recipeDurationStatistics"));
     }
 
     public boolean setBlockingJobsMode(boolean blockingJobsMode) {
@@ -372,9 +353,11 @@ public class CraftingJobHandler {
      * @param recipe A recipe.
      * @return The estimated duration in ticks of a single crafting operation of the given recipe,
      *         based on the operations that were performed by this handler before, or -1 if unknown.
+     *         This falls back to the average duration over all recipes
+     *         when the given recipe itself was not crafted recently.
      */
     public long getEstimatedRecipeDuration(IRecipeDefinition recipe) {
-        return this.recipeDurations.containsKey(recipe) ? Math.round(this.recipeDurations.getDouble(recipe)) : -1;
+        return getRecipeDurationStatistics().getEstimatedDuration(recipe, getCurrentTick());
     }
 
     /**
@@ -390,15 +373,23 @@ public class CraftingJobHandler {
      * @param durationTicks The number of ticks the crafting operation took.
      */
     protected void reportRecipeDuration(IRecipeDefinition recipe, long durationTicks) {
-        if (this.recipeDurations.containsKey(recipe)) {
-            // Smooth out the duration over the previous operations,
-            // as crafting durations can vary due to for example varying machine speeds.
-            double previousDuration = this.recipeDurations.getDouble(recipe);
-            this.recipeDurations.put(recipe,
-                    previousDuration + (durationTicks - previousDuration) * RECIPE_DURATION_SMOOTHING);
-        } else {
-            this.recipeDurations.put(recipe, (double) durationTicks);
+        getRecipeDurationStatistics().reportDuration(recipe, durationTicks, getCurrentTick());
+    }
+
+    /**
+     * @return The duration statistics of this handler, which are created lazily,
+     *         as their configuration is only available once the mod is fully loaded.
+     */
+    public RecipeDurationStatistics getRecipeDurationStatistics() {
+        if (this.recipeDurationStatistics == null) {
+            this.recipeDurationStatistics = createRecipeDurationStatistics();
         }
+        return this.recipeDurationStatistics;
+    }
+
+    protected RecipeDurationStatistics createRecipeDurationStatistics() {
+        return new RecipeDurationStatistics(GeneralConfig.craftingInterfaceRecipeDurationEntries,
+                GeneralConfig.craftingInterfaceRecipeDurationMaxAge);
     }
 
     public void unmarkCraftingJobProcessing(CraftingJob craftingJob) {

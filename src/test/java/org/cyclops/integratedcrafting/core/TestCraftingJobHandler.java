@@ -29,6 +29,8 @@ import static org.junit.Assert.assertThat;
  */
 public class TestCraftingJobHandler {
 
+    private static final int MAX_RECIPE_DURATION_ENTRIES = 32;
+
     private TickingCraftingJobHandler handler;
     private ICraftingNetwork craftingNetwork;
     private IRecipeDefinition recipeA;
@@ -38,11 +40,14 @@ public class TestCraftingJobHandler {
     public void beforeEach() {
         this.handler = new TickingCraftingJobHandler();
         this.craftingNetwork = new CraftingNetwork();
-        this.recipeA = new RecipeDefinition(Maps.newIdentityHashMap(), new MixedIngredients(Maps.newIdentityHashMap()));
+        this.recipeA = newRecipe(0);
+        this.recipeB = newRecipe(1);
+    }
 
-        Map<IngredientComponent<?, ?>, List<?>> outputB = Maps.newIdentityHashMap();
-        outputB.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(1L));
-        this.recipeB = new RecipeDefinition(Maps.newIdentityHashMap(), new MixedIngredients(outputB));
+    protected static IRecipeDefinition newRecipe(long output) {
+        Map<IngredientComponent<?, ?>, List<?>> outputs = Maps.newIdentityHashMap();
+        outputs.put(IngredientComponentStubs.SIMPLE, Lists.newArrayList(output));
+        return new RecipeDefinition(Maps.newIdentityHashMap(), new MixedIngredients(outputs));
     }
 
     protected static Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> newPendingIngredients() {
@@ -77,9 +82,34 @@ public class TestCraftingJobHandler {
     }
 
     @Test
-    public void testRecipeDurationPerRecipe() {
+    public void testRecipeDurationFallsBackToAverage() {
         handler.reportRecipeDuration(recipeA, 100);
-        assertThat(handler.getEstimatedRecipeDuration(recipeB), equalTo(-1L));
+        assertThat(handler.getEstimatedRecipeDuration(recipeB), equalTo(100L));
+    }
+
+    @Test
+    public void testRecipeDurationsAreBounded() {
+        for (int i = 0; i < MAX_RECIPE_DURATION_ENTRIES + 10; i++) {
+            handler.reportRecipeDuration(newRecipe(i), 100);
+        }
+
+        assertThat(handler.getRecipeDurationStatistics().getEntryCount(), equalTo(MAX_RECIPE_DURATION_ENTRIES));
+    }
+
+    @Test
+    public void testSerializationDoesNotGrowWithRecipes() {
+        handler.reportRecipeDuration(recipeA, 100);
+        CompoundTag tagSingle = new CompoundTag();
+        handler.writeToNBT(null, tagSingle);
+
+        for (int i = 0; i < 100; i++) {
+            handler.reportRecipeDuration(newRecipe(i), 100);
+        }
+        CompoundTag tagMany = new CompoundTag();
+        handler.writeToNBT(null, tagMany);
+
+        // Only the average duration is serialized, so crafting more recipes must not grow the crafting interface
+        assertThat(tagMany.toString(), equalTo(tagSingle.toString()));
     }
 
     @Test
@@ -181,6 +211,7 @@ public class TestCraftingJobHandler {
         deserialized.readFromNBT(null, tag);
 
         assertThat(deserialized.getEstimatedRecipeDuration(recipeA), equalTo(100L));
+        assertThat(deserialized.getRecipeDurationStatistics().getEntryCount(), equalTo(0));
     }
 
     protected static class TickingCraftingJobHandler extends CraftingJobHandler {
@@ -194,6 +225,11 @@ public class TestCraftingJobHandler {
 
                 }
             });
+        }
+
+        @Override
+        protected RecipeDurationStatistics createRecipeDurationStatistics() {
+            return new RecipeDurationStatistics(MAX_RECIPE_DURATION_ENTRIES, 24000);
         }
 
         public void setCurrentTick(long currentTick) {

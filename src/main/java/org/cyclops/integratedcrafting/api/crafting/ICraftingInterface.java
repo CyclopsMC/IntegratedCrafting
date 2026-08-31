@@ -90,6 +90,9 @@ public interface ICraftingInterface {
      * @param recipe A recipe.
      * @return The estimated duration in ticks of a single crafting operation of the given recipe,
      *         based on the operations that were performed by this interface before, or -1 if unknown.
+     *         This may fall back to the average duration over all recipes of this interface,
+     *         as recipe-specific durations are only remembered for a limited number of recipes,
+     *         and are forgotten once they become outdated.
      */
     public default long getEstimatedRecipeDuration(IRecipeDefinition recipe) {
         return -1;
