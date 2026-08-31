@@ -2,6 +2,7 @@ package org.cyclops.integratedcrafting.core;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import net.minecraft.nbt.CompoundTag;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
@@ -134,6 +135,19 @@ public class TestCraftingJobHandler {
         handler.unmarkCraftingJobProcessing(craftingJob);
 
         assertThat(handler.getCraftingJobEntryStartTick(1), equalTo(-1L));
+    }
+
+    @Test
+    public void testRecipeDurationsSurviveSerialization() {
+        handler.reportRecipeDuration(recipeA, 100);
+
+        CompoundTag tag = new CompoundTag();
+        handler.writeToNBT(null, tag);
+
+        TickingCraftingJobHandler deserialized = new TickingCraftingJobHandler();
+        deserialized.readFromNBT(null, tag);
+
+        assertThat(deserialized.getEstimatedRecipeDuration(recipeA), equalTo(100L));
     }
 
     protected static class TickingCraftingJobHandler extends CraftingJobHandler {
