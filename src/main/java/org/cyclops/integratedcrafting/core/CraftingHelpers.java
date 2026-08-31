@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -1735,7 +1734,9 @@ public class CraftingHelpers {
      * @return The current game tick of the server.
      */
     public static long getCurrentTick() {
-        return ServerLifecycleHooks.getCurrentServer().getLevel(Level.OVERWORLD).getGameTime();
+        // Fully qualified, as this class already imports org.apache.logging.log4j.Level
+        return ServerLifecycleHooks.getCurrentServer()
+                .getLevel(net.minecraft.world.level.Level.OVERWORLD).getGameTime();
     }
 
     /**
