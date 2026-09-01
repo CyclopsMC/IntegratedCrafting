@@ -229,9 +229,9 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
 
             boolean enabled = container.isRecipeEnabled(recipe);
 
-            // The state border surrounds the cell instead of overlapping its contents,
-            // so that it can be drawn behind the output icon and its count.
-            guiGraphics.renderOutline(x - 1, y - 1, GuiHelpers.SLOT_SIZE, GuiHelpers.SLOT_SIZE,
+            // The state border is inset by a pixel, so that the slot's own border stays visible,
+            // and is drawn before the output icon and its count so that it does not cut through them.
+            guiGraphics.renderOutline(x, y, GuiHelpers.SLOT_SIZE_INNER, GuiHelpers.SLOT_SIZE_INNER,
                     enabled ? COLOR_BORDER_ENABLED : COLOR_BORDER_DISABLED);
             if (RenderHelpers.isPointInRegion(x, y, GuiHelpers.SLOT_SIZE_INNER, GuiHelpers.SLOT_SIZE_INNER,
                     mouseX, mouseY)) {
