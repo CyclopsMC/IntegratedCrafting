@@ -1,5 +1,6 @@
 package org.cyclops.integratedcrafting.api.crafting;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.ints.*;
 import net.minecraft.world.level.storage.ValueInput;
@@ -9,9 +10,9 @@ import org.cyclops.integratedcrafting.core.CraftingHelpers;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * A CraftingJobDependencyGraph stores dependencies between crafting jobs based on their unique ID.
@@ -45,11 +46,7 @@ public class CraftingJobDependencyGraph {
     }
 
     public Collection<CraftingJob> getDependencies(CraftingJob craftingJob) {
-        return dependencies.getOrDefault(craftingJob.getId(), new IntArrayList())
-                .stream()
-                .map(craftingJobs::get)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return getCraftingJobs(dependencies.get(craftingJob.getId()));
     }
 
     public boolean hasDependencies(CraftingJob craftingJob) {
@@ -70,11 +67,27 @@ public class CraftingJobDependencyGraph {
     }
 
     public Collection<CraftingJob> getDependents(CraftingJob craftingJob) {
-        return dependents.getOrDefault(craftingJob.getId(), new IntArrayList())
-                .stream()
-                .map(craftingJobs::get)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return getCraftingJobs(dependents.get(craftingJob.getId()));
+    }
+
+    /**
+     * Resolve the given crafting job ids into their crafting jobs, skipping the ids that are unknown.
+     * @param craftingJobIds Crafting job ids, may be null if no ids are stored.
+     * @return A new collection with the resolved crafting jobs.
+     */
+    protected Collection<CraftingJob> getCraftingJobs(@Nullable IntCollection craftingJobIds) {
+        if (craftingJobIds == null || craftingJobIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<CraftingJob> resolved = Lists.newArrayListWithCapacity(craftingJobIds.size());
+        IntIterator it = craftingJobIds.iterator();
+        while (it.hasNext()) {
+            CraftingJob craftingJob = this.craftingJobs.get(it.nextInt());
+            if (craftingJob != null) {
+                resolved.add(craftingJob);
+            }
+        }
+        return resolved;
     }
 
     public void addCraftingJobId(CraftingJob craftingJob) {
