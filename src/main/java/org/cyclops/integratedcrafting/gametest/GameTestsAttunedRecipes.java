@@ -294,12 +294,10 @@ public class GameTestsAttunedRecipes {
                     // The search matches recipe ids, so this isolates the chest recipe
                     container.updateFilter(RECIPE_CHEST);
                     IRecipeDefinition chestRecipe = null;
-                    for (int i = 0; i < container.getPageSize(); i++) {
-                        if (container.isElementVisible(i)) {
-                            IRecipeDefinition recipe = container.getVisibleElement(i);
-                            if (RECIPE_CHEST.equals(container.getEntry(recipe).identifier())) {
-                                chestRecipe = recipe;
-                            }
+                    for (int i = 0; i < container.getPageSize() * container.getColumns(); i++) {
+                        IRecipeDefinition recipe = container.getVisibleElement(i);
+                        if (recipe != null && RECIPE_CHEST.equals(container.getEntry(recipe).identifier())) {
+                            chestRecipe = recipe;
                         }
                     }
                     helper.assertTrue(chestRecipe != null, "The chest recipe was not found through the gui search");
@@ -309,10 +307,22 @@ public class GameTestsAttunedRecipes {
                             indexOfRecipeId(partState.getAllRecipes(), RECIPE_CHEST),
                             "The gui has the wrong server index for the chest recipe");
 
+                    // The whole grid is filled when there are more recipes than fit on one page
+                    container.updateFilter("");
+                    int cells = container.getPageSize() * container.getColumns();
+                    helper.assertTrue(container.getFilteredItemCount() > cells,
+                            "The target does not expose enough recipes to fill the gui grid");
+                    for (int i = 0; i < cells; i++) {
+                        helper.assertTrue(container.getVisibleElement(i) != null,
+                                "The gui grid has a hole at cell " + i);
+                    }
+
                     // Recipes that do not match the search must not be shown
                     container.updateFilter("this recipe does not exist");
                     helper.assertValueEqual(container.getFilteredItemCount(), 0,
                             "The gui shows recipes that do not match the search");
+                    helper.assertTrue(container.getVisibleElement(0) == null,
+                            "The gui grid still shows a recipe that does not match the search");
 
                     // The part must also hand out the same container to a player opening it
                     ServerPlayer player = helper.makeMockServerPlayerInLevel();

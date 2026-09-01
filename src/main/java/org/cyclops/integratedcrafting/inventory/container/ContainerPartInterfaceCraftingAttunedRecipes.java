@@ -58,7 +58,12 @@ public class ContainerPartInterfaceCraftingAttunedRecipes extends ScrollingInven
     public static final String BUTTON_SETTINGS = "button_settings";
     public static final String BUTTON_OFFSETS = "button_offsets";
 
-    public static final int PAGE_SIZE = 5;
+    /**
+     * The number of recipes that are shown next to each other.
+     * This matches the player inventory below it, so that both grids line up.
+     */
+    public static final int COLUMNS = 9;
+    public static final int ROWS = 6;
 
     public static final int BULK_ACTION_ENABLE = 0;
     public static final int BULK_ACTION_DISABLE = 1;
@@ -110,7 +115,7 @@ public class ContainerPartInterfaceCraftingAttunedRecipes extends ScrollingInven
         this.toggleRecipeValueId = getNextValueId();
         this.bulkActionValueId = getNextValueId();
 
-        addPlayerInventory(player.getInventory(), 9, 131);
+        addPlayerInventory(player.getInventory(), 9, 149);
 
         putButtonAction(BUTTON_SETTINGS, (s, containerExtended) -> {
             if (!player.level().isClientSide()) {
@@ -152,7 +157,12 @@ public class ContainerPartInterfaceCraftingAttunedRecipes extends ScrollingInven
 
     @Override
     public int getPageSize() {
-        return PAGE_SIZE;
+        return ROWS;
+    }
+
+    @Override
+    public int getColumns() {
+        return COLUMNS;
     }
 
     @Override

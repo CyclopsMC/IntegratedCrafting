@@ -2,50 +2,60 @@ package org.cyclops.integratedcrafting.client.gui;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.datafixers.util.Either;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIngredientAlternatives;
+import net.minecraft.world.item.TooltipFlag;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
-import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.client.gui.component.button.ButtonImage;
 import org.cyclops.cyclopscore.client.gui.component.button.ButtonText;
 import org.cyclops.cyclopscore.client.gui.container.ContainerScreenScrolling;
 import org.cyclops.cyclopscore.client.gui.image.IImage;
-import org.cyclops.cyclopscore.client.gui.image.Images;
-import org.cyclops.cyclopscore.helper.Helpers;
+import org.cyclops.cyclopscore.helper.GuiHelpers;
 import org.cyclops.cyclopscore.helper.RenderHelpers;
 import org.cyclops.integratedcrafting.Reference;
+import org.cyclops.integratedcrafting.client.gui.tooltip.RecipeInputs;
+import org.cyclops.integratedcrafting.client.gui.tooltip.RecipeInputsTooltip;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingAttunedRecipes;
 
 import java.awt.Rectangle;
 import java.util.List;
 
 /**
- * Gui that lists all recipes of an attuned crafting interface.
+ * Gui that shows all recipes of an attuned crafting interface in a grid.
  * @author rubensworks
  */
 public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends ContainerScreenScrolling<ContainerPartInterfaceCraftingAttunedRecipes> {
 
-    private static final int LIST_X = 9;
-    private static final int LIST_Y = 18;
-    private static final int LIST_WIDTH = 160;
-    private static final int ROW_HEIGHT = 18;
-    private static final int BUTTONS_Y = 114;
+    private static final int GRID_X = 9;
+    private static final int GRID_Y = 18;
+    private static final int BUTTONS_Y = 132;
     private static final int BUTTON_WIDTH = 52;
     private static final int BUTTON_HEIGHT = 14;
+
     /**
-     * The maximum number of recipe inputs that are shown in a tooltip.
+     * The white overlay that highlights the cell under the mouse.
      */
-    private static final int MAX_TOOLTIP_INPUTS = 9;
+    private static final int COLOR_HOVER = 0x80FFFFFF;
+    /**
+     * The overlay that greys out a disabled recipe.
+     */
+    private static final int COLOR_DISABLED = 0x80303030;
+    private static final int COLOR_BORDER_ENABLED = 0xFF44BB44;
+    private static final int COLOR_BORDER_DISABLED = 0xFFBB4444;
 
     public ContainerScreenPartInterfaceCraftingAttunedRecipes(ContainerPartInterfaceCraftingAttunedRecipes container,
                                                               Inventory inventory, Component title) {
@@ -64,18 +74,25 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
 
     @Override
     protected int getBaseYSize() {
-        return 213;
+        return 231;
+    }
+
+    protected int getGridWidth() {
+        return getMenu().getColumns() * GuiHelpers.SLOT_SIZE;
+    }
+
+    protected int getGridHeight() {
+        return getMenu().getPageSize() * GuiHelpers.SLOT_SIZE;
     }
 
     @Override
     protected int getScrollHeight() {
-        return ROW_HEIGHT * ContainerPartInterfaceCraftingAttunedRecipes.PAGE_SIZE + 4;
+        return getGridHeight() + 4;
     }
 
     @Override
     protected Rectangle getScrollRegion() {
-        return new Rectangle(this.leftPos + LIST_X, this.topPos + LIST_Y,
-                LIST_WIDTH, ROW_HEIGHT * ContainerPartInterfaceCraftingAttunedRecipes.PAGE_SIZE);
+        return new Rectangle(this.leftPos + GRID_X, this.topPos + GRID_Y, getGridWidth(), getGridHeight());
     }
 
     @Override
@@ -107,26 +124,68 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
         addBulkActionButton(0, "enableall", ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_ENABLE);
         addBulkActionButton(1, "disableall", ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_DISABLE);
         addBulkActionButton(2, "invert", ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_INVERT);
+
+        getScrollbar().setTotalRows(getTotalGridRows());
     }
 
     protected void addBulkActionButton(int index, String name, int action) {
         Component label = Component.translatable("gui.integratedcrafting.partinterface.recipes." + name);
-        addRenderableWidget(new ButtonText(this.leftPos + LIST_X + index * (BUTTON_WIDTH + 2), this.topPos + BUTTONS_Y,
+        addRenderableWidget(new ButtonText(this.leftPos + GRID_X + index * (BUTTON_WIDTH + 2), this.topPos + BUTTONS_Y,
                 BUTTON_WIDTH, BUTTON_HEIGHT, label, label,
                 (button) -> getMenu().applyBulkAction(action), true));
     }
 
-    protected int getRowY(int row) {
-        return LIST_Y + ROW_HEIGHT * row;
+    /**
+     * The scrollbar rows are rounded up here,
+     * as a last row that is only partially filled must still be reachable.
+     * {@link ContainerScreenScrolling} rounds down, which would hide it.
+     */
+    protected int getTotalGridRows() {
+        return Mth.ceil((double) getMenu().getFilteredItemCount() / getMenu().getColumns());
+    }
+
+    @Override
+    protected void updateSearch(String searchString) {
+        super.updateSearch(searchString);
+        getScrollbar().setTotalRows(getTotalGridRows());
+        getScrollbar().scrollTo(0);
+    }
+
+    /**
+     * @param mouseX The absolute mouse x position.
+     * @param mouseY The absolute mouse y position.
+     * @return The index of the grid cell under the mouse, or -1 if the mouse is not over a cell.
+     */
+    protected int getCellIndexAt(double mouseX, double mouseY) {
+        int relativeX = (int) (mouseX - this.leftPos - this.offsetX - GRID_X);
+        int relativeY = (int) (mouseY - this.topPos - this.offsetY - GRID_Y);
+        if (relativeX < 0 || relativeY < 0 || relativeX >= getGridWidth() || relativeY >= getGridHeight()) {
+            return -1;
+        }
+        // Ignore the border between two cells
+        if (relativeX % GuiHelpers.SLOT_SIZE >= GuiHelpers.SLOT_SIZE_INNER
+                || relativeY % GuiHelpers.SLOT_SIZE >= GuiHelpers.SLOT_SIZE_INNER) {
+            return -1;
+        }
+        return relativeX / GuiHelpers.SLOT_SIZE
+                + (relativeY / GuiHelpers.SLOT_SIZE) * getMenu().getColumns();
+    }
+
+    protected int getCellX(int index) {
+        return this.leftPos + this.offsetX + GRID_X + (index % getMenu().getColumns()) * GuiHelpers.SLOT_SIZE;
+    }
+
+    protected int getCellY(int index) {
+        return this.topPos + this.offsetY + GRID_Y + (index / getMenu().getColumns()) * GuiHelpers.SLOT_SIZE;
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         if (mouseButton == 0) {
-            for (int i = 0; i < getMenu().getPageSize(); i++) {
-                if (getMenu().isElementVisible(i)
-                        && isHovering(LIST_X, getRowY(i), LIST_WIDTH, ROW_HEIGHT - 1, mouseX, mouseY)) {
-                    IRecipeDefinition recipe = getMenu().getVisibleElement(i);
+            int index = getCellIndexAt(mouseX, mouseY);
+            if (index >= 0) {
+                IRecipeDefinition recipe = getMenu().getVisibleElement(index);
+                if (recipe != null) {
                     getMenu().setRecipeEnabled(recipe, !getMenu().isRecipeEnabled(recipe));
                     Minecraft.getInstance().getSoundManager()
                             .play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
@@ -142,55 +201,50 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
         super.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
 
         RenderHelpers.drawScaledCenteredString(guiGraphics.pose(), guiGraphics.bufferSource(), font,
-                this.title.getString(), this.leftPos + offsetX + 6, this.topPos + offsetY + 10, 70,
+                this.title.getString(), this.leftPos + this.offsetX + 6, this.topPos + this.offsetY + 10, 70,
                 4210752, false, Font.DisplayMode.NORMAL);
 
         ContainerPartInterfaceCraftingAttunedRecipes container = getMenu();
-        for (int i = 0; i < container.getPageSize(); i++) {
-            if (!container.isElementVisible(i)) {
+        int cells = container.getPageSize() * container.getColumns();
+        for (int i = 0; i < cells; i++) {
+            IRecipeDefinition recipe = container.getVisibleElement(i);
+            if (recipe == null) {
                 continue;
             }
-            IRecipeDefinition recipe = container.getVisibleElement(i);
-            ContainerPartInterfaceCraftingAttunedRecipes.RecipeEntry entry = container.getEntry(recipe);
-            boolean enabled = container.isRecipeEnabled(recipe);
-            int x = this.leftPos + offsetX + LIST_X;
-            int y = this.topPos + offsetY + getRowY(i);
+            int x = getCellX(i);
+            int y = getCellY(i);
 
-            // Row background
-            if (enabled) {
-                RenderSystem.setShaderColor(0.84F, 1F, 0.84F, 1F);
-            } else {
-                RenderSystem.setShaderColor(0.62F, 0.62F, 0.62F, 1F);
+            if (RenderHelpers.isPointInRegion(x, y, GuiHelpers.SLOT_SIZE_INNER, GuiHelpers.SLOT_SIZE_INNER,
+                    mouseX, mouseY)) {
+                guiGraphics.fill(x, y, x + GuiHelpers.SLOT_SIZE_INNER, y + GuiHelpers.SLOT_SIZE_INNER, COLOR_HOVER);
             }
-            guiGraphics.blit(this.texture, x, y, 0, getBaseYSize(), LIST_WIDTH, ROW_HEIGHT - 1);
-            RenderSystem.setShaderColor(1, 1, 1, 1);
 
-            // Output icon
             ItemStack outputItem = ContainerPartInterfaceCraftingAttunedRecipes.getOutputItem(recipe);
             if (!outputItem.isEmpty()) {
-                guiGraphics.renderItem(outputItem, x + 1, y);
-                guiGraphics.renderItemDecorations(font, outputItem, x + 1, y);
+                guiGraphics.renderItem(outputItem, x, y);
+                guiGraphics.renderItemDecorations(font, outputItem, x, y);
             }
 
-            // Output name
-            RenderHelpers.drawScaledCenteredString(guiGraphics.pose(), guiGraphics.bufferSource(), font,
-                    entry.displayName().getString(), x + 22, y + 8, 108,
-                    enabled ? Helpers.RGBToInt(40, 40, 40) : Helpers.RGBToInt(105, 105, 105),
-                    false, Font.DisplayMode.NORMAL);
-
-            // Enabled indicator
-            (enabled ? Images.OK : Images.ERROR).draw(guiGraphics, x + 143, y + 2);
+            // Draw in front of the output, which is rendered as a 3D item
+            guiGraphics.pose().pushPose();
+            guiGraphics.pose().translate(0, 0, 300);
+            boolean enabled = container.isRecipeEnabled(recipe);
+            if (!enabled) {
+                guiGraphics.fill(x, y, x + GuiHelpers.SLOT_SIZE_INNER, y + GuiHelpers.SLOT_SIZE_INNER, COLOR_DISABLED);
+            }
+            guiGraphics.renderOutline(x, y, GuiHelpers.SLOT_SIZE_INNER, GuiHelpers.SLOT_SIZE_INNER,
+                    enabled ? COLOR_BORDER_ENABLED : COLOR_BORDER_DISABLED);
+            guiGraphics.pose().popPose();
         }
     }
 
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        ContainerPartInterfaceCraftingAttunedRecipes container = getMenu();
-        for (int i = 0; i < container.getPageSize(); i++) {
-            if (container.isElementVisible(i)
-                    && isHovering(LIST_X, getRowY(i), LIST_WIDTH, ROW_HEIGHT - 1, mouseX, mouseY)) {
-                drawTooltip(getRecipeTooltip(container, container.getVisibleElement(i)),
-                        guiGraphics.pose(), mouseX - this.leftPos, mouseY - this.topPos);
+        int index = getCellIndexAt(mouseX, mouseY);
+        if (index >= 0) {
+            IRecipeDefinition recipe = getMenu().getVisibleElement(index);
+            if (recipe != null) {
+                renderRecipeTooltip(guiGraphics, recipe, mouseX, mouseY);
             }
         }
 
@@ -204,60 +258,46 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
         }
     }
 
-    protected List<Component> getRecipeTooltip(ContainerPartInterfaceCraftingAttunedRecipes container,
-                                               IRecipeDefinition recipe) {
-        ContainerPartInterfaceCraftingAttunedRecipes.RecipeEntry entry = container.getEntry(recipe);
-        boolean enabled = container.isRecipeEnabled(recipe);
+    protected void renderRecipeTooltip(GuiGraphics guiGraphics, IRecipeDefinition recipe, int mouseX, int mouseY) {
+        ContainerPartInterfaceCraftingAttunedRecipes.RecipeEntry entry = getMenu().getEntry(recipe);
+        Minecraft minecraft = Minecraft.getInstance();
 
-        List<Component> lines = Lists.newArrayList();
-        lines.add(entry.displayName().copy().withStyle(ChatFormatting.WHITE));
-        lines.add(Component.literal(entry.identifier()).withStyle(ChatFormatting.DARK_GRAY));
+        List<Either<FormattedText, TooltipComponent>> elements = Lists.newArrayList();
 
-        lines.add(Component.translatable("gui.integratedcrafting.partinterface.recipes.inputs")
-                .withStyle(ChatFormatting.GRAY));
-        int shownInputs = 0;
-        for (IngredientComponent<?, ?> component : recipe.getInputComponents()) {
-            for (IPrototypedIngredientAlternatives<?, ?> alternatives : getInputs(recipe, component)) {
-                if (shownInputs >= MAX_TOOLTIP_INPUTS) {
-                    lines.add(Component.literal("...").withStyle(ChatFormatting.GRAY));
-                    shownInputs++;
-                    break;
-                }
-                Component inputName = getInputName(alternatives);
-                if (inputName != null) {
-                    lines.add(Component.literal("- ").withStyle(ChatFormatting.YELLOW).append(inputName));
-                    shownInputs++;
-                }
-            }
-            if (shownInputs > MAX_TOOLTIP_INPUTS) {
-                break;
+        ItemStack outputItem = ContainerPartInterfaceCraftingAttunedRecipes.getOutputItem(recipe);
+        if (outputItem.isEmpty()) {
+            elements.add(Either.left(entry.displayName()));
+        } else {
+            for (Component line : outputItem.getTooltipLines(
+                    Item.TooltipContext.of(minecraft.level.registryAccess()), minecraft.player,
+                    minecraft.options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL)) {
+                elements.add(Either.left(line));
             }
         }
+        elements.add(Either.left(Component.literal(entry.identifier()).withStyle(ChatFormatting.DARK_GRAY)));
 
-        lines.add(Component.translatable(enabled
+        // The inputs are only determined for the recipe that is actually hovered,
+        // as doing this for every shown recipe on every frame would be far too slow.
+        List<List<IPrototypedIngredient<?, ?>>> inputs = RecipeInputs.getGroupedInputs(recipe);
+        if (!inputs.isEmpty()) {
+            elements.add(Either.left(Component.translatable("gui.integratedcrafting.partinterface.recipes.inputs")
+                    .withStyle(ChatFormatting.YELLOW)));
+            elements.add(Either.right(new RecipeInputsTooltip(inputs)));
+        }
+
+        elements.add(Either.left(Component.translatable(getMenu().isRecipeEnabled(recipe)
                         ? "gui.integratedcrafting.partinterface.recipes.click_disable"
                         : "gui.integratedcrafting.partinterface.recipes.click_enable")
-                .withStyle(ChatFormatting.AQUA));
-        return lines;
-    }
+                .withStyle(ChatFormatting.AQUA)));
 
-    protected static <T, M> List<IPrototypedIngredientAlternatives<T, M>> getInputs(IRecipeDefinition recipe,
-                                                                                    IngredientComponent<T, M> component) {
-        return recipe.getInputs(component);
-    }
-
-    protected Component getInputName(IPrototypedIngredientAlternatives<?, ?> alternatives) {
-        for (IPrototypedIngredient<?, ?> alternative : alternatives.getAlternatives()) {
-            Object prototype = alternative.getPrototype();
-            if (prototype instanceof ItemStack itemStack) {
-                if (itemStack.isEmpty()) {
-                    continue;
-                }
-                return Component.literal(itemStack.getCount() + "x ").append(itemStack.getHoverName());
-            }
-            return Component.literal(String.valueOf(prototype));
-        }
-        return null;
+        // Don't write to the depth buffer, so that anything drawn after this tooltip is not occluded by it.
+        RenderSystem.disableDepthTest();
+        // Tooltips are positioned in screen space, while this layer is translated to the position of the gui.
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(-this.leftPos, -this.topPos, 0);
+        guiGraphics.renderComponentTooltipFromElements(font, elements, mouseX, mouseY, ItemStack.EMPTY);
+        guiGraphics.pose().popPose();
+        RenderSystem.enableDepthTest();
     }
 
 }

@@ -7,8 +7,10 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 * Allow individual recipes to be enabled or disabled in the Attuned Crafting Interface, Closes #162, Closes #219
-  The Attuned Crafting Interface now has a gui that lists all recipes of its target machine.
+  The Attuned Crafting Interface now has a gui that shows all recipes of its target machine
+  in a grid of their output icons, with a green or red border for their state.
   Recipes can be toggled by clicking them, and bulk actions apply to the current search filter.
+  Hovering a recipe shows its output and the inputs it requires.
   Disabled recipes are not registered in the crafting network, so no crafting job will use them.
 
 ### Changed
