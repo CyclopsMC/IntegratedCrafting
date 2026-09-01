@@ -45,6 +45,11 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
     private static final int BUTTONS_Y = 132;
     private static final int BUTTON_WIDTH = 52;
     private static final int BUTTON_HEIGHT = 14;
+    /**
+     * The bulk action buttons are spread out over the full width of the grid.
+     */
+    private static final int BUTTON_OFFSET = 55;
+    private static final String[] BULK_ACTION_NAMES = {"enableall", "disableall", "invert"};
 
     /**
      * The white overlay that highlights the cell under the mouse.
@@ -121,18 +126,26 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
 
         // The bulk actions apply to the recipes that match the current search filter,
         // as toggling thousands of recipes one by one is not workable.
-        addBulkActionButton(0, "enableall", ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_ENABLE);
-        addBulkActionButton(1, "disableall", ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_DISABLE);
-        addBulkActionButton(2, "invert", ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_INVERT);
+        addBulkActionButton(0, ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_ENABLE);
+        addBulkActionButton(1, ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_DISABLE);
+        addBulkActionButton(2, ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_INVERT);
 
         getScrollbar().setTotalRows(getTotalGridRows());
     }
 
-    protected void addBulkActionButton(int index, String name, int action) {
-        Component label = Component.translatable("gui.integratedcrafting.partinterface.recipes." + name);
-        addRenderableWidget(new ButtonText(this.leftPos + GRID_X + index * (BUTTON_WIDTH + 2), this.topPos + BUTTONS_Y,
+    protected void addBulkActionButton(int index, int action) {
+        Component label = Component.translatable(getBulkActionKey(index));
+        addRenderableWidget(new ButtonText(this.leftPos + getBulkActionX(index), this.topPos + BUTTONS_Y,
                 BUTTON_WIDTH, BUTTON_HEIGHT, label, label,
                 (button) -> getMenu().applyBulkAction(action), true));
+    }
+
+    protected static String getBulkActionKey(int index) {
+        return "gui.integratedcrafting.partinterface.recipes." + BULK_ACTION_NAMES[index];
+    }
+
+    protected int getBulkActionX(int index) {
+        return GRID_X + index * BUTTON_OFFSET;
     }
 
     /**
@@ -214,6 +227,12 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
             int x = getCellX(i);
             int y = getCellY(i);
 
+            boolean enabled = container.isRecipeEnabled(recipe);
+
+            // The state border surrounds the cell instead of overlapping its contents,
+            // so that it can be drawn behind the output icon and its count.
+            guiGraphics.renderOutline(x - 1, y - 1, GuiHelpers.SLOT_SIZE, GuiHelpers.SLOT_SIZE,
+                    enabled ? COLOR_BORDER_ENABLED : COLOR_BORDER_DISABLED);
             if (RenderHelpers.isPointInRegion(x, y, GuiHelpers.SLOT_SIZE_INNER, GuiHelpers.SLOT_SIZE_INNER,
                     mouseX, mouseY)) {
                 guiGraphics.fill(x, y, x + GuiHelpers.SLOT_SIZE_INNER, y + GuiHelpers.SLOT_SIZE_INNER, COLOR_HOVER);
@@ -225,16 +244,13 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
                 guiGraphics.renderItemDecorations(font, outputItem, x, y);
             }
 
-            // Draw in front of the output, which is rendered as a 3D item
-            guiGraphics.pose().pushPose();
-            guiGraphics.pose().translate(0, 0, 300);
-            boolean enabled = container.isRecipeEnabled(recipe);
             if (!enabled) {
+                // Draw in front of the output, which is rendered as a 3D item
+                guiGraphics.pose().pushPose();
+                guiGraphics.pose().translate(0, 0, 300);
                 guiGraphics.fill(x, y, x + GuiHelpers.SLOT_SIZE_INNER, y + GuiHelpers.SLOT_SIZE_INNER, COLOR_DISABLED);
+                guiGraphics.pose().popPose();
             }
-            guiGraphics.renderOutline(x, y, GuiHelpers.SLOT_SIZE_INNER, GuiHelpers.SLOT_SIZE_INNER,
-                    enabled ? COLOR_BORDER_ENABLED : COLOR_BORDER_DISABLED);
-            guiGraphics.pose().popPose();
         }
     }
 
@@ -245,6 +261,14 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
             IRecipeDefinition recipe = getMenu().getVisibleElement(index);
             if (recipe != null) {
                 renderRecipeTooltip(guiGraphics, recipe, mouseX, mouseY);
+            }
+        }
+
+        // The button labels are kept short enough to fit, so what they act on is in their tooltip
+        for (int i = 0; i < BULK_ACTION_NAMES.length; i++) {
+            if (isHovering(getBulkActionX(i), BUTTONS_Y, BUTTON_WIDTH, BUTTON_HEIGHT, mouseX, mouseY)) {
+                drawTooltip(Lists.newArrayList(Component.translatable(getBulkActionKey(i) + ".info")),
+                        guiGraphics.pose(), mouseX - this.leftPos, mouseY - this.topPos);
             }
         }
 
