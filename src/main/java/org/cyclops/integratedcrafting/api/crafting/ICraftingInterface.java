@@ -78,6 +78,23 @@ public interface ICraftingInterface {
     public void cancelCraftingJob(int channel, int craftingJobId);
 
     /**
+     * @param craftingJobId A crafting job id.
+     * @return The tick at which the oldest running crafting operation of the given job was started,
+     *         or -1 if no operation is running, or if this is unknown.
+     */
+    public long getCraftingJobEntryStartTick(int craftingJobId);
+
+    /**
+     * @param recipe A recipe.
+     * @return The estimated duration in ticks of a single crafting operation of the given recipe,
+     *         based on the operations that were performed by this interface before, or -1 if unknown.
+     *         This may fall back to the average duration over all recipes of this interface,
+     *         as recipe-specific durations are only remembered for a limited number of recipes,
+     *         and are forgotten once they become outdated.
+     */
+    public long getEstimatedRecipeDuration(IRecipeDefinition recipe);
+
+    /**
      * @return The prioritized position of this interface.
      */
     public PrioritizedPartPos getPosition();

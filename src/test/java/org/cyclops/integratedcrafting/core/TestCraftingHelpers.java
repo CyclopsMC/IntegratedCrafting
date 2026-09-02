@@ -3790,6 +3790,14 @@ public class TestCraftingHelpers {
     }
 
     @Test
+    public void testSplitCraftingJobsAmountTotal() {
+        CraftingJob job = new CraftingJob(-1, 0, recipeA, 3, new MixedIngredients(Maps.newIdentityHashMap()));
+        List<CraftingJob> jobs = CraftingHelpers.splitCraftingJobs(job, 2, craftingJobDependencyGraph, identifierGenerator);
+        assertThat(jobs.get(0).getAmountTotal(), equalTo(2));
+        assertThat(jobs.get(1).getAmountTotal(), equalTo(1));
+    }
+
+    @Test
     public void testSplitCraftingJobsThreeOverTwo() {
         CraftingJob job = new CraftingJob(-1, 0, recipeA, 3, new MixedIngredients(Maps.newIdentityHashMap()));
         assertThat(CraftingHelpers.splitCraftingJobs(job, 2, craftingJobDependencyGraph, identifierGenerator),

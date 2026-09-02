@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import net.minecraft.core.Direction;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.apache.commons.lang3.tuple.Pair;
@@ -1730,6 +1731,15 @@ public class CraftingHelpers {
     }
 
     /**
+     * @return The current game tick of the server.
+     */
+    public static long getCurrentTick() {
+        // Fully qualified, as this class already imports org.apache.logging.log4j.Level
+        return ServerLifecycleHooks.getCurrentServer()
+                .getLevel(net.minecraft.world.level.Level.OVERWORLD).getGameTime();
+    }
+
+    /**
      * Split the given crafting job amount into new jobs with a given split factor.
      * @param craftingJob A crafting job to split.
      * @param splitFactor The number of jobs to split the job over.
@@ -1758,6 +1768,7 @@ public class CraftingHelpers {
                 modulus--;
             }
             clonedJob.setAmount(newAmount);
+            clonedJob.setAmountTotal(newAmount);
         }
 
         // Collect dependency links
