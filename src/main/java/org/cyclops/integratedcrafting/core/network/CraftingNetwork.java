@@ -15,6 +15,7 @@ import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.crafting.UnavailableCraftingInterfacesException;
+import org.cyclops.integratedcrafting.api.event.CraftingJobFinishedEvent;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.ICraftingJobIndexModifiable;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndexModifiable;
@@ -275,6 +276,11 @@ public class CraftingNetwork implements ICraftingNetwork {
 
     @Override
     public void onCraftingJobFinished(CraftingJob craftingJob) {
+        // Emit the event before removal, as removal clears the job's dependency links.
+        if (!craftingJob.isCancelled()) {
+            CraftingJobFinishedEvent.post(this, craftingJob);
+        }
+
         removeCraftingJob(craftingJob.getChannel(), craftingJob);
         getCraftingJobDependencyGraph().onCraftingJobFinished(craftingJob);
     }
@@ -290,6 +296,10 @@ public class CraftingNetwork implements ICraftingNetwork {
     }
 
     protected void cancelCraftingJob(CraftingJob craftingJob) {
+        // Mark as cancelled, so that no completion event is emitted for it.
+        // The crafting interface finalizes cancelled jobs via the regular finishing logic.
+        craftingJob.setCancelled(true);
+
         // First cancel all dependencies
         for (CraftingJob dependency : getCraftingJobDependencyGraph().getDependencies(craftingJob)) {
             cancelCraftingJob(dependency);
