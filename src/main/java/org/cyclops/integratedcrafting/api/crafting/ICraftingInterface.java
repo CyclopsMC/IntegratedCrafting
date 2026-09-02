@@ -82,9 +82,7 @@ public interface ICraftingInterface {
      * @return The tick at which the oldest running crafting operation of the given job was started,
      *         or -1 if no operation is running, or if this is unknown.
      */
-    public default long getCraftingJobEntryStartTick(int craftingJobId) {
-        return -1;
-    }
+    public long getCraftingJobEntryStartTick(int craftingJobId);
 
     /**
      * @param recipe A recipe.
@@ -94,9 +92,7 @@ public interface ICraftingInterface {
      *         as recipe-specific durations are only remembered for a limited number of recipes,
      *         and are forgotten once they become outdated.
      */
-    public default long getEstimatedRecipeDuration(IRecipeDefinition recipe) {
-        return -1;
-    }
+    public long getEstimatedRecipeDuration(IRecipeDefinition recipe);
 
     /**
      * @return The prioritized position of this interface.

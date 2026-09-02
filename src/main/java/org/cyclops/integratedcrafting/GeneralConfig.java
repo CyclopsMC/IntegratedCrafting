@@ -39,7 +39,7 @@ public class GeneralConfig extends DummyConfig {
     public static int craftingInterfaceRecipeDurationEntries = 32;
 
     @ConfigurableProperty(category = "machine", comment = "The number of ticks after which a measured crafting duration is forgotten, so that estimations follow changes to the network. Set to 0 to never forget them.", minimalValue = 0, isCommandable = true, configLocation = ModConfig.Type.SERVER)
-    public static int craftingInterfaceRecipeDurationMaxAge = 24000;
+    public static int craftingInterfaceRecipeDurationMaxAge = 144000;
 
     @ConfigurableProperty(category = "machine", comment = "Enabling this option will log all recipe validation failures in crafting interfaces into the server logs", isCommandable = true, configLocation = ModConfig.Type.SERVER)
     public static boolean logRecipeValidationFailures = true;
