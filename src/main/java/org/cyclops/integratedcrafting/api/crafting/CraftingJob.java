@@ -43,7 +43,9 @@ public class CraftingJob {
     private boolean invalidInputs;
     @Nullable
     private String initiatorUuid;
+    private boolean notifyInitiator;
     private boolean ignoreDependencyCheck;
+    private boolean cancelled;
 
     public CraftingJob(int id, int channel, IRecipeDefinition recipe, int amount, IMixedIngredients ingredientsStorage) {
         this.id = id;
@@ -237,6 +239,29 @@ public class CraftingJob {
         this.initiatorUuid = initiatorUuid;
     }
 
+    /**
+     * @return If the initiator wants to be notified when this job is completed.
+     */
+    public boolean isNotifyInitiator() {
+        return notifyInitiator;
+    }
+
+    public void setNotifyInitiator(boolean notifyInitiator) {
+        this.notifyInitiator = notifyInitiator;
+    }
+
+    /**
+     * @return If this job was cancelled instead of running to completion.
+     *         This is not persisted, as cancelled jobs are removed from their network right away.
+     */
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
+    }
+
     public void setIgnoreDependencyCheck(boolean ignoreDependencyCheck) {
         this.ignoreDependencyCheck = ignoreDependencyCheck;
     }
@@ -262,6 +287,7 @@ public class CraftingJob {
         if (craftingJob.initiatorUuid != null) {
             tag.putString("initiatorUuid", craftingJob.initiatorUuid);
         }
+        tag.putBoolean("notifyInitiator", craftingJob.notifyInitiator);
         tag.putBoolean("ignoreDependencyCheck", craftingJob.ignoreDependencyCheck);
         return tag;
     }
@@ -320,6 +346,7 @@ public class CraftingJob {
         if (tag.contains("initiatorUuid", Tag.TAG_STRING)) {
             craftingJob.setInitiatorUuid(tag.getString("initiatorUuid"));
         }
+        craftingJob.setNotifyInitiator(tag.getBoolean("notifyInitiator"));
         craftingJob.setIgnoreDependencyCheck(tag.getBoolean("ignoreDependencyCheck"));
         craftingJob.setIngredientsStorageBuffer(ingredientsStorageBuffer);
         return craftingJob;

@@ -698,11 +698,32 @@ public class CraftingHelpers {
      * @param initiator                  Optional UUID of the initiator.
      * @throws UnavailableCraftingInterfacesException If no crafting interfaces were available.
      */
+    @Deprecated // TODO: rm in next major
     public static void scheduleCraftingJobs(ICraftingNetwork craftingNetwork,
                                             Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
                                             CraftingJobDependencyGraph craftingJobDependencyGraph,
                                             boolean allowDistribution,
                                             @Nullable UUID initiator) throws UnavailableCraftingInterfacesException {
+        scheduleCraftingJobs(craftingNetwork, storageGetter, craftingJobDependencyGraph, allowDistribution, initiator, false);
+    }
+
+    /**
+     * Schedule all crafting jobs in the given dependency graph in the given network.
+     *
+     * @param craftingNetwork            The target crafting network.
+     * @param storageGetter              The storage getter.
+     * @param craftingJobDependencyGraph The crafting job dependency graph.
+     * @param allowDistribution          If the crafting jobs are allowed to be split over multiple crafting interfaces.
+     * @param initiator                  Optional UUID of the initiator.
+     * @param notifyInitiator            If the initiator wants to be notified when the jobs are completed.
+     * @throws UnavailableCraftingInterfacesException If no crafting interfaces were available.
+     */
+    public static void scheduleCraftingJobs(ICraftingNetwork craftingNetwork,
+                                            Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
+                                            CraftingJobDependencyGraph craftingJobDependencyGraph,
+                                            boolean allowDistribution,
+                                            @Nullable UUID initiator,
+                                            boolean notifyInitiator) throws UnavailableCraftingInterfacesException {
         List<CraftingJob> startedJobs = Lists.newArrayList();
         craftingNetwork.getCraftingJobDependencyGraph().importDependencies(craftingJobDependencyGraph);
         for (CraftingJob craftingJob : craftingJobDependencyGraph.getCraftingJobs()) {
@@ -721,6 +742,7 @@ public class CraftingHelpers {
             startedJobs.add(craftingJob);
             if (initiator != null) {
                 craftingJob.setInitiatorUuid(initiator.toString());
+                craftingJob.setNotifyInitiator(notifyInitiator);
             }
         }
     }
