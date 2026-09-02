@@ -698,6 +698,7 @@ public class CraftingHelpers {
      * @param initiator                  Optional UUID of the initiator.
      * @throws UnavailableCraftingInterfacesException If no crafting interfaces were available.
      */
+    @Deprecated // TODO: rm in next major
     public static void scheduleCraftingJobs(ICraftingNetwork craftingNetwork,
                                             Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
                                             CraftingJobDependencyGraph craftingJobDependencyGraph,
