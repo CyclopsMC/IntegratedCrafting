@@ -1,5 +1,6 @@
 org.cyclops.integratedcrafting
 org.cyclops.integratedcrafting.api.crafting
+org.cyclops.integratedcrafting.api.event
 org.cyclops.integratedcrafting.api.network
 org.cyclops.integratedcrafting.api.recipe
 org.cyclops.integratedcrafting.capability.network
