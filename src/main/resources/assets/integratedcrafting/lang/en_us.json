@@ -18,6 +18,7 @@
   "gui.integratedcrafting.partinterface.recipes.inputs": "Inputs:",
   "gui.integratedcrafting.partinterface.recipes.click_enable": "Click to enable this recipe",
   "gui.integratedcrafting.partinterface.recipes.click_disable": "Click to disable this recipe",
+  "gui.integratedcrafting.partinterface.recipes.click_drag": "Drag to apply to multiple recipes",
 
   "gui.integratedcrafting.partinterface.slot.message.valid": "Recipe is valid for the target.",
   "gui.integratedcrafting.partinterface.slot.message.invalid": "Recipe is not acceptable by the target.",

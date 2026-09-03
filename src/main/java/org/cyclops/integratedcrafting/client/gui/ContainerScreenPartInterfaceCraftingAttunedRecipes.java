@@ -1,9 +1,11 @@
 package org.cyclops.integratedcrafting.client.gui;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -31,8 +33,10 @@ import org.cyclops.integratedcrafting.client.gui.tooltip.RecipeInputs;
 import org.cyclops.integratedcrafting.client.gui.tooltip.RecipeInputsTooltip;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingAttunedRecipes;
 
+import javax.annotation.Nullable;
 import java.awt.Rectangle;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Gui that shows all recipes of an attuned crafting interface in a grid.
@@ -61,6 +65,28 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
     private static final int COLOR_DISABLED = 0x80303030;
     private static final int COLOR_BORDER_ENABLED = 0xFF44BB44;
     private static final int COLOR_BORDER_DISABLED = 0xFFBB4444;
+
+    /**
+     * The minimum time in milliseconds between two clicking sounds while dragging,
+     * as dragging over a full row would otherwise produce a burst of clicks.
+     */
+    private static final long TOGGLE_SOUND_INTERVAL = 100;
+    /**
+     * The maximum distance in pixels between two positions that a drag is applied at.
+     */
+    private static final double DRAG_STEP = 4;
+    private static final int MAX_DRAG_STEPS = 100;
+
+    /**
+     * The recipes that the drag that is in progress has passed over,
+     * or null if no drag is in progress.
+     */
+    private Set<IRecipeDefinition> draggedRecipes = null;
+    /**
+     * The state that the drag that is in progress applies to the recipes it passes over.
+     */
+    private boolean draggedEnabled = false;
+    private long lastToggleSoundTime = 0;
 
     public ContainerScreenPartInterfaceCraftingAttunedRecipes(ContainerPartInterfaceCraftingAttunedRecipes container,
                                                               Inventory inventory, Component title) {
@@ -170,14 +196,24 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
      * @return The index of the grid cell under the mouse, or -1 if the mouse is not over a cell.
      */
     protected int getCellIndexAt(double mouseX, double mouseY) {
+        return getCellIndexAt(mouseX, mouseY, true);
+    }
+
+    /**
+     * @param mouseX The absolute mouse x position.
+     * @param mouseY The absolute mouse y position.
+     * @param skipCellBorders If the border between two cells should not count as a cell.
+     * @return The index of the grid cell under the mouse, or -1 if the mouse is not over a cell.
+     */
+    protected int getCellIndexAt(double mouseX, double mouseY, boolean skipCellBorders) {
         int relativeX = (int) (mouseX - this.leftPos - this.offsetX - GRID_X);
         int relativeY = (int) (mouseY - this.topPos - this.offsetY - GRID_Y);
         if (relativeX < 0 || relativeY < 0 || relativeX >= getGridWidth() || relativeY >= getGridHeight()) {
             return -1;
         }
         // Ignore the border between two cells
-        if (relativeX % GuiHelpers.SLOT_SIZE >= GuiHelpers.SLOT_SIZE_INNER
-                || relativeY % GuiHelpers.SLOT_SIZE >= GuiHelpers.SLOT_SIZE_INNER) {
+        if (skipCellBorders && (relativeX % GuiHelpers.SLOT_SIZE >= GuiHelpers.SLOT_SIZE_INNER
+                || relativeY % GuiHelpers.SLOT_SIZE >= GuiHelpers.SLOT_SIZE_INNER)) {
             return -1;
         }
         return relativeX / GuiHelpers.SLOT_SIZE
@@ -195,18 +231,90 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         if (mouseButton == 0) {
-            int index = getCellIndexAt(mouseX, mouseY);
-            if (index >= 0) {
-                IRecipeDefinition recipe = getMenu().getVisibleElement(index);
-                if (recipe != null) {
-                    getMenu().setRecipeEnabled(recipe, !getMenu().isRecipeEnabled(recipe));
-                    Minecraft.getInstance().getSoundManager()
-                            .play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                    return true;
-                }
+            IRecipeDefinition recipe = getRecipeAt(mouseX, mouseY);
+            if (recipe != null) {
+                // The recipe that is clicked first determines the state that the whole drag applies,
+                // so that dragging can both enable and disable recipes.
+                this.draggedRecipes = Sets.newIdentityHashSet();
+                this.draggedEnabled = !getMenu().isRecipeEnabled(recipe);
+                applyDragTo(recipe);
+                return true;
             }
         }
         return super.mouseClicked(mouseX, mouseY, mouseButton);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int mouseButton, double dragX, double dragY) {
+        if (this.draggedRecipes != null && mouseButton == 0) {
+            // The mouse can move over several cells between two events,
+            // so the whole path since the previous position is walked over.
+            int steps = Mth.clamp((int) Math.ceil(Math.max(Math.abs(dragX), Math.abs(dragY)) / DRAG_STEP),
+                    1, MAX_DRAG_STEPS);
+            for (int step = 1; step <= steps; step++) {
+                applyDragAt(mouseX - dragX * (steps - step) / steps, mouseY - dragY * (steps - step) / steps);
+            }
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, mouseButton, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int mouseButton) {
+        if (this.draggedRecipes != null && mouseButton == 0) {
+            this.draggedRecipes = null;
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, mouseButton);
+    }
+
+    /**
+     * @param mouseX The absolute mouse x position.
+     * @param mouseY The absolute mouse y position.
+     * @return The recipe in the grid cell under the mouse, or null if there is none.
+     */
+    @Nullable
+    protected IRecipeDefinition getRecipeAt(double mouseX, double mouseY) {
+        int index = getCellIndexAt(mouseX, mouseY);
+        return index >= 0 ? getMenu().getVisibleElement(index) : null;
+    }
+
+    /**
+     * Apply the state of the drag that is in progress to the recipe at the given position, if any.
+     *
+     * @param mouseX The absolute mouse x position.
+     * @param mouseY The absolute mouse y position.
+     */
+    protected void applyDragAt(double mouseX, double mouseY) {
+        // The borders between cells are dragged over as well,
+        // so that a drag is not interrupted by the single pixel between two cells.
+        int index = getCellIndexAt(mouseX, mouseY, false);
+        IRecipeDefinition recipe = index >= 0 ? getMenu().getVisibleElement(index) : null;
+        if (recipe != null) {
+            applyDragTo(recipe);
+        }
+    }
+
+    /**
+     * Apply the state of the drag that is in progress to the given recipe.
+     *
+     * Recipes that the drag already passed over are skipped,
+     * so that moving back and forth over a recipe does not toggle it repeatedly.
+     *
+     * @param recipe One of the recipes in this container.
+     */
+    protected void applyDragTo(IRecipeDefinition recipe) {
+        if (!this.draggedRecipes.add(recipe) || getMenu().isRecipeEnabled(recipe) == this.draggedEnabled) {
+            return;
+        }
+        getMenu().setRecipeEnabled(recipe, this.draggedEnabled);
+
+        long time = Util.getMillis();
+        if (time - this.lastToggleSoundTime >= TOGGLE_SOUND_INTERVAL) {
+            this.lastToggleSoundTime = time;
+            Minecraft.getInstance().getSoundManager()
+                    .play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        }
     }
 
     @Override
@@ -256,9 +364,9 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
 
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        int index = getCellIndexAt(mouseX, mouseY);
-        if (index >= 0) {
-            IRecipeDefinition recipe = getMenu().getVisibleElement(index);
+        // The tooltip is hidden while dragging, as it would cover the cells that are being dragged over
+        if (this.draggedRecipes == null) {
+            IRecipeDefinition recipe = getRecipeAt(mouseX, mouseY);
             if (recipe != null) {
                 renderRecipeTooltip(guiGraphics, recipe, mouseX, mouseY);
             }
@@ -313,6 +421,8 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
                         ? "gui.integratedcrafting.partinterface.recipes.click_disable"
                         : "gui.integratedcrafting.partinterface.recipes.click_enable")
                 .withStyle(ChatFormatting.AQUA)));
+        elements.add(Either.left(Component.translatable("gui.integratedcrafting.partinterface.recipes.click_drag")
+                .withStyle(ChatFormatting.DARK_AQUA)));
 
         // Don't write to the depth buffer, so that anything drawn after this tooltip is not occluded by it.
         RenderSystem.disableDepthTest();
