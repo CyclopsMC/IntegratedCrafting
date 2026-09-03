@@ -155,8 +155,6 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
         addBulkActionButton(0, ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_ENABLE);
         addBulkActionButton(1, ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_DISABLE);
         addBulkActionButton(2, ContainerPartInterfaceCraftingAttunedRecipes.BULK_ACTION_INVERT);
-
-        getScrollbar().setTotalRows(getTotalGridRows());
     }
 
     protected void addBulkActionButton(int index, int action) {
@@ -172,22 +170,6 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
 
     protected int getBulkActionX(int index) {
         return GRID_X + index * BUTTON_OFFSET;
-    }
-
-    /**
-     * The scrollbar rows are rounded up here,
-     * as a last row that is only partially filled must still be reachable.
-     * {@link ContainerScreenScrolling} rounds down, which would hide it.
-     */
-    protected int getTotalGridRows() {
-        return Mth.ceil((double) getMenu().getFilteredItemCount() / getMenu().getColumns());
-    }
-
-    @Override
-    protected void updateSearch(String searchString) {
-        super.updateSearch(searchString);
-        getScrollbar().setTotalRows(getTotalGridRows());
-        getScrollbar().scrollTo(0);
     }
 
     /**
