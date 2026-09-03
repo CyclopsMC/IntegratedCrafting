@@ -28,7 +28,9 @@ import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.RecipeKey;
 import org.cyclops.cyclopscore.helper.ValueNotifierHelpers;
 import org.cyclops.integratedcrafting.core.CraftingHelpers;
+import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingAttunedOffsets;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingAttunedRecipes;
+import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettings;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCraftingAttuned;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integrateddynamics.api.evaluate.variable.ValueDeseralizationContext;
@@ -337,6 +339,43 @@ public class GameTestsAttunedRecipes {
                             "The part opened the wrong gui");
                     helper.assertValueEqual(((ContainerPartInterfaceCraftingAttunedRecipes) menu).getUnfilteredItemCount(),
                             partState.getAllRecipes().size(), "The opened gui has the wrong number of recipes");
+                })
+                .thenSucceed();
+    }
+
+    /**
+     * The settings and offsets guis are opened from the recipes gui,
+     * so this part exposes guis of its own that return to it when they are closed.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testAttunedSubGuisAreOwnedByThisMod(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingAttuned.State> positions =
+                createBasicNetwork(helper, POS, true);
+        PartTypeInterfaceCraftingAttuned.State partState = positions.interfaceStates().get(0);
+
+        helper.startSequence()
+                .thenWaitUntil(() -> {
+                    helper.assertTrue(partState.getCraftingNetwork() != null, "The interface has no crafting network");
+                })
+                .thenExecute(() -> {
+                    ServerPlayer player = helper.makeMockServerPlayerInLevel();
+                    PartPos pos = positions.interfaces().get(0);
+
+                    // The offsets gui must be the one of this mod,
+                    // as the one of Integrated Dynamics closes all guis instead of returning to the part's gui.
+                    MenuProvider offsetsProvider = PartTypes.INTERFACE_CRAFTING_ATTUNED
+                            .getContainerProviderOffsets(pos).orElse(null);
+                    helper.assertTrue(offsetsProvider != null, "The part has no offsets gui");
+                    helper.assertTrue(offsetsProvider.createMenu(2, player.getInventory(), player)
+                                    instanceof ContainerPartInterfaceCraftingAttunedOffsets,
+                            "The part has the wrong offsets gui");
+
+                    MenuProvider settingsProvider = PartTypes.INTERFACE_CRAFTING_ATTUNED
+                            .getContainerProviderSettings(pos).orElse(null);
+                    helper.assertTrue(settingsProvider != null, "The part has no settings gui");
+                    helper.assertTrue(settingsProvider.createMenu(3, player.getInventory(), player)
+                                    instanceof ContainerPartInterfaceCraftingSettings,
+                            "The part has the wrong settings gui");
                 })
                 .thenSucceed();
     }

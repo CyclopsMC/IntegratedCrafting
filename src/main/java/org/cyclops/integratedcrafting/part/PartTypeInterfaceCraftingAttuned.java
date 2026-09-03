@@ -33,6 +33,7 @@ import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.RecipeKey;
 import org.cyclops.integratedcrafting.core.part.PartTypeInterfaceCraftingBase;
+import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingAttunedOffsets;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingAttunedRecipes;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettings;
 import org.cyclops.integrateddynamics.api.evaluate.variable.ValueDeseralizationContext;
@@ -108,6 +109,24 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
             public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player playerEntity) {
                 Triple<IPartContainer, PartTypeBase, PartTarget> data = PartHelpers.getContainerPartConstructionData(pos);
                 return new ContainerPartInterfaceCraftingSettings(id, playerInventory, new SimpleContainer(0),
+                        data.getRight(), Optional.of(data.getLeft()), data.getMiddle());
+            }
+        });
+    }
+
+    @Override
+    public Optional<MenuProvider> getContainerProviderOffsets(PartPos pos) {
+        return Optional.of(new MenuProvider() {
+
+            @Override
+            public MutableComponent getDisplayName() {
+                return Component.translatable(getTranslationKey());
+            }
+
+            @Override
+            public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player playerEntity) {
+                Triple<IPartContainer, PartTypeBase, PartTarget> data = PartHelpers.getContainerPartConstructionData(pos);
+                return new ContainerPartInterfaceCraftingAttunedOffsets(id, playerInventory, new SimpleContainer(0),
                         data.getRight(), Optional.of(data.getLeft()), data.getMiddle());
             }
         });
