@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -26,6 +27,7 @@ import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.core.helper.NetworkHelpers;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -120,6 +122,58 @@ public class GameTestsCraftingJobFinishedEvent {
                 .thenSucceed();
     }
 
+    /**
+     * A job that is distributed over multiple crafting interfaces stays attributed to its initiator.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testDistributedJobRetainsInitiator(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions =
+                GameTestHelpersIntegratedCrafting.createBasicNetwork(helper, POS, false,
+                        Blocks.CRAFTING_TABLE, Blocks.CRAFTING_TABLE);
+        ChestBlockEntity chest = helper.getBlockEntity(POS.east());
+        chest.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
+
+        // Both interfaces know the recipe, so the job gets split over the two of them
+        for (int i = 0; i < positions.interfaceRecipeAdders().size(); i++) {
+            positions.interfaceRecipeAdders().get(i).accept(Triple.of(0, RecipeType.CRAFTING,
+                    ResourceLocation.fromNamespaceAndPath("minecraft", "chest")));
+        }
+
+        UUID initiator = UUID.randomUUID();
+        EventCollector collector = EventCollector.start(initiator);
+
+        helper.startSequence()
+                .thenIdle(20)
+                .thenExecute(() -> {
+                    scheduleChestJob(helper, initiator, true, 4);
+
+                    List<CraftingJob> jobs = getCraftingJobs(helper);
+                    helper.assertTrue(jobs.size() > 1,
+                            "Expected the job to be split over both crafting interfaces, but found "
+                                    + jobs.size() + " job(s)");
+                    for (CraftingJob craftingJob : jobs) {
+                        helper.assertTrue(initiator.toString().equals(craftingJob.getInitiatorUuid()),
+                                "A split job lost its initiator");
+                        helper.assertTrue(craftingJob.isNotifyInitiator(),
+                                "A split job lost its notify flag");
+                    }
+                })
+                .thenWaitUntil(() -> helper.assertTrue(!collector.getRootJobs().isEmpty(),
+                        "No completion event was emitted for the distributed job"))
+                .thenExecute(collector::stop)
+                .thenSucceed();
+    }
+
+    private static List<CraftingJob> getCraftingJobs(GameTestHelper helper) {
+        List<CraftingJob> jobs = Lists.newArrayList();
+        Iterator<CraftingJob> it = CraftingHelpers.getCraftingNetworkChecked(getNetwork(helper))
+                .getCraftingJobs(IPositionedAddonsNetworkIngredients.WILDCARD_CHANNEL);
+        while (it.hasNext()) {
+            jobs.add(it.next());
+        }
+        return jobs;
+    }
+
     private static void prepareNetwork(GameTestHelper helper) {
         GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions =
                 GameTestHelpersIntegratedCrafting.createBasicNetwork(helper, POS);
@@ -134,12 +188,17 @@ public class GameTestsCraftingJobFinishedEvent {
     }
 
     private static CraftingJob scheduleChestJob(GameTestHelper helper, UUID initiator, boolean notifyInitiator) {
+        return scheduleChestJob(helper, initiator, notifyInitiator, 1);
+    }
+
+    private static CraftingJob scheduleChestJob(GameTestHelper helper, UUID initiator, boolean notifyInitiator,
+                                                int amount) {
         INetwork network = getNetwork(helper);
         int channel = IPositionedAddonsNetworkIngredients.DEFAULT_CHANNEL;
         try {
             CraftingJobDependencyGraph dependencyGraph = new CraftingJobDependencyGraph();
             CraftingJob craftingJob = CraftingHelpers.calculateCraftingJobs(network, channel,
-                    IngredientComponents.ITEMSTACK, new ItemStack(Items.CHEST), ItemMatch.ITEM, true,
+                    IngredientComponents.ITEMSTACK, new ItemStack(Items.CHEST, amount), ItemMatch.ITEM, true,
                     CraftingHelpers.getGlobalCraftingJobIdentifier(), dependencyGraph, false);
             CraftingHelpers.scheduleCraftingJobs(CraftingHelpers.getCraftingNetworkChecked(network),
                     CraftingHelpers.getNetworkStorageGetter(network, channel, false), dependencyGraph, true,

@@ -385,6 +385,8 @@ public class CraftingJob {
                 getIngredientsStorage()
         );
         clone.setAmountTotal(getAmountTotal());
+        clone.setInitiatorUuid(getInitiatorUuid());
+        clone.setNotifyInitiator(isNotifyInitiator());
         return clone;
     }
 }
