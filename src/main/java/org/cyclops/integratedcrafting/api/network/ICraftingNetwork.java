@@ -168,6 +168,8 @@ public interface ICraftingNetwork {
      * @param recipe A recipe.
      * @return The estimated duration in ticks of a single crafting operation of the given recipe,
      *         based on the operations that the crafting interfaces performed before, or -1 if unknown.
+     *         As with {@link ICraftingInterface#getEstimatedRecipeDuration(IRecipeDefinition)},
+     *         this accounts for the interval at which those interfaces start operations.
      */
     public long getEstimatedRecipeDuration(int channel, IRecipeDefinition recipe);
 

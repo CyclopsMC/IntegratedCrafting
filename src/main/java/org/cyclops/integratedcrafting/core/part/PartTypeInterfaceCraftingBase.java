@@ -381,7 +381,7 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
 
         @Override
         public long getEstimatedRecipeDuration(IRecipeDefinition recipe) {
-            return craftingJobHandler.getEstimatedRecipeDuration(recipe);
+            return craftingJobHandler.getEstimatedRecipeDuration(recipe, getUpdateInterval());
         }
 
         @Override

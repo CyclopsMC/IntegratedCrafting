@@ -118,10 +118,12 @@ public class GameTestsItemsCraft {
             // Check if items have been crafted
             helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.CHEST, "Slot 1 item is incorrect");
 
-            // Check if the duration of the crafted recipe was measured
+            // Check if the duration of the crafted recipe was measured.
+            // A chest is crafted within the tick it is started in, so its measured duration is zero,
+            // and the interval at which the interface starts operations is what is left of it.
             PartTypeInterfaceCrafting.State interfaceState = positions.interfaceStates().get(0);
             for (IRecipeDefinition recipe : interfaceState.getRecipes()) {
-                helper.assertTrue(interfaceState.getEstimatedRecipeDuration(recipe) >= 0,
+                helper.assertTrue(interfaceState.getEstimatedRecipeDuration(recipe) >= interfaceState.getUpdateInterval(),
                         "No crafting duration was measured for the crafted recipe");
             }
         });

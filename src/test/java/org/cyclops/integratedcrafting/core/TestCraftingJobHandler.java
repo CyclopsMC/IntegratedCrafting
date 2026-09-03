@@ -63,28 +63,52 @@ public class TestCraftingJobHandler {
 
     @Test
     public void testRecipeDurationUnknown() {
-        assertThat(handler.getEstimatedRecipeDuration(recipeA), equalTo(-1L));
+        assertThat(handler.getEstimatedRecipeDuration(recipeA, 0), equalTo(-1L));
     }
 
     @Test
     public void testRecipeDurationSingle() {
         handler.reportRecipeDuration(recipeA, 100);
-        assertThat(handler.getEstimatedRecipeDuration(recipeA), equalTo(100L));
+        assertThat(handler.getEstimatedRecipeDuration(recipeA, 0), equalTo(100L));
     }
 
     @Test
     public void testRecipeDurationSmoothed() {
         handler.reportRecipeDuration(recipeA, 100);
         handler.reportRecipeDuration(recipeA, 200);
-        assertThat(handler.getEstimatedRecipeDuration(recipeA), equalTo(125L));
+        assertThat(handler.getEstimatedRecipeDuration(recipeA, 0), equalTo(125L));
         handler.reportRecipeDuration(recipeA, 200);
-        assertThat(handler.getEstimatedRecipeDuration(recipeA), equalTo(144L));
+        assertThat(handler.getEstimatedRecipeDuration(recipeA, 0), equalTo(144L));
+    }
+
+    @Test
+    public void testRecipeDurationIsAtLeastOneUpdate() {
+        handler.reportRecipeDuration(recipeA, 0);
+        assertThat(handler.getEstimatedRecipeDuration(recipeA, 5), equalTo(5L));
+    }
+
+    @Test
+    public void testRecipeDurationLongerThanOneUpdateIsKept() {
+        handler.reportRecipeDuration(recipeA, 100);
+        assertThat(handler.getEstimatedRecipeDuration(recipeA, 5), equalTo(100L));
+    }
+
+    @Test
+    public void testUnknownRecipeDurationStaysUnknownWithUpdateInterval() {
+        assertThat(handler.getEstimatedRecipeDuration(recipeA, 5), equalTo(-1L));
+    }
+
+    @Test
+    public void testRecipeDurationIsNotBoundedInNonBlockingMode() {
+        TickingCraftingJobHandler nonBlockingHandler = new TickingCraftingJobHandler(false);
+        nonBlockingHandler.reportRecipeDuration(recipeA, 0);
+        assertThat(nonBlockingHandler.getEstimatedRecipeDuration(recipeA, 5), equalTo(0L));
     }
 
     @Test
     public void testRecipeDurationFallsBackToAverage() {
         handler.reportRecipeDuration(recipeA, 100);
-        assertThat(handler.getEstimatedRecipeDuration(recipeB), equalTo(100L));
+        assertThat(handler.getEstimatedRecipeDuration(recipeB, 0), equalTo(100L));
     }
 
     @Test
@@ -130,7 +154,7 @@ public class TestCraftingJobHandler {
 
         assertThat(craftingJob.getAmount(), equalTo(1));
         assertThat(craftingJob.getAmountTotal(), equalTo(2));
-        assertThat(handler.getEstimatedRecipeDuration(recipeA), equalTo(60L));
+        assertThat(handler.getEstimatedRecipeDuration(recipeA, 0), equalTo(60L));
         assertThat(handler.getCraftingJobEntryStartTick(1), equalTo(-1L));
     }
 
@@ -147,12 +171,12 @@ public class TestCraftingJobHandler {
 
         handler.setCurrentTick(200);
         handler.onCraftingJobEntryFinished(craftingNetwork, 1);
-        assertThat(handler.getEstimatedRecipeDuration(recipeA), equalTo(100L));
+        assertThat(handler.getEstimatedRecipeDuration(recipeA, 0), equalTo(100L));
         assertThat(handler.getCraftingJobEntryStartTick(1), equalTo(120L));
 
         handler.setCurrentTick(220);
         handler.onCraftingJobEntryFinished(craftingNetwork, 1);
-        assertThat(handler.getEstimatedRecipeDuration(recipeA), equalTo(100L));
+        assertThat(handler.getEstimatedRecipeDuration(recipeA, 0), equalTo(100L));
         assertThat(handler.getCraftingJobEntryStartTick(1), equalTo(-1L));
     }
 
@@ -210,7 +234,7 @@ public class TestCraftingJobHandler {
         TickingCraftingJobHandler deserialized = new TickingCraftingJobHandler();
         deserialized.readFromNBT(null, tag);
 
-        assertThat(deserialized.getEstimatedRecipeDuration(recipeA), equalTo(100L));
+        assertThat(deserialized.getEstimatedRecipeDuration(recipeA, 0), equalTo(100L));
         assertThat(deserialized.getRecipeDurationStatistics().getEntryCount(), equalTo(0));
     }
 
@@ -219,7 +243,11 @@ public class TestCraftingJobHandler {
         private long currentTick;
 
         public TickingCraftingJobHandler() {
-            super(1, true, Collections.emptyList(), new ICraftingResultsSink() {
+            this(true);
+        }
+
+        public TickingCraftingJobHandler(boolean blockingJobsMode) {
+            super(1, blockingJobsMode, Collections.emptyList(), new ICraftingResultsSink() {
                 @Override
                 public <T, M> void addResult(IngredientComponent<T, M> ingredientComponent, T instance) {
 
