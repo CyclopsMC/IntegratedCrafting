@@ -35,4 +35,25 @@ public class TestCraftingJob {
         assertThat(job.getAmountTotal(), equalTo(3));
     }
 
+    @Test
+    public void testCloneRetainsInitiator() {
+        // Jobs are cloned when they are distributed over multiple crafting interfaces,
+        // so the clones have to remain attributable to whoever requested them.
+        job.setInitiatorUuid("00000000-0000-0000-0000-00000000beef");
+        job.setNotifyInitiator(true);
+
+        CraftingJob clone = job.clone(() -> 1);
+
+        assertThat(clone.getInitiatorUuid(), equalTo("00000000-0000-0000-0000-00000000beef"));
+        assertThat(clone.isNotifyInitiator(), equalTo(true));
+    }
+
+    @Test
+    public void testCloneWithoutInitiator() {
+        CraftingJob clone = job.clone(() -> 1);
+
+        assertThat(clone.getInitiatorUuid(), equalTo(null));
+        assertThat(clone.isNotifyInitiator(), equalTo(false));
+    }
+
 }

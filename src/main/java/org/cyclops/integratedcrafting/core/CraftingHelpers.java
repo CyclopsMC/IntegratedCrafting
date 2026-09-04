@@ -727,6 +727,12 @@ public class CraftingHelpers {
         List<CraftingJob> startedJobs = Lists.newArrayList();
         craftingNetwork.getCraftingJobDependencyGraph().importDependencies(craftingJobDependencyGraph);
         for (CraftingJob craftingJob : craftingJobDependencyGraph.getCraftingJobs()) {
+            // Set before scheduling, as scheduling may distribute the job over multiple crafting
+            // interfaces, in which case it is replaced by clones that have to inherit this.
+            if (initiator != null) {
+                craftingJob.setInitiatorUuid(initiator.toString());
+                craftingJob.setNotifyInitiator(notifyInitiator);
+            }
             try {
                 craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution, storageGetter);
             } catch (UnavailableCraftingInterfacesException e) {
@@ -740,10 +746,6 @@ public class CraftingHelpers {
                 throw new UnavailableCraftingInterfacesException(craftingJobDependencyGraph.getCraftingJobs());
             }
             startedJobs.add(craftingJob);
-            if (initiator != null) {
-                craftingJob.setInitiatorUuid(initiator.toString());
-                craftingJob.setNotifyInitiator(notifyInitiator);
-            }
         }
     }
 
@@ -763,10 +765,12 @@ public class CraftingHelpers {
                                                   CraftingJob craftingJob,
                                                   boolean allowDistribution,
                                                   @Nullable UUID initiator) throws UnavailableCraftingInterfacesException {
-        craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution, storageGetter);
+        // Set before scheduling, as scheduling may distribute the job over multiple crafting
+        // interfaces, in which case it is replaced by clones that have to inherit this.
         if (initiator != null) {
             craftingJob.setInitiatorUuid(initiator.toString());
         }
+        craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution, storageGetter);
         return craftingJob;
     }
 
