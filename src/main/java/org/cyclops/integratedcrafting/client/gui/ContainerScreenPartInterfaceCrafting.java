@@ -11,7 +11,7 @@ import org.cyclops.cyclopscore.client.gui.container.ContainerScreenExtended;
 import org.cyclops.cyclopscore.client.gui.image.IImage;
 import org.cyclops.cyclopscore.client.gui.image.Images;
 import org.cyclops.cyclopscore.helper.GuiHelpers;
-import org.cyclops.integratedcrafting.Reference;
+import org.cyclops.integratedcrafting.core.part.PartTypeInterfaceCraftingVariableBase;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCrafting;
 import org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects;
 
@@ -39,7 +39,7 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
 
     @Override
     protected ResourceLocation constructGuiTexture() {
-        return ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "textures/gui/part_interface_crafting.png");
+        return ((PartTypeInterfaceCraftingVariableBase<?, ?>) getMenu().getPartType()).getGuiTexture();
     }
 
     @Override

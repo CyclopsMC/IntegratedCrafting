@@ -17,6 +17,7 @@
     "recipes": [
       "integratedcrafting:part_interface_crafting",
       "integratedcrafting:part_interface_crafting_attuned",
+      "integratedcrafting:part_interface_crafting_list",
       "integratedcrafting:part_crafting_writer"
 
     ]

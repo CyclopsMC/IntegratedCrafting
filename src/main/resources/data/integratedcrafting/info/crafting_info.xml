@@ -15,12 +15,15 @@
         <section name="info_book.integratedcrafting.crafting_interface.basics">
             <tag>integratedcrafting:part_interface_crafting</tag>
             <tag>integratedcrafting:part_interface_crafting_attuned</tag>
+            <tag>integratedcrafting:part_interface_crafting_list</tag>
             <paragraph>info_book.integratedcrafting.crafting_interface.basics.text1</paragraph>
             <paragraph>info_book.integratedcrafting.crafting_interface.basics.text2</paragraph>
             <paragraph>info_book.integratedcrafting.crafting_interface.basics.text3</paragraph>
             <paragraph>info_book.integratedcrafting.crafting_interface.basics.text4</paragraph>
+            <paragraph>info_book.integratedcrafting.crafting_interface.basics.text5</paragraph>
             <appendix type="minecraft:crafting">integratedcrafting:crafting/part_interface_crafting</appendix>
             <appendix type="minecraft:crafting">integratedcrafting:crafting/part_interface_crafting_attuned</appendix>
+            <appendix type="minecraft:crafting">integratedcrafting:crafting/part_interface_crafting_list</appendix>
         </section>
 
         <section name="info_book.integratedcrafting.crafting_interface.crafting">

@@ -12,5 +12,6 @@
   { "type": "minecraft:single", "resource": "integratedcrafting:part/crafting_writer_front_inactive" },
   { "type": "minecraft:single", "resource": "integratedcrafting:part/interface_crafting" },
   { "type": "minecraft:single", "resource": "integratedcrafting:part/interface_crafting_attuned" },
+  { "type": "minecraft:single", "resource": "integratedcrafting:part/interface_crafting_list" },
   { "type": "minecraft:single", "resource": "integratedcrafting:part/crafting_writer_back" }
 ]}

@@ -12,6 +12,11 @@
   "gui.integratedcrafting.partinterface.slot.message.valid": "Recipe is valid for the target.",
   "gui.integratedcrafting.partinterface.slot.message.invalid": "Recipe is not acceptable by the target.",
   "gui.integratedcrafting.partinterface.slot.message.norecipe": "The variable does not contain a recipe.",
+  "gui.integratedcrafting.partinterface.slot.message.empty": "The variable does not contain any recipes.",
+  "gui.integratedcrafting.partinterface.slot.message.valid.multiple": "%s recipes are valid for the target.",
+  "gui.integratedcrafting.partinterface.slot.message.partial": "Only %s of %s recipes are acceptable by the target.",
+  "gui.integratedcrafting.partinterface.slot.message.list.infinite": "Infinite lists of recipes are not supported.",
+  "gui.integratedcrafting.partinterface.slot.message.list.toolarge": "The list was too long: only the first %s recipes are used.",
 
   "_comment": "Advancements",
   "advancement.integratedcrafting.craft_crafting_interface": "Crafting² Interface",
@@ -24,6 +29,8 @@
   "advancement.integratedcrafting.craft_planks.desc": "Use a Crafting Writer to start a crafting job for Oak Planks",
   "advancement.integratedcrafting.craft_crafting_interface_attuned": "Crafting³ Interface",
   "advancement.integratedcrafting.craft_crafting_interface_attuned.desc": "Craft an Attuned Crafting Interface",
+  "advancement.integratedcrafting.craft_crafting_interface_list": "Crafting\u2074 Interface",
+  "advancement.integratedcrafting.craft_crafting_interface_list.desc": "Craft a List-Based Crafting Interface",
 
   "_comment": "Part types",
   "parttype.integratedcrafting.interface_crafting": "Crafting Interface",
@@ -31,6 +38,8 @@
   "parttype.integratedcrafting.interface_crafting_attuned": "Attuned Crafting Interface",
   "parttype.integratedcrafting.interface_crafting_attuned.info": "Handles crafting for all recipes exposed by the target machine.",
   "parttype.integratedcrafting.interface_crafting_attuned.unsupported": "The target machine does not support recipe handling.",
+  "parttype.integratedcrafting.interface_crafting_list": "List-Based Crafting Interface",
+  "parttype.integratedcrafting.interface_crafting_list.info": "Handles crafting for all recipes inside a single list variable.",
 
   "parttype.integratedcrafting.crafting_writer": "Crafting Writer",
   "parttype.integratedcrafting.crafting_writer.info": "Starts crafting jobs",
@@ -83,6 +92,7 @@
   "info_book.integratedcrafting.crafting_interface.basics.text2": "By pointing a &lCrafting Interface&r to a machine &o(like a Crafting table or Furnace)&r, this interface will be bound to this machine to handle recipes.",
   "info_book.integratedcrafting.crafting_interface.basics.text3": "When opening the GUI of a &lCrafting Interface&r, you can insert &lVariable Cards&r that hold &8Recipes&0. This will tell the interface that the given recipe can be crafted using the bound machine.",
   "info_book.integratedcrafting.crafting_interface.basics.text4": "When you've progressed later in the game, you will be able to craft the &lAttuned Crafting Interface&r. It does not require you to manually add recipes to it, as it will read and expose all recipes that are available in the target machine. These are the same recipes that are listed in the &lMachine Reader&r. Some modded machines may not be supported, which will be visualized by a red border when placing the &lAttuned Crafting Interface&r.",
+  "info_book.integratedcrafting.crafting_interface.basics.text5": "The &lList-Based Crafting Interface&r takes a single variable holding a &llist of recipes&r, and exposes every recipe in that list to the network. This allows you to derive the recipes of an interface using logic, for example by pointing the &lMachine Reader&r at a machine, or by filtering a list of recipes. Infinite lists are not supported, and the number of recipes that is read from a list can be limited in the config.",
 
   "info_book.integratedcrafting.crafting_interface.crafting": "Crafting Process",
   "info_book.integratedcrafting.crafting_interface.crafting.text1": "This section will explain how the crafting process is being handled by &lCrafting Interfaces&r. This information is essential to get the most out of this mod, and to debug any issues you may encounter.",

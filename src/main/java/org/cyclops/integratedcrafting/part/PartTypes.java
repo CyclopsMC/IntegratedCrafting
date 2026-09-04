@@ -16,6 +16,7 @@ public class PartTypes {
 
     public static final PartTypeInterfaceCrafting INTERFACE_CRAFTING = REGISTRY.register(new PartTypeInterfaceCrafting("interface_crafting"));
     public static final PartTypeInterfaceCraftingAttuned INTERFACE_CRAFTING_ATTUNED = REGISTRY.register(new PartTypeInterfaceCraftingAttuned("interface_crafting_attuned"));
+    public static final PartTypeInterfaceCraftingList INTERFACE_CRAFTING_LIST = REGISTRY.register(new PartTypeInterfaceCraftingList("interface_crafting_list"));
     public static final PartTypeCraftingWriter CRAFTING_WRITER = REGISTRY.register(new PartTypeCraftingWriter("crafting_writer"));
 
 }
