@@ -1,9 +1,15 @@
 package org.cyclops.integratedcrafting.part;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -25,7 +31,10 @@ import org.cyclops.cyclopscore.helper.BlockHelpers;
 import org.cyclops.cyclopscore.helper.IModHelpersNeoForge;
 import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
+import org.cyclops.integratedcrafting.api.recipe.RecipeKey;
 import org.cyclops.integratedcrafting.core.part.PartTypeInterfaceCraftingBase;
+import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingAttunedOffsets;
+import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingAttunedRecipes;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettings;
 import org.cyclops.integrateddynamics.api.evaluate.variable.ValueDeseralizationContext;
 import org.cyclops.integrateddynamics.api.network.INetwork;
@@ -41,7 +50,9 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Interface for auto crafting that reads out all available target machine recipes.
@@ -70,6 +81,33 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
             @Override
             public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player playerEntity) {
                 Triple<IPartContainer, PartTypeBase, PartTarget> data = PartHelpers.getContainerPartConstructionData(pos);
+                PartTypeInterfaceCraftingAttuned.State partState = (PartTypeInterfaceCraftingAttuned.State) data.getLeft().getPartState(pos.getSide());
+                return new ContainerPartInterfaceCraftingAttunedRecipes(id, playerInventory, new SimpleContainer(0),
+                        data.getRight(), Optional.of(data.getLeft()), data.getMiddle(),
+                        partState.getAllRecipes(), partState.getDisabledRecipes(), partState.getRecipesVersion());
+            }
+        });
+    }
+
+    @Override
+    public void writeExtraGuiData(RegistryFriendlyByteBuf packetBuffer, PartPos pos, ServerPlayer player) {
+        super.writeExtraGuiDataSettings(packetBuffer, pos, player); // Writes the part position and part type
+        ContainerPartInterfaceCraftingAttunedRecipes.writeRecipes(packetBuffer,
+                (PartTypeInterfaceCraftingAttuned.State) PartHelpers.getPartContainerChecked(pos).getPartState(pos.getSide()));
+    }
+
+    @Override
+    public Optional<MenuProvider> getContainerProviderSettings(PartPos pos) {
+        return Optional.of(new MenuProvider() {
+
+            @Override
+            public MutableComponent getDisplayName() {
+                return Component.translatable(getTranslationKey());
+            }
+
+            @Override
+            public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player playerEntity) {
+                Triple<IPartContainer, PartTypeBase, PartTarget> data = PartHelpers.getContainerPartConstructionData(pos);
                 return new ContainerPartInterfaceCraftingSettings(id, playerInventory, new SimpleContainer(0),
                         data.getRight(), Optional.of(data.getLeft()), data.getMiddle());
             }
@@ -77,13 +115,21 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
     }
 
     @Override
-    public void writeExtraGuiData(RegistryFriendlyByteBuf packetBuffer, PartPos pos, ServerPlayer player) {
-        super.writeExtraGuiDataSettings(packetBuffer, pos, player); // We show the settings directly.
-    }
+    public Optional<MenuProvider> getContainerProviderOffsets(PartPos pos) {
+        return Optional.of(new MenuProvider() {
 
-    @Override
-    public Optional<MenuProvider> getContainerProviderSettings(PartPos pos) {
-        return Optional.empty();
+            @Override
+            public MutableComponent getDisplayName() {
+                return Component.translatable(getTranslationKey());
+            }
+
+            @Override
+            public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player playerEntity) {
+                Triple<IPartContainer, PartTypeBase, PartTarget> data = PartHelpers.getContainerPartConstructionData(pos);
+                return new ContainerPartInterfaceCraftingAttunedOffsets(id, playerInventory, new SimpleContainer(0),
+                        data.getRight(), Optional.of(data.getLeft()), data.getMiddle());
+            }
+        });
     }
 
     @Override
@@ -156,7 +202,24 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
     public static class State extends PartTypeInterfaceCraftingBase.State<PartTypeInterfaceCraftingAttuned, PartTypeInterfaceCraftingAttuned.State> {
 
         protected boolean hasValidTarget = false;
-        private Collection<IRecipeDefinition> recipes;
+        /**
+         * All recipes that the target exposes, in the order the target exposes them.
+         */
+        private List<IRecipeDefinition> recipes = Collections.emptyList();
+        /**
+         * The subset of {@link #recipes} that is exposed to the crafting network.
+         * This must always be kept in sync with the recipes that are registered in the crafting network,
+         * as the network unregisters a crafting interface by iterating over {@link #getRecipes()}.
+         */
+        private List<IRecipeDefinition> recipesEnabled = Collections.emptyList();
+        private Map<IRecipeDefinition, RecipeKey> recipeKeys = Maps.newIdentityHashMap();
+        /**
+         * The keys of all recipes that the player has disabled.
+         * Unknown keys are retained, so that recipes stay disabled across pack updates
+         * that temporarily remove them.
+         */
+        private final Set<RecipeKey> disabledRecipes = Sets.newLinkedHashSet();
+        private int recipesVersion = 0;
 
         protected Optional<IRecipeHandler> getTargetRecipeHandler() {
             PartPos target = getTarget().getTarget();
@@ -168,10 +231,51 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
             super.setNetworks(network, craftingNetwork, partNetwork, channel, valueDeseralizationContext, initialize);
 
             this.hasValidTarget = getTargetRecipeHandler().isPresent();
-            this.recipes = getTargetRecipeHandler()
-                    .map(IRecipeHandler::getRecipes)
-                    .orElse(Collections.emptyList());
+            reloadRecipeIndex(valueDeseralizationContext);
             markDirty();
+        }
+
+        /**
+         * Re-read all recipes from the target, and re-apply the disabled recipes filter on them.
+         *
+         * This is a no-op without a lookup provider,
+         * as recipes that are not backed by a built-in recipe can not be keyed without one.
+         * The previously read recipes are then retained,
+         * which keeps {@link #getRecipes()} in sync with what is registered in the crafting network.
+         *
+         * @param valueDeseralizationContext The deserialization context, may be null.
+         */
+        protected void reloadRecipeIndex(@Nullable ValueDeseralizationContext valueDeseralizationContext) {
+            if (valueDeseralizationContext == null) {
+                return;
+            }
+            HolderLookup.Provider lookupProvider = valueDeseralizationContext.holderLookupProvider();
+
+            List<IRecipeDefinition> recipes = Lists.newArrayList(getTargetRecipeHandler()
+                    .map(IRecipeHandler::getRecipes)
+                    .orElse(Collections.emptyList()));
+            Map<IRecipeDefinition, RecipeKey> recipeKeys = Maps.newIdentityHashMap();
+            for (IRecipeDefinition recipe : recipes) {
+                recipeKeys.put(recipe, RecipeKey.of(lookupProvider, recipe));
+            }
+
+            this.recipes = recipes;
+            this.recipeKeys = recipeKeys;
+            this.recipesEnabled = filterEnabledRecipes();
+            this.recipesVersion++;
+        }
+
+        protected List<IRecipeDefinition> filterEnabledRecipes() {
+            if (this.disabledRecipes.isEmpty()) {
+                return this.recipes;
+            }
+            List<IRecipeDefinition> enabled = Lists.newArrayListWithCapacity(this.recipes.size());
+            for (IRecipeDefinition recipe : this.recipes) {
+                if (!this.disabledRecipes.contains(this.recipeKeys.get(recipe))) {
+                    enabled.add(recipe);
+                }
+            }
+            return enabled;
         }
 
         public boolean hasValidTarget() {
@@ -182,17 +286,122 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
         public void writeToNBT(ValueDeseralizationContext valueDeseralizationContext, CompoundTag tag) {
             super.writeToNBT(valueDeseralizationContext, tag);
             tag.putBoolean("hasValidTarget", hasValidTarget);
+            if (!this.disabledRecipes.isEmpty()) {
+                ListTag disabledRecipesTag = new ListTag();
+                for (RecipeKey disabledRecipe : this.disabledRecipes) {
+                    disabledRecipesTag.add(disabledRecipe.serialize());
+                }
+                tag.put("disabledRecipes", disabledRecipesTag);
+            }
         }
 
         @Override
         public void readFromNBT(ValueDeseralizationContext valueDeseralizationContext, CompoundTag tag) {
             super.readFromNBT(valueDeseralizationContext, tag);
             this.hasValidTarget = tag.getBoolean("hasValidTarget");
+            // The exposed recipes are deliberately not re-filtered here:
+            // they are recomputed by setNetworks, which is what keeps them in sync
+            // with the recipes that are registered in the crafting network.
+            this.disabledRecipes.clear();
+            for (Tag disabledRecipeTag : tag.getList("disabledRecipes", Tag.TAG_COMPOUND)) {
+                this.disabledRecipes.add(RecipeKey.deserialize((CompoundTag) disabledRecipeTag));
+            }
         }
 
         @Override
         public Collection<IRecipeDefinition> getRecipes() {
-            return this.recipes;
+            return this.recipesEnabled;
+        }
+
+        /**
+         * @return All recipes that the target exposes, including the disabled ones.
+         */
+        public List<IRecipeDefinition> getAllRecipes() {
+            return Collections.unmodifiableList(this.recipes);
+        }
+
+        /**
+         * @return The keys of all recipes that are currently disabled.
+         */
+        public Set<RecipeKey> getDisabledRecipes() {
+            return Collections.unmodifiableSet(this.disabledRecipes);
+        }
+
+        /**
+         * @param recipe One of {@link #getAllRecipes()}.
+         * @return The key of the given recipe, or null if it is not exposed by the target.
+         */
+        @Nullable
+        public RecipeKey getRecipeKey(IRecipeDefinition recipe) {
+            return this.recipeKeys.get(recipe);
+        }
+
+        /**
+         * A counter that is incremented every time the recipes are re-read from the target.
+         *
+         * This allows guis to detect that the recipe list they are showing has become stale.
+         *
+         * @return The current recipe list version.
+         */
+        public int getRecipesVersion() {
+            return this.recipesVersion;
+        }
+
+        /**
+         * @param key A recipe key.
+         * @return If the recipe with the given key is exposed to the crafting network.
+         */
+        public boolean isRecipeEnabled(RecipeKey key) {
+            return !this.disabledRecipes.contains(key);
+        }
+
+        /**
+         * Enable or disable the recipes with the given keys.
+         *
+         * Keys that do not correspond to a recipe of the current target are still stored,
+         * so that the player's choice survives a temporary disappearance of the recipe.
+         *
+         * @param keys The keys of the recipes to update.
+         * @param enabled If the recipes should be exposed to the crafting network.
+         * @return If anything changed.
+         */
+        public boolean setRecipesEnabled(Collection<RecipeKey> keys, boolean enabled) {
+            Set<RecipeKey> changedKeys = Sets.newHashSet();
+            for (RecipeKey key : keys) {
+                if (enabled ? this.disabledRecipes.remove(key) : this.disabledRecipes.add(key)) {
+                    changedKeys.add(key);
+                }
+            }
+            if (changedKeys.isEmpty()) {
+                return false;
+            }
+
+            List<IRecipeDefinition> changedRecipes = Lists.newArrayList();
+            for (IRecipeDefinition recipe : this.recipes) {
+                if (changedKeys.contains(this.recipeKeys.get(recipe))) {
+                    changedRecipes.add(recipe);
+                }
+            }
+
+            // The exposed recipes must be updated before the network is notified,
+            // as the network unregisters this interface by iterating over them.
+            this.recipesEnabled = filterEnabledRecipes();
+
+            // Apply the change to the network incrementally,
+            // so that the network's recipe index stays in sync with our exposed recipes.
+            ICraftingNetwork craftingNetwork = getCraftingNetwork();
+            if (craftingNetwork != null && !shouldAddToCraftingNetwork()) {
+                for (IRecipeDefinition changedRecipe : changedRecipes) {
+                    if (enabled) {
+                        craftingNetwork.addCraftingInterfaceRecipe(getChannelCrafting(), this, changedRecipe);
+                    } else {
+                        craftingNetwork.removeCraftingInterfaceRecipe(getChannelCrafting(), this, changedRecipe);
+                    }
+                }
+            }
+
+            markDirty();
+            return true;
         }
     }
 

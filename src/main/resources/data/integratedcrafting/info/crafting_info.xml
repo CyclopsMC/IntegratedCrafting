@@ -23,6 +23,14 @@
             <appendix type="minecraft:crafting">integratedcrafting:crafting/part_interface_crafting_attuned</appendix>
         </section>
 
+        <section name="info_book.integratedcrafting.crafting_interface.attuned_recipes">
+            <tag>integratedcrafting:part_interface_crafting_attuned</tag>
+            <paragraph>info_book.integratedcrafting.crafting_interface.attuned_recipes.text1</paragraph>
+            <paragraph>info_book.integratedcrafting.crafting_interface.attuned_recipes.text2</paragraph>
+            <paragraph>info_book.integratedcrafting.crafting_interface.attuned_recipes.text3</paragraph>
+            <paragraph>info_book.integratedcrafting.crafting_interface.attuned_recipes.text4</paragraph>
+        </section>
+
         <section name="info_book.integratedcrafting.crafting_interface.crafting">
             <paragraph>info_book.integratedcrafting.crafting_interface.crafting.text1</paragraph>
             <paragraph>info_book.integratedcrafting.crafting_interface.crafting.text2</paragraph>
