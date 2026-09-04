@@ -350,14 +350,28 @@ public class CraftingJobHandler {
     }
 
     /**
+     * Only the time between starting a crafting operation and its outputs coming back in is measured.
+     * Recipes that produce their outputs within the tick they are started in, such as regular crafting
+     * recipes, therefore measure as taking no time at all, which would estimate whole crafting jobs away.
+     *
+     * In blocking mode, a single operation is started per update, so an operation occupies this handler
+     * for a full update interval, however quickly the recipe itself is done.
+     * In non-blocking mode, as many operations are started as the target accepts, so there is no such
+     * lower bound, and the given interval is ignored.
+     *
      * @param recipe A recipe.
+     * @param updateInterval The number of ticks between two updates of this handler.
      * @return The estimated duration in ticks of a single crafting operation of the given recipe,
      *         based on the operations that were performed by this handler before, or -1 if unknown.
      *         This falls back to the average duration over all recipes
      *         when the given recipe itself was not crafted recently.
      */
-    public long getEstimatedRecipeDuration(IRecipeDefinition recipe) {
-        return getRecipeDurationStatistics().getEstimatedDuration(recipe, getCurrentTick());
+    public long getEstimatedRecipeDuration(IRecipeDefinition recipe, long updateInterval) {
+        long recipeDuration = getRecipeDurationStatistics().getEstimatedDuration(recipe, getCurrentTick());
+        if (recipeDuration < 0) {
+            return -1;
+        }
+        return isBlockingJobsMode() ? Math.max(recipeDuration, updateInterval) : recipeDuration;
     }
 
     /**

@@ -91,6 +91,8 @@ public interface ICraftingInterface {
      *         This may fall back to the average duration over all recipes of this interface,
      *         as recipe-specific durations are only remembered for a limited number of recipes,
      *         and are forgotten once they become outdated.
+     *         This is never shorter than the interval at which this interface can start operations,
+     *         so that recipes that produce their outputs instantly are not estimated as taking no time.
      */
     public long getEstimatedRecipeDuration(IRecipeDefinition recipe);
 
