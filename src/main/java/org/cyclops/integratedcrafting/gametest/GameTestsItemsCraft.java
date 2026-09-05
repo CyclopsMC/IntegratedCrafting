@@ -18,6 +18,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.commoncapabilities.IngredientComponents;
 import org.cyclops.commoncapabilities.api.capability.itemhandler.ItemMatch;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIngredientAlternatives;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIngredientAlternativesItemStackTag;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIngredientAlternativesList;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
@@ -93,6 +94,35 @@ public class GameTestsItemsCraft {
             helper.assertValueEqual(chestIn.getItem(0).getCount(), 56, Component.literal("Slot 0 amount is incorrect"));
             helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.CHEST, Component.literal("Slot 1 item is incorrect"));
             helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, Component.literal("Slot 1 amount is incorrect"));
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftChestOneRecipeDuration(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east(), ChestBlockEntity.class);
+        chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
+
+        // Add chest recipe to crafting interface
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, Identifier.fromNamespaceAndPath("minecraft", "chest")));
+
+        // Enable crafting aspect in crafting writer
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.CHEST));
+
+        helper.succeedWhen(() -> {
+            // Check if items have been crafted
+            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.CHEST, "Slot 1 item is incorrect");
+
+            // Check if the duration of the crafted recipe was measured.
+            // A chest is crafted within the tick it is started in, so its measured duration is zero,
+            // and the interval at which the interface starts operations is what is left of it.
+            PartTypeInterfaceCrafting.State interfaceState = positions.interfaceStates().get(0);
+            for (IRecipeDefinition recipe : interfaceState.getRecipes()) {
+                helper.assertTrue(interfaceState.getEstimatedRecipeDuration(recipe) >= interfaceState.getUpdateInterval(),
+                        "No crafting duration was measured for the crafted recipe");
+            }
         });
     }
 

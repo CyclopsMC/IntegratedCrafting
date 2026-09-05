@@ -314,6 +314,21 @@ public class TestCraftingJobDependencyGraph {
     }
 
     @Test
+    public void testMergeCraftingJobsAmountTotal() {
+        g.addCraftingJobId(J0);
+        g.addCraftingJobId(J1);
+
+        // Simulate that one of the two operations of J0 was crafted already
+        J0.setAmount(2);
+        J0.setAmountTotal(3);
+
+        g.mergeCraftingJobs(J0, J1, true);
+
+        assertThat(J0.getAmount(), equalTo(3));
+        assertThat(J0.getAmountTotal(), equalTo(4));
+    }
+
+    @Test
     public void testMergeCraftingJobsDependenciesMatching() {
         IRecipeDefinition R0 = new RecipeDefinition(Maps.newIdentityHashMap(), new MixedIngredients(Maps.newIdentityHashMap()));
 

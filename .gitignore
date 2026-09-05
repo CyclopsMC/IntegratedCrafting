@@ -34,3 +34,7 @@ config
 
 # Ignore generated performance benchmark results
 benchmark_results.json
+
+# ClientDevBridge session state (golden images are intentionally kept)
+.clientdevbridge/*
+!.clientdevbridge/golden/

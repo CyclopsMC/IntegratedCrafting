@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import net.minecraft.core.Direction;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.apache.commons.lang3.tuple.Pair;
@@ -698,14 +699,41 @@ public class CraftingHelpers {
      * @param initiator                  Optional UUID of the initiator.
      * @throws UnavailableCraftingInterfacesException If no crafting interfaces were available.
      */
+    @Deprecated // TODO: rm in next major
     public static void scheduleCraftingJobs(ICraftingNetwork craftingNetwork,
                                             Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
                                             CraftingJobDependencyGraph craftingJobDependencyGraph,
                                             boolean allowDistribution,
                                             @Nullable UUID initiator) throws UnavailableCraftingInterfacesException {
+        scheduleCraftingJobs(craftingNetwork, storageGetter, craftingJobDependencyGraph, allowDistribution, initiator, false);
+    }
+
+    /**
+     * Schedule all crafting jobs in the given dependency graph in the given network.
+     *
+     * @param craftingNetwork            The target crafting network.
+     * @param storageGetter              The storage getter.
+     * @param craftingJobDependencyGraph The crafting job dependency graph.
+     * @param allowDistribution          If the crafting jobs are allowed to be split over multiple crafting interfaces.
+     * @param initiator                  Optional UUID of the initiator.
+     * @param notifyInitiator            If the initiator wants to be notified when the jobs are completed.
+     * @throws UnavailableCraftingInterfacesException If no crafting interfaces were available.
+     */
+    public static void scheduleCraftingJobs(ICraftingNetwork craftingNetwork,
+                                            Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageGetter,
+                                            CraftingJobDependencyGraph craftingJobDependencyGraph,
+                                            boolean allowDistribution,
+                                            @Nullable UUID initiator,
+                                            boolean notifyInitiator) throws UnavailableCraftingInterfacesException {
         List<CraftingJob> startedJobs = Lists.newArrayList();
         craftingNetwork.getCraftingJobDependencyGraph().importDependencies(craftingJobDependencyGraph);
         for (CraftingJob craftingJob : craftingJobDependencyGraph.getCraftingJobs()) {
+            // Set before scheduling, as scheduling may distribute the job over multiple crafting
+            // interfaces, in which case it is replaced by clones that have to inherit this.
+            if (initiator != null) {
+                craftingJob.setInitiatorUuid(initiator.toString());
+                craftingJob.setNotifyInitiator(notifyInitiator);
+            }
             try {
                 craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution, storageGetter);
             } catch (UnavailableCraftingInterfacesException e) {
@@ -719,9 +747,6 @@ public class CraftingHelpers {
                 throw new UnavailableCraftingInterfacesException(craftingJobDependencyGraph.getCraftingJobs());
             }
             startedJobs.add(craftingJob);
-            if (initiator != null) {
-                craftingJob.setInitiatorUuid(initiator.toString());
-            }
         }
     }
 
@@ -741,10 +766,12 @@ public class CraftingHelpers {
                                                   CraftingJob craftingJob,
                                                   boolean allowDistribution,
                                                   @Nullable UUID initiator) throws UnavailableCraftingInterfacesException {
-        craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution, storageGetter);
+        // Set before scheduling, as scheduling may distribute the job over multiple crafting
+        // interfaces, in which case it is replaced by clones that have to inherit this.
         if (initiator != null) {
             craftingJob.setInitiatorUuid(initiator.toString());
         }
+        craftingNetwork.scheduleCraftingJob(craftingJob, allowDistribution, storageGetter);
         return craftingJob;
     }
 
@@ -1732,6 +1759,15 @@ public class CraftingHelpers {
     }
 
     /**
+     * @return The current game tick of the server.
+     */
+    public static long getCurrentTick() {
+        // Fully qualified, as this class already imports org.apache.logging.log4j.Level
+        return ServerLifecycleHooks.getCurrentServer()
+                .getLevel(net.minecraft.world.level.Level.OVERWORLD).getGameTime();
+    }
+
+    /**
      * Split the given crafting job amount into new jobs with a given split factor.
      * @param craftingJob A crafting job to split.
      * @param splitFactor The number of jobs to split the job over.
@@ -1760,6 +1796,7 @@ public class CraftingHelpers {
                 modulus--;
             }
             clonedJob.setAmount(newAmount);
+            clonedJob.setAmountTotal(newAmount);
         }
 
         // Collect dependency links

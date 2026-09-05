@@ -1,8 +1,26 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.6.0"></a>
+## [1.21.1-1.6.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.5.0...1.21.1-1.6.0) - 2026-09-05 16:54:39
+
+
+### Added
+* Let the Attuned Crafting Interface enable and disable individual recipes (#221), Closes #162
+* Internal additions for other mods:
+  * Keep the initiator of crafting jobs that are distributed (#224), Required for CyclopsMC/IntegratedCrafting#175
+  * Emit an event when a crafting job is completed (#222), Required for #175
+  * Estimate a duration for recipes that are crafted instantly (#223), Required for CyclopsMC/IntegratedTerminals#145
+  * Expose crafting job progress and measured recipe durations (#220), Required for CyclopsMC/IntegratedTerminals#145
+* Performance improvements:
+  * Skip the crafting network lookup of an idle crafting interface
+  * Resolve crafting job dependency edges without boxing
+  * Classify the crafting job index by ingredient category
+  * Stop aggregating network capacity on every recipe input evaluation
+  * Look crafting table recipes up through the recipe cache
+
 <a name="1.21.1-1.5.0"></a>
-## [1.21.1-1.5.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.7...1.21.1-1.5.0) - 2026-08-24 21:07:04
+## [1.21.1-1.5.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.4.7...1.21.1-1.5.0) - 2026-08-24 21:07:04 +0200
 
 
 ### Added

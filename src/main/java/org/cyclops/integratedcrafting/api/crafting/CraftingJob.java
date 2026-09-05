@@ -33,6 +33,7 @@ public class CraftingJob {
     private final IntList dependencyCraftingJobs;
     private final IntList dependentCraftingJobs;
     private int amount;
+    private int amountTotal;
     private IMixedIngredients ingredientsStorage; // Total to extract from storage (simulated and immutable)
     private IMixedIngredients ingredientsStorageBuffer; // The actual ingredients from storage, which are consumed over time.
     private Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients;
@@ -40,13 +41,16 @@ public class CraftingJob {
     private boolean invalidInputs;
     @Nullable
     private String initiatorUuid;
+    private boolean notifyInitiator;
     private boolean ignoreDependencyCheck;
+    private boolean cancelled;
 
     public CraftingJob(int id, int channel, IRecipeDefinition recipe, int amount, IMixedIngredients ingredientsStorage) {
         this.id = id;
         this.channel = channel;
         this.recipe = recipe;
         this.amount = amount;
+        this.amountTotal = amount;
         this.ingredientsStorage = ingredientsStorage;
         this.ingredientsStorageBuffer = new MixedIngredients(Maps.newIdentityHashMap());
         this.lastMissingIngredients = Maps.newIdentityHashMap();
@@ -82,6 +86,18 @@ public class CraftingJob {
 
     public void setAmount(int amount) {
         this.amount = amount;
+    }
+
+    /**
+     * @return The amount this job started with, including the amount that was crafted already.
+     *         Contrary to {@link #getAmount()}, this value is not decremented while crafting.
+     */
+    public int getAmountTotal() {
+        return amountTotal;
+    }
+
+    public void setAmountTotal(int amountTotal) {
+        this.amountTotal = amountTotal;
     }
 
     public void addDependency(CraftingJob dependency) {
@@ -221,6 +237,29 @@ public class CraftingJob {
         this.initiatorUuid = initiatorUuid;
     }
 
+    /**
+     * @return If the initiator wants to be notified when this job is completed.
+     */
+    public boolean isNotifyInitiator() {
+        return notifyInitiator;
+    }
+
+    public void setNotifyInitiator(boolean notifyInitiator) {
+        this.notifyInitiator = notifyInitiator;
+    }
+
+    /**
+     * @return If this job was cancelled instead of running to completion.
+     *         This is not persisted, as cancelled jobs are removed from their network right away.
+     */
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
+    }
+
     public void setIgnoreDependencyCheck(boolean ignoreDependencyCheck) {
         this.ignoreDependencyCheck = ignoreDependencyCheck;
     }
@@ -236,6 +275,7 @@ public class CraftingJob {
         valueOutput.putIntArray("dependencies", craftingJob.getDependencyCraftingJobs().toIntArray());
         valueOutput.putIntArray("dependents", craftingJob.getDependentCraftingJobs().toIntArray());
         valueOutput.putInt("amount", craftingJob.amount);
+        valueOutput.putInt("amountTotal", craftingJob.amountTotal);
         IMixedIngredients.serialize(valueOutput.child("ingredientsStorage"), craftingJob.ingredientsStorage);
         IMixedIngredients.serialize(valueOutput.child("ingredientsStorageBuffer"), craftingJob.ingredientsStorageBuffer);
         MissingIngredients.serialize(valueOutput.child("lastMissingIngredients"), craftingJob.lastMissingIngredients);
@@ -244,6 +284,7 @@ public class CraftingJob {
         if (craftingJob.initiatorUuid != null) {
             valueOutput.putString("initiatorUuid", craftingJob.initiatorUuid);
         }
+        valueOutput.putBoolean("notifyInitiator", craftingJob.notifyInitiator);
         valueOutput.putBoolean("ignoreDependencyCheck", craftingJob.ignoreDependencyCheck);
     }
 
@@ -264,9 +305,11 @@ public class CraftingJob {
         Map<IngredientComponent<?, ?>, MissingIngredients<?, ?>> lastMissingIngredients = MissingIngredients
                 .deserialize(valueInput.child("lastMissingIngredients").orElseThrow());
         craftingJob.setLastMissingIngredients(lastMissingIngredients);
+        craftingJob.setAmountTotal(valueInput.getIntOr("amountTotal", amount)); // TODO: rm backwards-compat in next major
         craftingJob.setStartTick(valueInput.getLong("startTick").orElseThrow());
         craftingJob.setInvalidInputs(valueInput.getBooleanOr("invalidInputs", false));
         valueInput.getString("initiatorUuid").ifPresent(craftingJob::setInitiatorUuid);
+        craftingJob.setNotifyInitiator(valueInput.getBooleanOr("notifyInitiator", false));
         craftingJob.setIgnoreDependencyCheck(valueInput.getBooleanOr("ignoreDependencyCheck", false));
         craftingJob.setIngredientsStorageBuffer(ingredientsStorageBuffer);
         return craftingJob;
@@ -297,12 +340,16 @@ public class CraftingJob {
         if (!this.getIngredientsStorageBuffer().isEmpty()) {
             throw new IllegalStateException("Cloning a job with an ingredient buffer is illegal");
         }
-        return new CraftingJob(
+        CraftingJob clone = new CraftingJob(
                 identifierGenerator.getNext(),
                 getChannel(),
                 getRecipe(),
                 getAmount(),
                 getIngredientsStorage()
         );
+        clone.setAmountTotal(getAmountTotal());
+        clone.setInitiatorUuid(getInitiatorUuid());
+        clone.setNotifyInitiator(isNotifyInitiator());
+        return clone;
     }
 }
