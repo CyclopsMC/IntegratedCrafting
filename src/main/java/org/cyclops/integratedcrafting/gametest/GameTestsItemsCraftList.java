@@ -15,14 +15,15 @@ import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.apache.commons.lang3.tuple.Pair;
-import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCraftingList;
 import org.cyclops.integratedcrafting.part.PartTypes;
+import org.cyclops.cyclopscore.datastructure.DimPos;
 import org.cyclops.integrateddynamics.RegistryEntries;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeInteger;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeList;
+import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeListProxyPositionedRecipes;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 import org.cyclops.integrateddynamics.part.aspect.Aspects;
@@ -164,8 +165,8 @@ public class GameTestsItemsCraftList {
     }
 
     /**
-     * A lazy list from a machine reader is read into the interface,
-     * capped at the configured maximum, and re-read whenever the reader's variable is invalidated.
+     * A lazy list from a machine reader is read into the interface in full,
+     * and re-read whenever the reader's variable is invalidated.
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
     public void testItemsCraftListMachineReader(GameTestHelper helper) {
@@ -193,8 +194,12 @@ public class GameTestsItemsCraftList {
             if (!targetRemoved[0]) {
                 helper.assertTrue(state.isRecipeSlotValid(0),
                         "Recipe list from the machine reader is not valid: " + state.getRecipeSlotUnlocalizedMessage(0));
-                helper.assertValueEqual(state.getRecipes().size(), GeneralConfig.maxCraftingInterfaceListRecipes,
-                        "Recipe count from the machine reader is not capped");
+                // The interface exposes exactly the recipes that its reader's target holds
+                int targetRecipes = new ValueTypeListProxyPositionedRecipes(
+                        DimPos.of(helper.getLevel(), helper.absolutePos(POS.south().west().west())), Direction.UP).getLength();
+                helper.assertTrue(targetRecipes > 0, "The reader's target exposes no recipes at all");
+                helper.assertValueEqual(state.getRecipes().size(), targetRecipes,
+                        "Recipe count from the machine reader is incorrect");
 
                 // Remove the reader's target, so that only the list variable changes
                 helper.setBlock(POS.south().west().west(), Blocks.AIR);
