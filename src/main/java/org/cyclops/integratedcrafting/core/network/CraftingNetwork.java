@@ -7,8 +7,6 @@ import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
-import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
@@ -17,6 +15,7 @@ import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
 import org.cyclops.integratedcrafting.api.crafting.CraftingJobDependencyGraph;
 import org.cyclops.integratedcrafting.api.crafting.ICraftingInterface;
 import org.cyclops.integratedcrafting.api.crafting.UnavailableCraftingInterfacesException;
+import org.cyclops.integratedcrafting.api.event.CraftingJobFinishedEvent;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.api.recipe.ICraftingJobIndexModifiable;
 import org.cyclops.integratedcrafting.api.recipe.IRecipeIndexModifiable;
@@ -272,11 +271,16 @@ public class CraftingNetwork implements ICraftingNetwork {
     }
 
     protected long getCurrentTick() {
-        return ServerLifecycleHooks.getCurrentServer().getLevel(Level.OVERWORLD).getGameTime();
+        return CraftingHelpers.getCurrentTick();
     }
 
     @Override
     public void onCraftingJobFinished(CraftingJob craftingJob) {
+        // Emit the event before removal, as removal clears the job's dependency links.
+        if (!craftingJob.isCancelled()) {
+            CraftingJobFinishedEvent.post(this, craftingJob);
+        }
+
         removeCraftingJob(craftingJob.getChannel(), craftingJob);
         getCraftingJobDependencyGraph().onCraftingJobFinished(craftingJob);
     }
@@ -292,6 +296,10 @@ public class CraftingNetwork implements ICraftingNetwork {
     }
 
     protected void cancelCraftingJob(CraftingJob craftingJob) {
+        // Mark as cancelled, so that no completion event is emitted for it.
+        // The crafting interface finalizes cancelled jobs via the regular finishing logic.
+        craftingJob.setCancelled(true);
+
         // First cancel all dependencies
         for (CraftingJob dependency : getCraftingJobDependencyGraph().getDependencies(craftingJob)) {
             cancelCraftingJob(dependency);
@@ -445,6 +453,21 @@ public class CraftingNetwork implements ICraftingNetwork {
     @Override
     public long getRunningTicks(CraftingJob craftingJob) {
         return getCurrentTick() - craftingJob.getStartTick();
+    }
+
+    @Override
+    public long getEstimatedRecipeDuration(int channel, IRecipeDefinition recipe) {
+        // Average the durations of all interfaces that can craft this recipe and that measured it before
+        long totalDuration = 0;
+        int durationCount = 0;
+        for (ICraftingInterface craftingInterface : getRecipeCraftingInterfaces(channel).get(recipe)) {
+            long duration = craftingInterface.getEstimatedRecipeDuration(recipe);
+            if (duration >= 0) {
+                totalDuration += duration;
+                durationCount++;
+            }
+        }
+        return durationCount == 0 ? -1 : totalDuration / durationCount;
     }
 
     protected void cleanupChannelIfEmpty(int channel) {

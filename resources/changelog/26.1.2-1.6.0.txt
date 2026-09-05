@@ -1,0 +1,16 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.29.5 or higher.
+
+Additions:
+* Let the Attuned Crafting Interface enable and disable individual recipes (#221), Closes #162
+* Additions for external mods:
+  * Keep the initiator of crafting jobs that are distributed (#224), Required for CyclopsMC/IntegratedCrafting#175
+  * Estimate a duration for recipes that are crafted instantly (#223), Required for CyclopsMC/IntegratedTerminals#145
+  * Emit an event when a crafting job is completed (#222), Required for #175
+  * Expose crafting job progress and measured recipe durations (#220), Required for CyclopsMC/IntegratedTerminals#145
+* Performance improvements
+  * Skip the crafting network lookup of an idle crafting interface
+  * Resolve crafting job dependency edges without boxing
+  * Classify the crafting job index by ingredient category
+  * Stop aggregating network capacity on every recipe input evaluation
+  * Look crafting table recipes up through the recipe cache

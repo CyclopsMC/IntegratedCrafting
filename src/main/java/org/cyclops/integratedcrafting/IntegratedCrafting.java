@@ -25,6 +25,8 @@ import org.cyclops.integratedcrafting.capability.network.NetworkCraftingHandlerC
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrideRegistry;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
 import org.cyclops.integratedcrafting.gametest.GameTestsAdvancements;
+import org.cyclops.integratedcrafting.gametest.GameTestsAttunedRecipes;
+import org.cyclops.integratedcrafting.gametest.GameTestsCraftingJobFinishedEvent;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsCraft;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsMechanicalDryingBasin;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsMechanicalSqueezer;
@@ -32,6 +34,8 @@ import org.cyclops.integratedcrafting.gametest.GameTestsItemsSmithing;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsStonecutting;
 import org.cyclops.integratedcrafting.gametest.GameTestsPartOffsets;
 import org.cyclops.integratedcrafting.gametest.GameTestsPerformance;
+import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingAttunedOffsetsConfig;
+import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingAttunedRecipesConfig;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingConfig;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettingsConfig;
 import org.cyclops.integratedcrafting.part.PartTypes;
@@ -136,6 +140,8 @@ public class IntegratedCrafting extends ModBaseNeoForge<IntegratedCrafting> {
 
         configHandler.addConfigurable(new ContainerPartInterfaceCraftingConfig());
         configHandler.addConfigurable(new ContainerPartInterfaceCraftingSettingsConfig());
+        configHandler.addConfigurable(new ContainerPartInterfaceCraftingAttunedRecipesConfig());
+        configHandler.addConfigurable(new ContainerPartInterfaceCraftingAttunedOffsetsConfig());
 
         configHandler.addConfigurable(new RecipeSerializerDeadBushConfig()); // This one is only used in game tests.
     }
@@ -144,6 +150,8 @@ public class IntegratedCrafting extends ModBaseNeoForge<IntegratedCrafting> {
     public Class<?>[] getGameTestClasses() {
         return new Class<?>[]{
                 GameTestsAdvancements.class,
+                GameTestsAttunedRecipes.class,
+                GameTestsCraftingJobFinishedEvent.class,
                 GameTestsItemsCraft.class,
                 GameTestsItemsMechanicalDryingBasin.class,
                 GameTestsItemsSmithing.class,

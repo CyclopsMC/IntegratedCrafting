@@ -214,6 +214,7 @@ public class CraftingJobDependencyGraph {
      */
     public void mergeCraftingJobs(CraftingJob target, CraftingJob mergee, boolean markMergeeAsFinished) {
         target.setAmount(target.getAmount() + mergee.getAmount());
+        target.setAmountTotal(target.getAmountTotal() + mergee.getAmountTotal());
         target.setIngredientsStorage(CraftingHelpers.mergeMixedIngredients(
                 target.getIngredientsStorage(), mergee.getIngredientsStorage()));
 

@@ -23,9 +23,11 @@ import org.cyclops.cyclopscore.helper.IModHelpers;
 import org.cyclops.cyclopscore.helper.ValueNotifierHelpers;
 import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingSettings;
+import org.cyclops.integratedcrafting.part.PartTypeInterfaceCraftingAttuned;
 import org.cyclops.integrateddynamics.client.gui.image.Images;
 import org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown;
 import org.cyclops.integrateddynamics.core.client.gui.container.ContainerScreenPartSettings;
+import org.cyclops.integrateddynamics.core.inventory.container.ContainerPartSettings;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Arrays;
@@ -167,8 +169,20 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
             if (this.dropdownFieldSide.keyPressed(evt)) {
                 return true;
             }
+        } else if (getMenu().getPartType() instanceof PartTypeInterfaceCraftingAttuned) {
+            // The attuned interface has a gui of its own that these settings were opened from,
+            // so don't close all guis, but go back to it.
+            exitToPartGui();
+            return true;
         }
         return super.keyPressed(evt);
+    }
+
+    /**
+     * Save the current settings and go back to the gui of the part.
+     */
+    protected void exitToPartGui() {
+        createServerPressable(ContainerPartSettings.BUTTON_SAVE, button -> onSave()).onPress(null);
     }
 
     @Override
