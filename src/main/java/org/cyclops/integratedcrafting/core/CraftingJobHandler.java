@@ -21,8 +21,6 @@ import org.apache.logging.log4j.Level;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.*;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
-import org.cyclops.cyclopscore.ingredient.collection.IIngredientCollectionMutable;
-import org.cyclops.cyclopscore.ingredient.collection.IngredientCollectionPrototypeMap;
 import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.crafting.*;
@@ -30,6 +28,7 @@ import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.api.part.PartPos;
+import org.cyclops.integrateddynamics.core.network.IIngredientChannelInsertPreConsumer;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -808,17 +807,17 @@ public class CraftingJobHandler {
      * The remaining instance that could not be inserted into any of those crafting jobs is returned.
      * @param instanceWrapper The instance that would be inserted into the network.
      * @param channel The channel.
-     * @return The remaining instance that was not consumed by observers.
+     * @return The remaining instance that was not consumed by observers,
+     *         and the part of it that no observer accounted for.
      * @param <T> The ingredient type.
      * @param <M> The match condition.
      */
-    public <T, M> IngredientInstanceWrapper<T, M> beforeFlushIngredientToNetwork(IngredientInstanceWrapper<T, M> instanceWrapper, int channel) {
+    public <T, M> IIngredientChannelInsertPreConsumer.Result<T> beforeFlushIngredientToNetwork(IngredientInstanceWrapper<T, M> instanceWrapper, int channel) {
+        T instance = instanceWrapper.getInstance();
         PendingCraftingJobResultIndexObserver<T, M> observer = (PendingCraftingJobResultIndexObserver<T, M>) ingredientObservers.get(instanceWrapper.getComponent());
         if (observer != null) {
-            IIngredientCollectionMutable<T, M> instances = new IngredientCollectionPrototypeMap<>(instanceWrapper.getComponent());
-            instances.add(instanceWrapper.getInstance());
-            return observer.addIngredient(instanceWrapper, channel, false);
+            return observer.addIngredient(instance, instance, channel, false);
         }
-        return instanceWrapper;
+        return new IIngredientChannelInsertPreConsumer.Result<>(instance, instance);
     }
 }

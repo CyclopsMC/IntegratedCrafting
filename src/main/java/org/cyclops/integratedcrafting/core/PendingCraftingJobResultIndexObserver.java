@@ -36,20 +36,29 @@ public class PendingCraftingJobResultIndexObserver<T, M> implements IIngredientC
 
     /**
      * This adds the given instance to the waiting crafting jobs directly, without having to go through the network storage and its observers.
-     * Like the method above, this will first attempt to complete running jobs that are awaiting results.
+     * This will first attempt to complete running jobs that are awaiting results.
      * Then, it will try to give the instance to the dependent jobs based on their missing ingredients.
-     * @param instanceWrapper The instance to add.
+     *
+     * Only the part of the instance that was not accounted for yet may resolve pending outputs,
+     * as every crafting interface observes the same insertion.
+     * Without that, one produced instance would resolve the pending output of every parallel job at once,
+     * which would make those jobs report completion before their outputs are actually available.
+     *
+     * @param instance The instance to add.
+     * @param unaccounted The part of the instance that no observer has accounted for yet.
      * @param channel The channel.
      * @param simulate Simulate mode.
-     * @return The remaining instance that could not be given to any jobs that had missing ingredients.
+     * @return The remaining instance that could not be given to any jobs that had missing ingredients,
+     *         and the part of it that is still unaccounted for.
      */
-    public IngredientInstanceWrapper<T, M> addIngredient(IngredientInstanceWrapper<T, M> instanceWrapper, int channel, boolean simulate) {
+    public IIngredientChannelInsertPreConsumer.Result<T> addIngredient(T instance, T unaccounted, int channel, boolean simulate) {
         IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
-        long instanceAmount = matcher.getQuantity(instanceWrapper.getInstance());
+        long instanceAmount = matcher.getQuantity(instance);
+        long unaccountedAmount = matcher.getQuantity(unaccounted);
 
         Int2ObjectMap<List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>>> processingJobs = handler.getProcessingCraftingJobsPendingIngredients();
         ObjectIterator<Int2ObjectMap.Entry<List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>>>> jobsEntryIt = processingJobs.int2ObjectEntrySet().iterator();
-        while (jobsEntryIt.hasNext() && instanceAmount > 0) {
+        while (jobsEntryIt.hasNext() && unaccountedAmount > 0) {
             Int2ObjectMap.Entry<List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>>> jobsEntry = jobsEntryIt.next();
             int craftingJobId = jobsEntry.getIntKey();
             // Only check jobs that have a matching channel with the event
@@ -57,7 +66,7 @@ public class PendingCraftingJobResultIndexObserver<T, M> implements IIngredientC
             if (craftingJob != null
                     && (craftingJob.getChannel() == IPositionedAddonsNetwork.WILDCARD_CHANNEL || craftingJob.getChannel() == channel)) {
                 Iterator<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> jobEntryIt = jobsEntry.getValue().iterator();
-                while (jobEntryIt.hasNext() && instanceAmount > 0) {
+                while (jobEntryIt.hasNext() && unaccountedAmount > 0) {
                     Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> jobEntry = jobEntryIt.next();
                     List<IPrototypedIngredient<?, ?>> pendingIngredientsUnsafe = jobEntry.get(ingredientComponent);
                     if (pendingIngredientsUnsafe != null) {
@@ -66,22 +75,26 @@ public class PendingCraftingJobResultIndexObserver<T, M> implements IIngredientC
 
                         // Iterate over all pending ingredients for this ingredient component
                         ListIterator<IPrototypedIngredient<T, M>> it = pendingIngredients.listIterator();
-                        while (it.hasNext() && instanceAmount > 0) {
+                        while (it.hasNext() && unaccountedAmount > 0) {
                             IPrototypedIngredient<T, M> prototypedIngredient = it.next();
                             final long initialQuantity = matcher.getQuantity(prototypedIngredient.getPrototype());
                             long remainingQuantity = initialQuantity;
 
                             // Check if the instance matches the job's expected outputs.
-                            if (matcher.matches(instanceWrapper.getInstance(), prototypedIngredient.getPrototype(),
+                            if (matcher.matches(instance, prototypedIngredient.getPrototype(),
                                     prototypedIngredient.getCondition())) {
-                                long extractedQuantityToAssign = Math.min(remainingQuantity, instanceAmount);
-                                remainingQuantity -= extractedQuantityToAssign;
-                                T extracted = matcher.withQuantity(instanceWrapper.getInstance(), extractedQuantityToAssign);
+                                // This part of the insertion resolves this pending output,
+                                // so no other observer may account for it anymore.
+                                long accountedQuantity = Math.min(remainingQuantity, unaccountedAmount);
+                                remainingQuantity -= accountedQuantity;
+                                unaccountedAmount -= accountedQuantity;
 
                                 // Move this ingredient from storage to dependent crafting jobs.
                                 // We only consider jobs that have this instance as missing ingredient.
+                                long extractedQuantityToAssign = Math.min(accountedQuantity, instanceAmount);
+                                T extracted = matcher.withQuantity(instance, extractedQuantityToAssign);
                                 IntIterator dependentJobs = craftingJob.getDependentCraftingJobs().intIterator();
-                                while (dependentJobs.hasNext()) {
+                                while (extractedQuantityToAssign > 0 && dependentJobs.hasNext()) {
                                     CraftingJob dependentJob = craftingNetwork.getCraftingJob(craftingJob.getChannel(), dependentJobs.nextInt());
                                     if (dependentJob != null) {
                                         long missingQuantity = dependentJob.getMissingIngredientQuantity(ingredientComponent, extracted);
@@ -121,7 +134,8 @@ public class PendingCraftingJobResultIndexObserver<T, M> implements IIngredientC
             }
         }
 
-        return new IngredientInstanceWrapper<>(instanceWrapper.getComponent(), matcher.withQuantity(instanceWrapper.getInstance(), instanceAmount));
+        return new IIngredientChannelInsertPreConsumer.Result<>(matcher.withQuantity(instance, instanceAmount),
+                matcher.withQuantity(instance, unaccountedAmount));
     }
 
     // If no prototypes for this component type for this crafting job for this job entry are pending.
@@ -154,8 +168,8 @@ public class PendingCraftingJobResultIndexObserver<T, M> implements IIngredientC
     }
 
     @Override
-    public T insert(int channel, @NotNull T ingredient, boolean simulate) {
-        IngredientInstanceWrapper<T, M> instanceWrapper = addIngredient(new IngredientInstanceWrapper<>(ingredientComponent, ingredient), channel, simulate);
-        return instanceWrapper.getInstance();
+    public IIngredientChannelInsertPreConsumer.Result<T> insert(int channel, @NotNull T ingredient,
+                                                                @NotNull T unaccounted, boolean simulate) {
+        return addIngredient(ingredient, unaccounted, channel, simulate);
     }
 }
