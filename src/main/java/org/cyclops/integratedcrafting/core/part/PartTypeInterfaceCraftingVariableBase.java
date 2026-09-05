@@ -2,6 +2,8 @@ package org.cyclops.integratedcrafting.core.part;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.ints.Int2BooleanArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
@@ -60,7 +62,9 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Base part for crafting interfaces that derive their recipes from variables in an inventory.
@@ -159,12 +163,6 @@ public abstract class PartTypeInterfaceCraftingVariableBase<P extends PartTypeIn
                 slots.clear();
                 int channel = state.getChannelCrafting();
                 for (Integer slot : slotsCopy) {
-                    // Slots that may not be reloaded yet are retried in a later tick
-                    if (!state.mayReloadSlot(slot)) {
-                        slots.add(slot);
-                        continue;
-                    }
-
                     Int2ObjectMap<List<IRecipeDefinition>> recipes = state.getRecipesIndexed();
                     List<IRecipeDefinition> oldRecipes = recipes.get(slot);
                     oldRecipes = oldRecipes == null ? Collections.emptyList() : Lists.newArrayList(oldRecipes);
@@ -173,20 +171,25 @@ public abstract class PartTypeInterfaceCraftingVariableBase<P extends PartTypeIn
                     // We simulate initialization for the first two ticks, as dependency variables may still be loading,
                     // and errored may only go away after these dependencies are fully loaded.
                     // Related to CyclopsMC/IntegratedCrafting#110
-                    state.reloadRecipe(slot, state.ticksAfterReload <= 1);
+                    if (!state.reloadRecipe(slot, state.ticksAfterReload <= 1)) {
+                        // The recipes of this slot are unchanged, so the network index is still correct
+                        continue;
+                    }
 
                     List<IRecipeDefinition> newRecipes = recipes.get(slot);
                     newRecipes = newRecipes == null ? Collections.emptyList() : newRecipes;
 
                     // Only patch what actually changed, as slots can hold many recipes
                     // that are re-evaluated whenever their variable is invalidated.
+                    Set<IRecipeDefinition> oldRecipesLookup = Sets.newHashSet(oldRecipes);
+                    Set<IRecipeDefinition> newRecipesLookup = Sets.newHashSet(newRecipes);
                     for (IRecipeDefinition oldRecipe : oldRecipes) {
-                        if (!newRecipes.contains(oldRecipe)) {
+                        if (!newRecipesLookup.contains(oldRecipe)) {
                             craftingNetwork.removeCraftingInterfaceRecipe(channel, state, oldRecipe);
                         }
                     }
                     for (IRecipeDefinition newRecipe : newRecipes) {
-                        if (!oldRecipes.contains(newRecipe)) {
+                        if (!oldRecipesLookup.contains(newRecipe)) {
                             craftingNetwork.addCraftingInterfaceRecipe(channel, state, newRecipe);
                         }
                     }
@@ -227,6 +230,10 @@ public abstract class PartTypeInterfaceCraftingVariableBase<P extends PartTypeIn
 
         private final Int2ObjectMap<List<IRecipeDefinition>> currentRecipes;
         private List<IRecipeDefinition> currentRecipesFlattened;
+        // Validation results, reused until the whole part reloads, which is when the target may have changed.
+        // Keyed by identity: recipe handlers hand out the same instances on every read,
+        // while hashing a recipe by value is expensive.
+        private final Map<IRecipeDefinition, Boolean> validationCache;
 
         public State(int inventorySize) {
             this.inventoryVariables = new SimpleInventory(inventorySize, 1);
@@ -238,6 +245,7 @@ public abstract class PartTypeInterfaceCraftingVariableBase<P extends PartTypeIn
             this.variableListeners = new MapMaker().weakKeys().makeMap();
             this.currentRecipes = new Int2ObjectArrayMap<>();
             this.currentRecipesFlattened = Collections.emptyList();
+            this.validationCache = Maps.newIdentityHashMap();
         }
 
         /**
@@ -253,20 +261,6 @@ public abstract class PartTypeInterfaceCraftingVariableBase<P extends PartTypeIn
          * @throws EvaluationException If the value could not be converted into recipes.
          */
         protected abstract List<IRecipeDefinition> extractRecipes(int slot, IValue value) throws EvaluationException;
-
-        /**
-         * @return If the given slot may be reloaded in this tick.
-         */
-        protected boolean mayReloadSlot(int slot) {
-            return true;
-        }
-
-        /**
-         * @return The internal tick counter, which is monotonically increasing.
-         */
-        public int getTicks() {
-            return this.ticksAfterReload;
-        }
 
         /**
          * @return The message to show for a slot for which all recipes were accepted by the target.
@@ -327,6 +321,7 @@ public abstract class PartTypeInterfaceCraftingVariableBase<P extends PartTypeIn
 
         @Override
         public void reloadRecipes(boolean initialize) {
+            this.validationCache.clear();
             this.currentRecipes.clear();
             this.invalidateRecipesFlattened();
             this.recipeSlotMessages.clear();
@@ -360,7 +355,11 @@ public abstract class PartTypeInterfaceCraftingVariableBase<P extends PartTypeIn
             }
         }
 
-        protected void reloadRecipe(int slot, boolean initialize) {
+        protected boolean reloadRecipe(int slot, boolean initialize) {
+            List<IRecipeDefinition> previousRecipes = this.currentRecipes.get(slot);
+            MutableComponent previousMessage = this.recipeSlotMessages.get(slot);
+            boolean changed = true;
+
             this.currentRecipes.remove(slot);
             this.invalidateRecipesFlattened();
             if (this.recipeSlotMessages.size() > slot) {
@@ -404,17 +403,27 @@ public abstract class PartTypeInterfaceCraftingVariableBase<P extends PartTypeIn
                     }
                 }
 
-                try {
-                    IPartNetwork partNetwork = NetworkHelpers.getPartNetworkChecked(network);
-                    NeoForge.EVENT_BUS.post(new PartVariableDrivenVariableContentsUpdatedEvent<>(network,
-                            partNetwork, getTarget(),
-                            getPartTypeInstance(), (S) this, lastPlayer, variable,
-                            variable != null ? variable.getValue() : null));
-                } catch (EvaluationException e) {
-                    // Ignore error
+                changed = !Objects.equals(previousRecipes, this.currentRecipes.get(slot))
+                        || !Objects.equals(previousMessage, this.recipeSlotMessages.get(slot));
+
+                if (changed) {
+                    try {
+                        IPartNetwork partNetwork = NetworkHelpers.getPartNetworkChecked(network);
+                        NeoForge.EVENT_BUS.post(new PartVariableDrivenVariableContentsUpdatedEvent<>(network,
+                                partNetwork, getTarget(),
+                                getPartTypeInstance(), (S) this, lastPlayer, variable,
+                                variable != null ? variable.getValue() : null));
+                    } catch (EvaluationException e) {
+                        // Ignore error
+                    }
                 }
             }
-            sendUpdate();
+
+            // A slot whose recipes did not change needs no client sync and no network re-indexing
+            if (changed) {
+                sendUpdate();
+            }
+            return changed;
         }
 
         /**
@@ -432,7 +441,7 @@ public abstract class PartTypeInterfaceCraftingVariableBase<P extends PartTypeIn
             } else {
                 validRecipes = Lists.newArrayListWithExpectedSize(recipes.size());
                 for (IRecipeDefinition recipe : recipes) {
-                    if (isValid(recipe)) {
+                    if (this.validationCache.computeIfAbsent(recipe, this::isValid)) {
                         validRecipes.add(recipe);
                     }
                 }

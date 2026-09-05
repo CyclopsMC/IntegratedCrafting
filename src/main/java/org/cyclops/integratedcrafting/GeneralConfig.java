@@ -40,8 +40,8 @@ public class GeneralConfig extends DummyConfig {
     @ConfigurableProperty(category = "machine", comment = "The maximum number of recipes that will be read from a list inside a list-based crafting interface. Set to 0 for no limit.", minimalValue = 0, isCommandable = true, configLocation = ModConfig.Type.SERVER)
     public static int maxCraftingInterfaceListRecipes = 256;
 
-    @ConfigurableProperty(category = "machine", comment = "The minimum number of ticks between two reloads of a list inside a list-based crafting interface. Set to 0 to reload on every variable invalidation.", minimalValue = 0, isCommandable = true, configLocation = ModConfig.Type.SERVER)
-    public static int craftingInterfaceListMinReloadInterval = 20;
+    @ConfigurableProperty(category = "machine", comment = "The minimal update frequency in ticks to use for list-based crafting interfaces. Reading a list of recipes is more expensive than reading a single recipe, so this defaults higher than the regular crafting interface.", minimalValue = 1, configLocation = ModConfig.Type.SERVER)
+    public static int minCraftingInterfaceListUpdateFreq = 20;
 
     @ConfigurableProperty(category = "machine", comment = "The maximum number of recipes that a crafting interface remembers crafting durations for, which are used to estimate the duration of crafting jobs. Set to 0 to disable recipe-specific estimations.", minimalValue = 0, isCommandable = true, configLocation = ModConfig.Type.SERVER)
     public static int craftingInterfaceRecipeDurationEntries = 32;

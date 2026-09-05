@@ -1,8 +1,6 @@
 package org.cyclops.integratedcrafting.part;
 
 import com.google.common.collect.Lists;
-import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.network.chat.Component;
@@ -54,9 +52,6 @@ public class PartTypeInterfaceCraftingList extends PartTypeInterfaceCraftingVari
 
         // Slots for which the configured maximum truncated the list
         private final IntSet truncatedSlots = new IntArraySet();
-        // The tick at which each slot was last reloaded
-        private final Int2IntMap lastSlotReloadTicks = new Int2IntArrayMap();
-
         public State() {
             super(INVENTORY_SIZE);
         }
@@ -67,20 +62,10 @@ public class PartTypeInterfaceCraftingList extends PartTypeInterfaceCraftingVari
         }
 
         @Override
-        protected boolean mayReloadSlot(int slot) {
-            // Reader-backed list variables are invalidated on every reader tick, while re-materializing
-            // a list can be expensive. So throttle how often we act on those invalidations.
-            int interval = GeneralConfig.craftingInterfaceListMinReloadInterval;
-            if (interval <= 0 || !this.lastSlotReloadTicks.containsKey(slot)) {
-                return true;
-            }
-            return getTicks() - this.lastSlotReloadTicks.get(slot) >= interval;
-        }
-
-        @Override
-        protected void reloadRecipe(int slot, boolean initialize) {
-            this.lastSlotReloadTicks.put(slot, getTicks());
-            super.reloadRecipe(slot, initialize);
+        protected int getDefaultUpdateInterval() {
+            // Reading a whole list of recipes is more expensive than reading a single recipe,
+            // and reader-backed list variables are invalidated on every reader tick.
+            return GeneralConfig.minCraftingInterfaceListUpdateFreq;
         }
 
         @Override
