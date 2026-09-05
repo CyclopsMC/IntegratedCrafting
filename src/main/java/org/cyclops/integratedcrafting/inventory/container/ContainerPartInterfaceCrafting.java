@@ -8,6 +8,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import org.cyclops.cyclopscore.helper.GuiHelpers;
 import org.cyclops.cyclopscore.helper.ValueNotifierHelpers;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
 import org.cyclops.integratedcrafting.RegistryEntries;
@@ -33,6 +34,8 @@ import java.util.Optional;
 public class ContainerPartInterfaceCrafting<P extends PartTypeInterfaceCraftingVariableBase<P, S>, S extends PartTypeInterfaceCraftingVariableBase.State<P, S>>
         extends ContainerMultipart<P, S> {
 
+    public static final int GUI_WIDTH = 176;
+
     private final List<Integer> readSlotValidIds;
     private final List<Integer> readSlotErrorIds;
 
@@ -45,7 +48,7 @@ public class ContainerPartInterfaceCrafting<P extends PartTypeInterfaceCraftingV
                                           Optional<PartTarget> target, Optional<IPartContainer> partContainer, P partType) {
         super(RegistryEntries.CONTAINER_INTERFACE_CRAFTING.get(), id, playerInventory, inventory, target, partContainer, partType);
 
-        addInventory(inventory, 0, 8, 22, 1, inventory.getContainerSize());
+        addInventory(inventory, 0, getVariableSlotsX(inventory.getContainerSize()), 22, 1, inventory.getContainerSize());
         addPlayerInventory(player.getInventory(), 8, 59);
 
         getPartState().ifPresent(p -> p.setLastPlayer(player));
@@ -74,6 +77,13 @@ public class ContainerPartInterfaceCrafting<P extends PartTypeInterfaceCraftingV
                 ValueNotifierHelpers.setValue(this, this.readSlotErrorIds.get(i), partState.getRecipeSlotUnlocalizedMessage(i));
             }
         });
+    }
+
+    /**
+     * @return The x position of the first variable slot, so that the slots are horizontally centered.
+     */
+    public static int getVariableSlotsX(int slotCount) {
+        return (GUI_WIDTH - slotCount * GuiHelpers.SLOT_SIZE) / 2 + 1;
     }
 
     public boolean isRecipeSlotValid(int slot) {
