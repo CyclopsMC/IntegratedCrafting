@@ -126,6 +126,33 @@ public class GameTestsAdvancements {
     }
 
     /**
+     * Test for the craft_crafting_interface_list advancement.
+     * Trigger: cyclopscore:item_crafted
+     * Condition: player crafts integratedcrafting:part_interface_crafting_list
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testAdvancementCraftCraftingInterfaceList(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+        // Fire the PlayerEvent.ItemCraftedEvent via the NeoForge event bus
+        NeoForge.EVENT_BUS.post(new PlayerEvent.ItemCraftedEvent(
+                player,
+                new ItemStack(PartTypes.INTERFACE_CRAFTING_LIST.getItem()),
+                new SimpleContainer(9)
+        ));
+
+        helper.succeedWhen(() -> {
+            AdvancementHolder advancement = helper.getLevel().getServer().getAdvancements()
+                    .get(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "autocrafting_setup/craft_crafting_interface_list"));
+            helper.assertTrue(advancement != null, "craft_crafting_interface_list advancement not found");
+            helper.assertTrue(
+                    player.getAdvancements().getOrStartProgress(advancement).isDone(),
+                    "craft_crafting_interface_list advancement not granted"
+            );
+        });
+    }
+
+    /**
      * Test for the craft_crafting_writer advancement.
      * Trigger: cyclopscore:item_crafted
      * Condition: player crafts integratedcrafting:part_crafting_writer
@@ -288,6 +315,25 @@ public class GameTestsAdvancements {
         ));
 
         helper.succeedWhen(() -> assertAdvancementNotDone(helper, player, "autocrafting_setup/craft_crafting_interface_attuned"));
+    }
+
+    /**
+     * Negative test for the craft_crafting_interface_list advancement.
+     * Trigger: cyclopscore:item_crafted
+     * Condition: player crafts integratedcrafting:part_interface_crafting_list
+     * Here we craft the non-list interface instead – advancement must NOT be granted.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testAdvancementCraftCraftingInterfaceListNegative(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+        NeoForge.EVENT_BUS.post(new PlayerEvent.ItemCraftedEvent(
+                player,
+                new ItemStack(PartTypes.INTERFACE_CRAFTING.getItem()),
+                new SimpleContainer(9)
+        ));
+
+        helper.succeedWhen(() -> assertAdvancementNotDone(helper, player, "autocrafting_setup/craft_crafting_interface_list"));
     }
 
     /**

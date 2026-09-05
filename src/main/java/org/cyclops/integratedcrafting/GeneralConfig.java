@@ -34,6 +34,14 @@ public class GeneralConfig extends DummyConfig {
     public static int interfaceCraftingBaseConsumption = 5;
     @ConfigurableProperty(category = "general", comment = "The base energy usage for the attuned crafting interface per crafting job being processed.", minimalValue = 0, configLocation = ModConfig.Type.SERVER)
     public static int interfaceCraftingAttunedBaseConsumption = 10;
+    @ConfigurableProperty(category = "general", comment = "The base energy usage for the list-based crafting interface per crafting job being processed.", minimalValue = 0, configLocation = ModConfig.Type.SERVER)
+    public static int interfaceCraftingListBaseConsumption = 10;
+
+    @ConfigurableProperty(category = "machine", comment = "The maximum number of recipes that will be read from a list inside a list-based crafting interface. This is a guard against runaway lists, not a tuning knob: it is set well above the recipe count of any regular machine. Set to 0 for no limit.", minimalValue = 0, isCommandable = true, configLocation = ModConfig.Type.SERVER)
+    public static int maxCraftingInterfaceListRecipes = 4096;
+
+    @ConfigurableProperty(category = "machine", comment = "The minimal update frequency in ticks to use for list-based crafting interfaces. Reading a list of recipes is more expensive than reading a single recipe, so this defaults higher than the regular crafting interface.", minimalValue = 1, configLocation = ModConfig.Type.SERVER)
+    public static int minCraftingInterfaceListUpdateFreq = 20;
 
     @ConfigurableProperty(category = "machine", comment = "The maximum number of recipes that a crafting interface remembers crafting durations for, which are used to estimate the duration of crafting jobs. Set to 0 to disable recipe-specific estimations.", minimalValue = 0, isCommandable = true, configLocation = ModConfig.Type.SERVER)
     public static int craftingInterfaceRecipeDurationEntries = 32;

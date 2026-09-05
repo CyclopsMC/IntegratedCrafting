@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " D ",
+    "ICI",
+    " D "
+  ],
+  "key": {
+    "I": {
+      "item": "integratedcrafting:part_interface_crafting"
+    },
+    "C": {
+      "item": "integrateddynamics:crystalized_chorus_block"
+    },
+    "D": {
+      "tag": "c:gems/diamond"
+    }
+  },
+  "result": {
+    "id": "integratedcrafting:part_interface_crafting_list"
+  }
+}

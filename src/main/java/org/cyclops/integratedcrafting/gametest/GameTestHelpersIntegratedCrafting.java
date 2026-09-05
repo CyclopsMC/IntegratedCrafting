@@ -17,10 +17,12 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.FurnaceBlockEntity;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.cyclops.commoncapabilities.IngredientComponents;
 import org.cyclops.commoncapabilities.api.capability.itemhandler.ItemMatch;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IPrototypedIngredientAlternatives;
+import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIngredientAlternativesItemStackTag;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIngredientAlternativesList;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
@@ -44,6 +46,7 @@ import org.cyclops.integrateddynamics.api.part.aspect.property.IAspectProperties
 import org.cyclops.integrateddynamics.api.part.aspect.property.IAspectPropertyTypeInstance;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeItemStack;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
+import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeList;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 import org.cyclops.integratedtunnels.part.aspect.TunnelAspects;
@@ -73,7 +76,10 @@ public class GameTestHelpersIntegratedCrafting {
     }
 
     public static <T extends PartTypeInterfaceCraftingBase.State<?, ?>> INetworkPositions<T> createBasicNetwork(GameTestHelper helper, BlockPos pos, boolean attuned, Block... crafters) {
-        PartTypeInterfaceCraftingBase<? extends PartTypeInterfaceCraftingBase<?, ?>, ? extends PartTypeInterfaceCraftingBase.State<? extends PartTypeInterfaceCraftingBase<?, ?>, ? extends PartTypeInterfaceCraftingBase.State<?, ?>>> partInterface = attuned ? PartTypes.INTERFACE_CRAFTING_ATTUNED : PartTypes.INTERFACE_CRAFTING;
+        return createBasicNetwork(helper, pos, attuned ? PartTypes.INTERFACE_CRAFTING_ATTUNED : PartTypes.INTERFACE_CRAFTING, crafters);
+    }
+
+    public static <T extends PartTypeInterfaceCraftingBase.State<?, ?>> INetworkPositions<T> createBasicNetwork(GameTestHelper helper, BlockPos pos, PartTypeInterfaceCraftingBase<? extends PartTypeInterfaceCraftingBase<?, ?>, ? extends PartTypeInterfaceCraftingBase.State<? extends PartTypeInterfaceCraftingBase<?, ?>, ? extends PartTypeInterfaceCraftingBase.State<?, ?>>> partInterface, Block... crafters) {
 
         // Place cable
         helper.setBlock(pos, RegistryEntries.BLOCK_CABLE.value());
@@ -137,6 +143,19 @@ public class GameTestHelpersIntegratedCrafting {
     }
 
     public static ItemStack createVariableForRecipe(Level level, RecipeType<?> recipeType, ResourceLocation recipeName) {
+        return createVariableForValue(level, ValueTypes.OBJECT_RECIPE,
+                ValueObjectTypeRecipe.ValueRecipe.of(createRecipeDefinition(level, recipeType, recipeName)));
+    }
+
+    public static ItemStack createVariableForRecipeList(Level level, List<Pair<RecipeType<?>, ResourceLocation>> recipes) {
+        List<ValueObjectTypeRecipe.ValueRecipe> values = Lists.newArrayList();
+        for (Pair<RecipeType<?>, ResourceLocation> recipe : recipes) {
+            values.add(ValueObjectTypeRecipe.ValueRecipe.of(createRecipeDefinition(level, recipe.getLeft(), recipe.getRight())));
+        }
+        return createVariableForValue(level, ValueTypes.LIST, ValueTypeList.ValueList.ofList(ValueTypes.OBJECT_RECIPE, values));
+    }
+
+    public static IRecipeDefinition createRecipeDefinition(Level level, RecipeType<?> recipeType, ResourceLocation recipeName) {
         RecipeHolder<?> recipeUnknown = null;
         try {
             recipeUnknown = (RecipeHolder<?>) IModHelpers.get().getCraftingHelpers().<RecipeInput, Recipe>getServerRecipe((RecipeType) recipeType, recipeName).orElseThrow(() -> new IllegalStateException("Recipe " + recipeName.toString() + " could not be found"));
@@ -225,7 +244,7 @@ public class GameTestHelpersIntegratedCrafting {
         } else {
             throw new IllegalStateException("Unknown recipe type " + recipeType);
         }
-        return createVariableForValue(level, ValueTypes.OBJECT_RECIPE, ValueObjectTypeRecipe.ValueRecipe.of(new RecipeDefinition(recipeIn, new MixedIngredients(recipeOut))));
+        return new RecipeDefinition(recipeIn, new MixedIngredients(recipeOut));
     }
 
     public static void enableRecipeInWriter(GameTestHelper helper, PartPos writerPos, ItemStack itemStack) {
@@ -241,7 +260,7 @@ public class GameTestHelpersIntegratedCrafting {
 
     public static <T extends IValueType<V>, V extends IValue> void setCraftingInterfaceBlockingMode(PartPos writerPos, boolean blocking) {
         PartHelpers.PartStateHolder partStateHolder = PartHelpers.getPart(writerPos);
-        ((PartTypeInterfaceCrafting.State) partStateHolder.getState()).getCraftingJobHandler().setBlockingJobsMode(blocking);
+        ((PartTypeInterfaceCraftingBase.State<?, ?>) partStateHolder.getState()).getCraftingJobHandler().setBlockingJobsMode(blocking);
     }
 
     /**
