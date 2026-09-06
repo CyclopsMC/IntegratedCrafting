@@ -13,7 +13,7 @@ import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.cyclopscore.helper.ValueNotifierHelpers;
 import org.cyclops.integratedcrafting.RegistryEntries;
 import org.cyclops.integratedcrafting.core.part.PartTypeInterfaceCraftingBase;
-import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
+import org.cyclops.integratedcrafting.core.part.PartTypeInterfaceCraftingVariableBase;
 import org.cyclops.integrateddynamics.api.part.IPartContainer;
 import org.cyclops.integrateddynamics.api.part.IPartType;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
@@ -75,7 +75,7 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
             ValueNotifierHelpers.setValue(this, getTargetSideOverrideValueId(ingredientComponent),
                     partState.getIngredientComponentTargetSideOverride(ingredientComponent).ordinal());
         }
-        if (partState instanceof PartTypeInterfaceCrafting.State stateNormal) {
+        if (partState instanceof PartTypeInterfaceCraftingVariableBase.State<?, ?> stateNormal) {
             ValueNotifierHelpers.setValue(this, lastDisableCraftingCheckValueId, stateNormal.isDisableCraftingCheck());
         }
         ValueNotifierHelpers.setValue(this, lastBlockingModeValueId, partState.getCraftingJobHandler().isBlockingJobsMode());
@@ -135,7 +135,7 @@ public class ContainerPartInterfaceCraftingSettings extends ContainerPartSetting
             partState.setIngredientComponentTargetSideOverride(ingredientComponent,
                     getTargetSideOverrideValue(ingredientComponent));
         }
-        if (partState instanceof PartTypeInterfaceCrafting.State stateNormal) {
+        if (partState instanceof PartTypeInterfaceCraftingVariableBase.State<?, ?> stateNormal) {
             stateNormal.setDisableCraftingCheck(getLastDisableCraftingCheckValue());
         }
         if (partState.getCraftingJobHandler().setBlockingJobsMode(getLastBlockingModeValue())) {
