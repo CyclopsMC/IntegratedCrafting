@@ -25,17 +25,17 @@ import java.util.Optional;
  * Interface for auto crafting that derives all its recipes from a single list variable.
  * @author rubensworks
  */
-public class PartTypeInterfaceCraftingList extends PartTypeInterfaceCraftingVariableBase<PartTypeInterfaceCraftingList, PartTypeInterfaceCraftingList.State> {
+public class PartTypeInterfaceCraftingEnumerated extends PartTypeInterfaceCraftingVariableBase<PartTypeInterfaceCraftingEnumerated, PartTypeInterfaceCraftingEnumerated.State> {
 
     public static final int INVENTORY_SIZE = 1;
 
-    public PartTypeInterfaceCraftingList(String name) {
+    public PartTypeInterfaceCraftingEnumerated(String name) {
         super(name);
     }
 
     @Override
     public int getConsumptionRate(State state) {
-        return state.getCraftingJobHandler().getProcessingCraftingJobs().size() * GeneralConfig.interfaceCraftingListBaseConsumption;
+        return state.getCraftingJobHandler().getProcessingCraftingJobs().size() * GeneralConfig.interfaceCraftingEnumeratedBaseConsumption;
     }
 
     @Override
@@ -44,11 +44,11 @@ public class PartTypeInterfaceCraftingList extends PartTypeInterfaceCraftingVari
     }
 
     @Override
-    protected PartTypeInterfaceCraftingList.State constructDefaultState() {
-        return new PartTypeInterfaceCraftingList.State();
+    protected PartTypeInterfaceCraftingEnumerated.State constructDefaultState() {
+        return new PartTypeInterfaceCraftingEnumerated.State();
     }
 
-    public static class State extends PartTypeInterfaceCraftingVariableBase.State<PartTypeInterfaceCraftingList, PartTypeInterfaceCraftingList.State> {
+    public static class State extends PartTypeInterfaceCraftingVariableBase.State<PartTypeInterfaceCraftingEnumerated, PartTypeInterfaceCraftingEnumerated.State> {
 
         // Slots for which the configured maximum truncated the list
         private final IntSet truncatedSlots = new IntArraySet();
@@ -57,15 +57,15 @@ public class PartTypeInterfaceCraftingList extends PartTypeInterfaceCraftingVari
         }
 
         @Override
-        protected PartTypeInterfaceCraftingList getPartTypeInstance() {
-            return PartTypes.INTERFACE_CRAFTING_LIST;
+        protected PartTypeInterfaceCraftingEnumerated getPartTypeInstance() {
+            return PartTypes.INTERFACE_CRAFTING_ENUMERATED;
         }
 
         @Override
         protected int getDefaultUpdateInterval() {
             // Reading a whole list of recipes is more expensive than reading a single recipe,
             // and reader-backed list variables are invalidated on every reader tick.
-            return GeneralConfig.minCraftingInterfaceListUpdateFreq;
+            return GeneralConfig.minCraftingInterfaceEnumeratedUpdateFreq;
         }
 
         @Override
@@ -96,7 +96,7 @@ public class PartTypeInterfaceCraftingList extends PartTypeInterfaceCraftingVari
             }
 
             int length = list.getLength();
-            int max = GeneralConfig.maxCraftingInterfaceListRecipes;
+            int max = GeneralConfig.maxCraftingInterfaceEnumeratedRecipes;
             if (max > 0 && length > max) {
                 length = max;
                 this.truncatedSlots.add(slot);

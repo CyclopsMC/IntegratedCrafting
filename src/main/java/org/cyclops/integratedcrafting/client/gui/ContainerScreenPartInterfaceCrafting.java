@@ -24,6 +24,8 @@ import java.util.Optional;
  */
 public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtended<ContainerPartInterfaceCrafting> {
 
+    private static final int BUTTON_SETTINGS_X = 155;
+
     public ContainerScreenPartInterfaceCrafting(ContainerPartInterfaceCrafting container, Inventory inventory, Component title) {
         super(container, inventory, title);
     }
@@ -31,7 +33,7 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
     @Override
     public void init() {
         super.init();
-        addRenderableWidget(new ButtonImage(this.leftPos + 155, this.topPos + 4, 15, 15,
+        addRenderableWidget(new ButtonImage(this.leftPos + BUTTON_SETTINGS_X, this.topPos + 4, 15, 15,
                 Component.translatable("gui.integrateddynamics.part_settings"),
                 createServerPressable(ContainerMultipartAspects.BUTTON_SETTINGS, b -> {}), true,
                 Images.CONFIG_BOARD, -2, -3));
@@ -70,9 +72,16 @@ public class ContainerScreenPartInterfaceCrafting extends ContainerScreenExtende
 
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        // super.drawGuiContainerForegroundLayer(matrixStack, mouseX, mouseY);
-        this.font.drawInBatch(this.title, (float)this.titleLabelX, (float)this.titleLabelY, 4210752, false,
+        // Shrink the title if it would otherwise run into the settings button,
+        // as part names vary in length across part types and translations.
+        int titleMaxWidth = BUTTON_SETTINGS_X - this.titleLabelX - 2;
+        float titleScale = Math.min(1F, (float) titleMaxWidth / this.font.width(this.title));
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate((float) this.titleLabelX, (float) this.titleLabelY, 0F);
+        guiGraphics.pose().scale(titleScale, titleScale, 1F);
+        this.font.drawInBatch(this.title, 0F, 0F, 4210752, false,
                 guiGraphics.pose().last().pose(), guiGraphics.bufferSource(), Font.DisplayMode.NORMAL, 0, 15728880);
+        guiGraphics.pose().popPose();
 
         int y = 42;
         int slotsX = ContainerPartInterfaceCrafting.getVariableSlotsX(getMenu().getContainerInventory().getContainerSize());

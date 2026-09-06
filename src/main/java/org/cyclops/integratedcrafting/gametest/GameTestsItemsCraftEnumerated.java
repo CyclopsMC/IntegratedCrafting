@@ -16,7 +16,7 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cyclops.integratedcrafting.Reference;
-import org.cyclops.integratedcrafting.part.PartTypeInterfaceCraftingList;
+import org.cyclops.integratedcrafting.part.PartTypeInterfaceCraftingEnumerated;
 import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.cyclopscore.datastructure.DimPos;
 import org.cyclops.integrateddynamics.RegistryEntries;
@@ -38,7 +38,7 @@ import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedD
 
 @GameTestHolder(Reference.MOD_ID)
 @PrefixGameTestTemplate(false)
-public class GameTestsItemsCraftList {
+public class GameTestsItemsCraftEnumerated {
 
     public static final String TEMPLATE_EMPTY = "empty10";
     public static final int TIMEOUT = 2000;
@@ -48,9 +48,9 @@ public class GameTestsItemsCraftList {
      * A single list variable exposes multiple recipes, of which the first one is crafted.
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
-    public void testItemsCraftListChest(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingList.State> positions =
-                createBasicNetwork(helper, POS, PartTypes.INTERFACE_CRAFTING_LIST, Blocks.CRAFTING_TABLE);
+    public void testItemsCraftEnumeratedChest(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingEnumerated.State> positions =
+                createBasicNetwork(helper, POS, PartTypes.INTERFACE_CRAFTING_ENUMERATED, Blocks.CRAFTING_TABLE);
 
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
         chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
@@ -78,9 +78,9 @@ public class GameTestsItemsCraftList {
      * A recipe at the end of the list is craftable as well.
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
-    public void testItemsCraftListCraftingTable(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingList.State> positions =
-                createBasicNetwork(helper, POS, PartTypes.INTERFACE_CRAFTING_LIST, Blocks.CRAFTING_TABLE);
+    public void testItemsCraftEnumeratedCraftingTable(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingEnumerated.State> positions =
+                createBasicNetwork(helper, POS, PartTypes.INTERFACE_CRAFTING_ENUMERATED, Blocks.CRAFTING_TABLE);
 
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
         chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
@@ -103,10 +103,10 @@ public class GameTestsItemsCraftList {
      * Replacing the list variable re-indexes the interface with the new recipes.
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
-    public void testItemsCraftListReplaceVariable(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingList.State> positions =
-                createBasicNetwork(helper, POS, PartTypes.INTERFACE_CRAFTING_LIST, Blocks.CRAFTING_TABLE);
-        PartTypeInterfaceCraftingList.State state = positions.interfaceStates().get(0);
+    public void testItemsCraftEnumeratedReplaceVariable(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingEnumerated.State> positions =
+                createBasicNetwork(helper, POS, PartTypes.INTERFACE_CRAFTING_ENUMERATED, Blocks.CRAFTING_TABLE);
+        PartTypeInterfaceCraftingEnumerated.State state = positions.interfaceStates().get(0);
 
         state.getInventoryVariables().setItem(0, createVariableForRecipeList(helper.getLevel(), List.of(
                 Pair.of(RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "chest")),
@@ -132,9 +132,9 @@ public class GameTestsItemsCraftList {
      * as the crafting network drops a recipe as soon as one removal is requested for it.
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
-    public void testItemsCraftListDuplicates(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingList.State> positions =
-                createBasicNetwork(helper, POS, PartTypes.INTERFACE_CRAFTING_LIST, Blocks.CRAFTING_TABLE);
+    public void testItemsCraftEnumeratedDuplicates(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingEnumerated.State> positions =
+                createBasicNetwork(helper, POS, PartTypes.INTERFACE_CRAFTING_ENUMERATED, Blocks.CRAFTING_TABLE);
 
         positions.interfaceStates().get(0).getInventoryVariables().setItem(0,
                 createVariableForRecipeList(helper.getLevel(), List.of(
@@ -150,9 +150,9 @@ public class GameTestsItemsCraftList {
      * A list that does not hold recipes is rejected.
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
-    public void testItemsCraftListWrongElementType(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingList.State> positions =
-                createBasicNetwork(helper, POS, PartTypes.INTERFACE_CRAFTING_LIST, Blocks.CRAFTING_TABLE);
+    public void testItemsCraftEnumeratedWrongElementType(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingEnumerated.State> positions =
+                createBasicNetwork(helper, POS, PartTypes.INTERFACE_CRAFTING_ENUMERATED, Blocks.CRAFTING_TABLE);
 
         positions.interfaceStates().get(0).getInventoryVariables().setItem(0, createVariableForValue(helper.getLevel(),
                 ValueTypes.LIST, ValueTypeList.ValueList.ofList(ValueTypes.INTEGER,
@@ -169,10 +169,10 @@ public class GameTestsItemsCraftList {
      * and re-read whenever the reader's variable is invalidated.
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
-    public void testItemsCraftListMachineReader(GameTestHelper helper) {
-        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingList.State> positions =
-                createBasicNetwork(helper, POS, PartTypes.INTERFACE_CRAFTING_LIST, Blocks.CRAFTING_TABLE);
-        PartTypeInterfaceCraftingList.State state = positions.interfaceStates().get(0);
+    public void testItemsCraftEnumeratedMachineReader(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingEnumerated.State> positions =
+                createBasicNetwork(helper, POS, PartTypes.INTERFACE_CRAFTING_ENUMERATED, Blocks.CRAFTING_TABLE);
+        PartTypeInterfaceCraftingEnumerated.State state = positions.interfaceStates().get(0);
 
         // Validating every recipe of a whole machine against the target is not what is under test here
         state.setDisableCraftingCheck(true);
