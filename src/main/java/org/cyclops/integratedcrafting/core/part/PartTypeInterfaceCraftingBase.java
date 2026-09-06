@@ -9,7 +9,9 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
+import org.cyclops.cyclopscore.datastructure.DimPos;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
@@ -392,6 +394,20 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
         @Override
         public PrioritizedPartPos getPosition() {
             return PrioritizedPartPos.of(getTarget().getCenter(), getPriority());
+        }
+
+        @Override
+        public ItemStack getTargetMachineItem() {
+            PartTarget target = getTarget();
+            if (target == null) {
+                return ItemStack.EMPTY;
+            }
+            DimPos dimPos = target.getTarget().getPos();
+            if (!dimPos.isLoaded()) {
+                return ItemStack.EMPTY;
+            }
+            Level level = dimPos.getLevel(false);
+            return new ItemStack(level.getBlockState(dimPos.getBlockPos()).getBlock());
         }
 
         public CraftingJobHandler getCraftingJobHandler() {
