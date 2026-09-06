@@ -25,6 +25,11 @@ public class GameTestsCraftingInterfaceTargetMachine {
 
     public static final String TEMPLATE_EMPTY = "empty10";
     public static final int TIMEOUT = 2000;
+    /**
+     * Attuned interfaces expose every recipe of their machine, which is too heavy to run
+     * next to the default batch, so these tests get a batch of their own.
+     */
+    public static final String BATCH = "crafting_interface_target_machine";
     public static final BlockPos POS = BlockPos.ZERO.offset(2, 0, 2);
 
     protected void testTargetMachineItem(GameTestHelper helper, boolean attuned, Block crafter, Item expectedItem) {
@@ -36,22 +41,22 @@ public class GameTestsCraftingInterfaceTargetMachine {
         });
     }
 
-    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT, batch = BATCH)
     public void testTargetMachineItemCraftingTable(GameTestHelper helper) {
         testTargetMachineItem(helper, false, Blocks.CRAFTING_TABLE, Items.CRAFTING_TABLE);
     }
 
-    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT, batch = BATCH)
     public void testTargetMachineItemFurnace(GameTestHelper helper) {
         testTargetMachineItem(helper, false, Blocks.FURNACE, Items.FURNACE);
     }
 
-    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT, batch = BATCH)
     public void testTargetMachineItemAttunedCraftingTable(GameTestHelper helper) {
         testTargetMachineItem(helper, true, Blocks.CRAFTING_TABLE, Items.CRAFTING_TABLE);
     }
 
-    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT, batch = BATCH)
     public void testTargetMachineItemAttunedFurnace(GameTestHelper helper) {
         testTargetMachineItem(helper, true, Blocks.FURNACE, Items.FURNACE);
     }
