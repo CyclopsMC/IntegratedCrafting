@@ -3,6 +3,7 @@ package org.cyclops.integratedcrafting.api.crafting;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
 import net.minecraft.world.item.ItemStack;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
@@ -96,6 +97,17 @@ public interface ICraftingInterface {
      *         so that recipes that produce their outputs instantly are not estimated as taking no time.
      */
     public long getEstimatedRecipeDuration(IRecipeDefinition recipe);
+
+    /**
+     * Crafting results are buffered here until the storage network accepts them.
+     * A non-empty buffer means this interface is blocked: it will not start or finish any job
+     * until the buffer can be pushed into the network.
+     *
+     * @return The crafting results that are waiting to be pushed into the storage network.
+     */
+    public default List<IngredientInstanceWrapper<?, ?>> getOutputBuffer() {
+        return Collections.emptyList();
+    }
 
     /**
      * @return The prioritized position of this interface.
