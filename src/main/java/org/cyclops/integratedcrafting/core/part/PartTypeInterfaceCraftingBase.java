@@ -394,8 +394,22 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
         }
 
         @Override
+        public List<IngredientInstanceWrapper<?, ?>> getOutputBuffer() {
+            return getInventoryOutputBuffer();
+        }
+
+        @Override
         public CraftingJobStatus getCraftingJobStatus(ICraftingNetwork network, int channel, int craftingJobId) {
-            return craftingJobHandler.getCraftingJobStatus(network, channel, craftingJobId);
+            CraftingJobStatus status = craftingJobHandler.getCraftingJobStatus(network, channel, craftingJobId);
+
+            // A non-empty output buffer stops this interface from ticking at all.
+            // Every job on it is then blocked by the storage network rather than by its own inputs,
+            // including jobs that already finished but can not be retired until the buffer drains.
+            if (!getInventoryOutputBuffer().isEmpty() && status != CraftingJobStatus.UNKNOWN) {
+                return CraftingJobStatus.PENDING_OUTPUT_STORAGE;
+            }
+
+            return status;
         }
 
         @Override
