@@ -1,8 +1,29 @@
 # Changelog for Minecraft 26.1.2
 All notable changes to this project will be documented in this file.
 
+<a name="26.1.2-1.7.0"></a>
+## [26.1.2-1.7.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.6.0...26.1.2-1.7.0) - 2026-09-11 21:55:54
+
+
+### Added
+* Add translations through Crowdin (#231)
+* Add a list-based crafting interface (#227), Closes #10
+* Report crafting jobs that are blocked by a full storage network (#233)
+  Required for /CyclopsMC/IntegratedTerminals#224
+* Expose the machine that a crafting interface targets (#225)
+  Required for CyclopsMC/IntegratedTerminals#181
+
+### Changed
+* Clarify in the book that crafting results have to be inserted into the network (#234), Related to #213
+
+### Fixed
+* Fix item duplication on partial insertion into the network (#232)
+  We now only re-insert the remainder when a storage partially accepts ingredients.
+* Fix parallel crafting jobs all completing on a single produced output (26) (#230)
+  This could cause random crafting job failures in highly parallel jobs.
+
 <a name="26.1.2-1.6.0"></a>
-## [26.1.2-1.6.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.5.0...26.1.2-1.6.0) - 2026-09-05 18:05:31
+## [26.1.2-1.6.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.5.0...26.1.2-1.6.0) - 2026-09-05 18:05:31 +0200
 
 
 ### Added
