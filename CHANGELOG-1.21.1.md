@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.7.1"></a>
+## [1.21.1-1.7.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.7.0...1.21.1-1.7.1) - 2026-09-11 21:49:52
+
+
+### Fixed
+* Fix minimum CyclopsCore and Integrated Dynamics versions not being set
+
 <a name="1.21.1-1.7.0"></a>
-## [1.21.1-1.7.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.6.0...1.21.1-1.7.0) - 2026-09-11 21:46:00
+## [1.21.1-1.7.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.6.0...1.21.1-1.7.0) - 2026-09-11 21:46:00 +0200
 
 
 ### Added
