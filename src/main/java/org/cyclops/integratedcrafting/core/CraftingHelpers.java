@@ -1852,7 +1852,8 @@ public class CraftingHelpers {
                         remainingInstances = Lists.newArrayList();
                         remainingIngredients.put(component, remainingInstances);
                     }
-                    remainingInstances.add(instance);
+                    // Only the remainder is left over, the rest was accepted by the storage
+                    remainingInstances.add(remainder);
                 }
             }
         }

@@ -3,6 +3,8 @@ package org.cyclops.integratedcrafting.api.crafting;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
+import net.minecraft.world.item.ItemStack;
 import org.cyclops.commoncapabilities.api.ingredient.storage.IIngredientComponentStorage;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integrateddynamics.api.part.PrioritizedPartPos;
@@ -97,9 +99,28 @@ public interface ICraftingInterface {
     public long getEstimatedRecipeDuration(IRecipeDefinition recipe);
 
     /**
+     * Crafting results are buffered here until the storage network accepts them.
+     * A non-empty buffer means this interface is blocked: it will not start or finish any job
+     * until the buffer can be pushed into the network.
+     *
+     * @return The crafting results that are waiting to be pushed into the storage network.
+     */
+    public default List<IngredientInstanceWrapper<?, ?>> getOutputBuffer() {
+        return Collections.emptyList();
+    }
+
+    /**
      * @return The prioritized position of this interface.
      */
     public PrioritizedPartPos getPosition();
+
+    /**
+     * @return An item representation of the machine that this interface is targeting,
+     *         or an empty stack if the machine is unknown or its position is not loaded.
+     */
+    public default ItemStack getTargetMachineItem() {
+        return ItemStack.EMPTY;
+    }
 
     public static Comparator<ICraftingInterface> createComparator() {
         return Comparator.comparing(ICraftingInterface::getPosition);
