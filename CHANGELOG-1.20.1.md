@@ -1,8 +1,16 @@
 # Changelog for Minecraft 1.20.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.20.1-1.4.8"></a>
+## [1.20.1-1.4.8](/compare/1.20.1-1.4.7...1.20.1-1.4.8) - 2026-09-11 21:44:18
+
+
+### Fixed
+* Fix parallel crafting jobs all completing on a single produced output (1.20) (#229)
+  This could cause random crafting job failures in highly parallel jobs.
+
 <a name="1.20.1-1.4.7"></a>
-## [1.20.1-1.4.7](/compare/1.20.1-1.4.6...1.20.1-1.4.7) - 2026-08-06 08:54:23
+## [1.20.1-1.4.7](/compare/1.20.1-1.4.6...1.20.1-1.4.7) - 2026-08-06 08:54:23 +0200
 
 
 ### Fixed
