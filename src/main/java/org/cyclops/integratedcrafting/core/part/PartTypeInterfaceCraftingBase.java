@@ -2,13 +2,16 @@ package org.cyclops.integratedcrafting.core.part;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.IRecipeDefinition;
+import org.cyclops.cyclopscore.datastructure.DimPos;
 import org.cyclops.commoncapabilities.api.ingredient.IPrototypedIngredient;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
@@ -27,6 +30,7 @@ import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
 import org.cyclops.integratedcrafting.ingredient.storage.IngredientComponentStorageSlottedInsertProxy;
 import org.cyclops.integrateddynamics.api.evaluate.variable.ValueDeseralizationContext;
 import org.cyclops.integrateddynamics.api.network.INetwork;
+import org.cyclops.integrateddynamics.api.network.INetworkIngredientsChannel;
 import org.cyclops.integrateddynamics.api.network.IPartNetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.api.network.NetworkCapability;
@@ -35,6 +39,7 @@ import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
 import org.cyclops.integrateddynamics.api.part.PrioritizedPartPos;
 import org.cyclops.integrateddynamics.core.helper.NetworkHelpers;
+import org.cyclops.integrateddynamics.core.network.IIngredientChannelInsertPreConsumer;
 import org.cyclops.integrateddynamics.core.part.PartStateBase;
 
 import javax.annotation.Nullable;
@@ -142,23 +147,47 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
         return state.getDefaultUpdateInterval();
     }
 
+    /**
+     * Flush a crafting result into the network.
+     *
+     * The crafting jobs of this crafting interface get the first chance to claim the result,
+     * after which the remainder is inserted into the network storage.
+     * The part that was claimed here is passed along to the network insertion,
+     * so that the crafting interfaces observing it can not claim that same part a second time.
+     *
+     * @param wrapper The crafting result to flush.
+     * @param craftingJobHandler The crafting job handler of this crafting interface.
+     * @param network The network.
+     * @param channel The channel.
+     * @return The part of the result that could not be flushed, or null if it was flushed completely.
+     */
     @Nullable
-    protected static <T, M> IngredientInstanceWrapper<T, M> insertIntoNetwork(IngredientInstanceWrapper<T, M> wrapper,
-                                                                              INetwork network, int channel) {
-        IPositionedAddonsNetworkIngredients<T, M> storageNetwork = wrapper.getComponent()
+    protected static <T, M> IngredientInstanceWrapper<T, M> flushIngredientToNetwork(IngredientInstanceWrapper<T, M> wrapper,
+                                                                                     CraftingJobHandler craftingJobHandler,
+                                                                                     INetwork network, int channel) {
+        // First try to give the ingredient to pending crafting jobs of this crafting interface.
+        IIngredientChannelInsertPreConsumer.Result<T> claimed = craftingJobHandler
+                .beforeFlushIngredientToNetwork(wrapper, channel);
+
+        IngredientComponent<T, M> component = wrapper.getComponent();
+        IPositionedAddonsNetworkIngredients<T, M> storageNetwork = component
                 .getCapability(org.cyclops.integrateddynamics.Capabilities.PositionedAddonsNetworkIngredientsHandler.INGREDIENT)
                 .map(n -> (IPositionedAddonsNetworkIngredients<T, M>) n.getStorage(network).orElse(null))
                 .orElse(null);
         if (storageNetwork != null) {
-            IIngredientComponentStorage<T, M> storage = storageNetwork.getChannel(channel);
-            T remaining = storage.insert(wrapper.getInstance(), false);
-            if (wrapper.getComponent().getMatcher().isEmpty(remaining)) {
+            INetworkIngredientsChannel<T, M> storage = storageNetwork.getChannel(channel);
+            T remaining;
+            try (var tx = Transaction.openRoot()) {
+                remaining = storage.insert(claimed.remaining(), claimed.unclaimed(), tx);
+                tx.commit();
+            }
+            if (component.getMatcher().isEmpty(remaining)) {
                 return null;
             } else {
-                return new IngredientInstanceWrapper<>(wrapper.getComponent(), remaining);
+                return new IngredientInstanceWrapper<>(component, remaining);
             }
         }
-        return wrapper;
+        return new IngredientInstanceWrapper<>(component, claimed.remaining());
     }
 
     @Override
@@ -366,8 +395,22 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
         }
 
         @Override
+        public List<IngredientInstanceWrapper<?, ?>> getOutputBuffer() {
+            return getInventoryOutputBuffer();
+        }
+
+        @Override
         public CraftingJobStatus getCraftingJobStatus(ICraftingNetwork network, int channel, int craftingJobId) {
-            return craftingJobHandler.getCraftingJobStatus(network, channel, craftingJobId);
+            CraftingJobStatus status = craftingJobHandler.getCraftingJobStatus(network, channel, craftingJobId);
+
+            // A non-empty output buffer stops this interface from ticking at all.
+            // Every job on it is then blocked by the storage network rather than by its own inputs,
+            // including jobs that already finished but can not be retired until the buffer drains.
+            if (!getInventoryOutputBuffer().isEmpty() && status != CraftingJobStatus.UNKNOWN) {
+                return CraftingJobStatus.PENDING_OUTPUT_STORAGE;
+            }
+
+            return status;
         }
 
         @Override
@@ -388,6 +431,20 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
         @Override
         public PrioritizedPartPos getPosition() {
             return PrioritizedPartPos.of(getTarget().getCenter(), getPriority());
+        }
+
+        @Override
+        public ItemStack getTargetMachineItem() {
+            PartTarget target = getTarget();
+            if (target == null) {
+                return ItemStack.EMPTY;
+            }
+            DimPos dimPos = target.getTarget().getPos();
+            if (!dimPos.isLoaded()) {
+                return ItemStack.EMPTY;
+            }
+            Level level = dimPos.getLevel(false);
+            return new ItemStack(level.getBlockState(dimPos.getBlockPos()).getBlock());
         }
 
         public CraftingJobHandler getCraftingJobHandler() {
@@ -469,11 +526,7 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
             while (outputBufferIt.hasNext()) {
                 IngredientInstanceWrapper<?, ?> remainingInstance = outputBufferIt.next();
 
-                // First try to give the ingredients to pending crafting jobs.
-                remainingInstance = getCraftingJobHandler().beforeFlushIngredientToNetwork(remainingInstance, channelCrafting);
-
-                // If none of the jobs need it, dump it into the network.
-                remainingInstance = insertIntoNetwork(remainingInstance,
+                remainingInstance = flushIngredientToNetwork(remainingInstance, getCraftingJobHandler(),
                         network, this.getChannelCrafting());
                 if (remainingInstance == null) {
                     outputBufferIt.remove();

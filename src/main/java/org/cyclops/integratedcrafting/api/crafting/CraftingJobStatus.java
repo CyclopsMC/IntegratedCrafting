@@ -25,6 +25,11 @@ public enum CraftingJobStatus {
      */
     INVALID_INPUTS,
     /**
+     * The crafting interface holds crafting results that the storage network refuses to accept,
+     * so it can not make progress on any of its jobs until they can be pushed out.
+     */
+    PENDING_OUTPUT_STORAGE,
+    /**
      * The crafting job is actively processing,
      * and output ingredients are being awaited.
      */

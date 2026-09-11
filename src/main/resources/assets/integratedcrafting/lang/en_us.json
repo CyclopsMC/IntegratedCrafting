@@ -23,6 +23,11 @@
   "gui.integratedcrafting.partinterface.slot.message.valid": "Recipe is valid for the target.",
   "gui.integratedcrafting.partinterface.slot.message.invalid": "Recipe is not acceptable by the target.",
   "gui.integratedcrafting.partinterface.slot.message.norecipe": "The variable does not contain a recipe.",
+  "gui.integratedcrafting.partinterface.slot.message.empty": "The variable does not contain any recipes.",
+  "gui.integratedcrafting.partinterface.slot.message.valid.multiple": "%s recipes are valid for the target.",
+  "gui.integratedcrafting.partinterface.slot.message.partial": "Only %s of %s recipes are acceptable by the target.",
+  "gui.integratedcrafting.partinterface.slot.message.list.infinite": "Infinite lists of recipes are not supported.",
+  "gui.integratedcrafting.partinterface.slot.message.list.toolarge": "The list was too long: only the first %s recipes are used.",
 
   "_comment": "Advancements",
   "advancement.integratedcrafting.craft_crafting_interface": "Crafting² Interface",
@@ -35,6 +40,8 @@
   "advancement.integratedcrafting.craft_planks.desc": "Use a Crafting Writer to start a crafting job for Oak Planks",
   "advancement.integratedcrafting.craft_crafting_interface_attuned": "Crafting³ Interface",
   "advancement.integratedcrafting.craft_crafting_interface_attuned.desc": "Craft an Attuned Crafting Interface",
+  "advancement.integratedcrafting.craft_crafting_interface_enumerated": "Crafting to the Fourth",
+  "advancement.integratedcrafting.craft_crafting_interface_enumerated.desc": "Craft an Enumerated Crafting Interface",
 
   "_comment": "Part types",
   "parttype.integratedcrafting.interface_crafting": "Crafting Interface",
@@ -42,6 +49,8 @@
   "parttype.integratedcrafting.interface_crafting_attuned": "Attuned Crafting Interface",
   "parttype.integratedcrafting.interface_crafting_attuned.info": "Handles crafting for all recipes exposed by the target machine.",
   "parttype.integratedcrafting.interface_crafting_attuned.unsupported": "The target machine does not support recipe handling.",
+  "parttype.integratedcrafting.interface_crafting_enumerated": "Enumerated Crafting Interface",
+  "parttype.integratedcrafting.interface_crafting_enumerated.info": "Handles crafting for all recipes inside a single list variable.",
 
   "parttype.integratedcrafting.crafting_writer": "Crafting Writer",
   "parttype.integratedcrafting.crafting_writer.info": "Starts crafting jobs",
@@ -94,6 +103,7 @@
   "info_book.integratedcrafting.crafting_interface.basics.text2": "By pointing a &lCrafting Interface&r to a machine &o(like a Crafting table or Furnace)&r, this interface will be bound to this machine to handle recipes.",
   "info_book.integratedcrafting.crafting_interface.basics.text3": "When opening the GUI of a &lCrafting Interface&r, you can insert &lVariable Cards&r that hold &8Recipes&0. This will tell the interface that the given recipe can be crafted using the bound machine.",
   "info_book.integratedcrafting.crafting_interface.basics.text4": "When you've progressed later in the game, you will be able to craft the &lAttuned Crafting Interface&r. It does not require you to manually add recipes to it, as it will read and expose all recipes that are available in the target machine. These are the same recipes that are listed in the &lMachine Reader&r. Some modded machines may not be supported, which will be visualized by a red border when placing the &lAttuned Crafting Interface&r.",
+  "info_book.integratedcrafting.crafting_interface.basics.text5": "The &lEnumerated Crafting Interface&r takes a single variable holding a &llist of recipes&r, and exposes every recipe in that list to the network. This allows you to derive the recipes of an interface using logic, for example by pointing the &lMachine Reader&r at a machine, or by filtering a list of recipes. Infinite lists are not supported, and very long lists are cut off at a limit that can be changed in the config.",
 
   "info_book.integratedcrafting.crafting_interface.attuned_recipes": "Attuned Recipes",
   "info_book.integratedcrafting.crafting_interface.attuned_recipes.text1": "Since the &lAttuned Crafting Interface&r exposes &oall&r recipes of its machine, it may hand the network more recipes than you want it to use: a Crafting Table alone accounts for hundreds. Its GUI therefore shows every recipe of the bound machine as a grid of output icons, where you decide which ones the network is allowed to craft.",
@@ -103,7 +113,7 @@
   "info_book.integratedcrafting.crafting_interface.crafting": "Crafting Process",
   "info_book.integratedcrafting.crafting_interface.crafting.text1": "This section will explain how the crafting process is being handled by &lCrafting Interfaces&r. This information is essential to get the most out of this mod, and to debug any issues you may encounter.",
   "info_book.integratedcrafting.crafting_interface.crafting.text2": "When a crafting job is started (for example with the &lCrafting Writer&r), one (or more) &lCrafting Interface(s)&r will be used that have a recipe corresponding to the given job. All ingredients that are necessary for the recipes will be pulled from the network and held within the crafting jobs in the &lCrafting Interface(s)&r, to avoid ingredients being used elsewhere before the crafting jobs are completed. The &lCrafting Interface&r is responsible for inserting all inputs of the recipe into the bound machine. It will do this based on the storage network contents, as provided by &lIntegrated Tunnels interfaces&r.",
-  "info_book.integratedcrafting.crafting_interface.crafting.text3": "A &lCrafting Interface&r will however &lnot&r import the crafting results from the bound machine. The player is responsible for making sure that the crafting results end up back into the network. The Crafting Table is an exception to this, only a &lCrafting Interface&r is required to craft with this. The &lCrafting Interface&r will track changes in the storage network, and it will only mark the crafting job as completed once the expected outputs are present in the storage network. This can be achieved by either placing an active &lIntegrated Tunnels importer&r onto the machine, or by letting the machine automatically output into the &lCrafting Interface&r. Everything (items, fluids, energy) that is inserted into the &lCrafting Interface&r will be inserted into the storage network for the configured channel.",
+  "info_book.integratedcrafting.crafting_interface.crafting.text3": "A &lCrafting Interface&r will however &lnot&r import the crafting results from the bound machine. The player is responsible for making sure that the crafting results end up back into the network. The Crafting Table is an exception to this, only a &lCrafting Interface&r is required to craft with this. The &lCrafting Interface&r will only mark the crafting job as completed once the expected outputs are &linserted into&r the storage network. This can be achieved by either placing an active &lIntegrated Tunnels importer&r onto the machine, or by letting the machine automatically output into the &lCrafting Interface&r. Outputs that reach an attached storage by any other route, such as a pipe or hopper from another mod writing straight into a chest or drawer, will &lnot&r be detected, and the crafting job will keep waiting even though the outputs are visible in a terminal. Everything (items, fluids, energy) that is inserted into the &lCrafting Interface&r will be inserted into the storage network for the configured channel.",
   "info_book.integratedcrafting.crafting_interface.crafting.text4": "The following figures show examples of valid minimal setups for autocrafting with a Crafting Table and Furnace.",
 
   "info_book.integratedcrafting.crafting_interface.configuration": "Configuration",
