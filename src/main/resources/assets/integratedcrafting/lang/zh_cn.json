@@ -63,7 +63,6 @@
   "info_book.integratedcrafting.crafting_interface.crafting": "合成过程",
   "info_book.integratedcrafting.crafting_interface.crafting.text1": "本节将介绍&l合成接口&r如何处理合成流程。要充分发挥本模组的功能，并排查可能遇到的问题，理解这些信息至关重要。",
   "info_book.integratedcrafting.crafting_interface.crafting.text2": "当一个合成任务启动时（例如通过&l合成写入器&r启动），系统会使用一个或多个拥有对应配方的&l合成接口&r。配方所需的所有材料都会从网络中提取出来，并暂存在&l合成接口&r的合成任务中，防止这些材料在合成任务完成前被用于其他用途。&l合成接口&r负责将配方的所有输入材料放入已绑定的机器中。它会根据&l集成管道接口&r所提供的存储网络内容来执行此操作。",
-  "info_book.integratedcrafting.crafting_interface.crafting.text3": "但是，&l合成接口&r&l不会&r从已绑定的机器中导入合成产物。玩家需要自行确保合成产物能够重新进入网络。工作台是一个例外：使用工作台进行合成时，只需要&l合成接口&r即可。&l合成接口&r会监测存储网络中的变化，只有在预期产物出现在存储网络中后，才会将合成作业标记为已完成。你可以在机器上放置一个已启用的&l集成管道导入器&r，也可以让机器自动将产物输出到&l合成接口&r中。所有输入&l合成接口&r的内容，包括物品、流体和能量，都会被送入已配置频道对应的存储网络中。",
   "info_book.integratedcrafting.crafting_interface.crafting.text4": "下图展示了使用工作台和熔炉进行自动合成时，几种有效的最简配置。",
   "info_book.integratedcrafting.crafting_interface.configuration": "配置",
   "info_book.integratedcrafting.crafting_interface.configuration.text1": "与大多数&l集成动力&r部件一样，你可以在&l合成接口&r中配置频道、优先级和刻频率等选项。",
