@@ -8,6 +8,7 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
@@ -15,6 +16,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.FurnaceBlockEntity;
 import org.apache.commons.lang3.tuple.Pair;
@@ -27,9 +29,12 @@ import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIng
 import org.cyclops.commoncapabilities.api.capability.recipehandler.PrototypedIngredientAlternativesList;
 import org.cyclops.commoncapabilities.api.capability.recipehandler.RecipeDefinition;
 import org.cyclops.commoncapabilities.api.ingredient.IngredientComponent;
+import org.cyclops.commoncapabilities.api.ingredient.IngredientInstanceWrapper;
 import org.cyclops.commoncapabilities.api.ingredient.MixedIngredients;
 import org.cyclops.commoncapabilities.api.ingredient.PrototypedIngredient;
 import org.cyclops.cyclopscore.helper.IModHelpers;
+import org.cyclops.integratedcrafting.api.crafting.CraftingJob;
+import org.cyclops.integratedcrafting.core.CraftingJobHandler;
 import org.cyclops.integratedcrafting.core.part.PartTypeInterfaceCraftingBase;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCrafting;
 import org.cyclops.integratedcrafting.part.PartTypes;
@@ -284,6 +289,58 @@ public class GameTestHelpersIntegratedCrafting {
     public static <T extends IValueType<V>, V extends IValue> void setCraftingInterfaceUpdateInterval(PartPos writerPos, int updateInterval) {
         PartHelpers.PartStateHolder partStateHolder = PartHelpers.getPart(writerPos);
         partStateHolder.getState().setUpdateInterval(updateInterval);
+    }
+
+    /**
+     * Describe what the given crafting interface and the machine it targets are doing.
+     *
+     * A test that waits for crafting to finish can only report that it did not finish when it times out,
+     * which does not tell whether crafting was slow, or stuck on a job that can not make progress anymore.
+     *
+     * @param helper The game test helper.
+     * @param interfaceState The state of the crafting interface.
+     * @param machinePos The relative position of the machine that the crafting interface targets.
+     * @return A description of the item crafting state.
+     */
+    public static String describeCraftingState(GameTestHelper helper,
+                                               PartTypeInterfaceCraftingBase.State<?, ?> interfaceState,
+                                               BlockPos machinePos) {
+        CraftingJobHandler craftingJobHandler = interfaceState.getCraftingJobHandler();
+        StringBuilder description = new StringBuilder("jobs=[");
+        for (CraftingJob craftingJob : craftingJobHandler.getAllCraftingJobs().values()) {
+            List<?> operations = craftingJobHandler.getProcessingCraftingJobsPendingIngredients().get(craftingJob.getId());
+            description.append('#').append(craftingJob.getId())
+                    .append(operations == null ? " pending" : " processing")
+                    .append(craftingJob.isInvalidInputs() ? " invalid-inputs" : "")
+                    .append(craftingJob.getLastMissingIngredients().isEmpty() ? "" : " missing-ingredients")
+                    .append(" amount=").append(craftingJob.getAmount())
+                    .append(" operations=").append(operations == null ? 0 : operations.size())
+                    .append(" inputs=").append(craftingJob.getIngredientsStorageBuffer().getInstances(IngredientComponent.ITEMSTACK))
+                    .append(' ');
+        }
+        return description
+                .append("] results=").append(interfaceState.getInventoryOutputBuffer()
+                        .stream().map(IngredientInstanceWrapper::getInstance).toList())
+                .append(" machine=").append(describeContainer(helper.getBlockEntity(machinePos)))
+                .toString();
+    }
+
+    /**
+     * @param blockEntity A block entity.
+     * @return A description of the items that the given block entity holds.
+     */
+    public static String describeContainer(BlockEntity blockEntity) {
+        if (!(blockEntity instanceof Container container)) {
+            return "no container";
+        }
+        StringBuilder description = new StringBuilder("[");
+        for (int slot = 0; slot < container.getContainerSize(); slot++) {
+            ItemStack itemStack = container.getItem(slot);
+            if (!itemStack.isEmpty()) {
+                description.append(slot).append('=').append(itemStack).append(' ');
+            }
+        }
+        return description.append(']').toString();
     }
 
     public static void chestContains(GameTestHelper helper, ChestBlockEntity chest, ItemStack itemStack) {
