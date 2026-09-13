@@ -398,3 +398,17 @@ tasks.register('updateGitHooks', Copy) {
     into './.git/hooks'
 }
 compileJava.dependsOn updateGitHooks
+
+// @OnlyIn does not exist anymore since NeoForge 26, guard against upmerges from 1.21 reintroducing it
+tasks.register('checkNoOnlyIn') {
+    def javaSources = fileTree('src').matching { include '**/*.java' }
+    inputs.files(javaSources).withPropertyName('javaSources')
+    doLast {
+        def offenders = javaSources.files.findAll { it.text.contains('@OnlyIn') }
+        if (offenders) {
+            throw new GradleException('@OnlyIn does not exist anymore in this NeoForge version, remove it from:\n'
+                    + offenders.sort().collect { "  ${it}" }.join('\n'))
+        }
+    }
+}
+check.dependsOn checkNoOnlyIn
