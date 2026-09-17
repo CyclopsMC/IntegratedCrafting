@@ -571,7 +571,6 @@ public class GameTestsItemsCraft {
         });
     }
 
-    // Smelting eight ingots one at a time, so the budget scales with how slow the runner is.
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT * 5)
     public void testItemsCraftIngotsAndExtractFromStorageSameNetwork(GameTestHelper helper) {
         GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
