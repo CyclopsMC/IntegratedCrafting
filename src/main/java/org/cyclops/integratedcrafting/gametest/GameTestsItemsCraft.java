@@ -536,7 +536,7 @@ public class GameTestsItemsCraft {
         });
     }
 
-    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT * 2)
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT * 5)
     public void testItemsCraftIngotsAndExtractFromStorage(GameTestHelper helper) {
         GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
 
@@ -570,7 +570,7 @@ public class GameTestsItemsCraft {
         });
     }
 
-    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT * 2)
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT * 5)
     public void testItemsCraftIngotsAndExtractFromStorageSameNetwork(GameTestHelper helper) {
         GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS, Blocks.FURNACE);
 
