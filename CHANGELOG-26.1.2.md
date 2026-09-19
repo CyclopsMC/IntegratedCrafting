@@ -1,8 +1,16 @@
 # Changelog for Minecraft 26.1.2
 All notable changes to this project will be documented in this file.
 
+<a name="26.1.2-1.7.1"></a>
+## [26.1.2-1.7.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.7.0...26.1.2-1.7.1) - 2026-09-19 09:13:32
+
+
+### Fixed
+* Fix crash when opening the crafting interface on dedicated servers (#240)
+  Closes CyclopsMC/IntegratedDynamics#1736
+
 <a name="26.1.2-1.7.0"></a>
-## [26.1.2-1.7.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.6.0...26.1.2-1.7.0) - 2026-09-11 21:55:54
+## [26.1.2-1.7.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.6.0...26.1.2-1.7.0) - 2026-09-11 21:55:54 +0200
 
 
 ### Added
