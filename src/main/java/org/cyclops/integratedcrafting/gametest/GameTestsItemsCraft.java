@@ -562,7 +562,8 @@ public class GameTestsItemsCraft {
             helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
 
             // Check if items have been crafted
-            helper.assertTrue(chestIn.getItem(0).isEmpty(), "Slot 0 item is incorrect, was " + chestIn.getItem(0));
+            helper.assertTrue(chestIn.getItem(0).isEmpty(), "Slot 0 item is incorrect, was " + chestIn.getItem(0)
+                    + ", " + describeCraftingState(helper, positions.interfaceStates().get(0), POS.west()));
         });
     }
 
@@ -594,7 +595,8 @@ public class GameTestsItemsCraft {
             helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe in crafting interface is not valid");
 
             // Check if items have been crafted
-            helper.assertTrue(chestIn.getItem(0).isEmpty(), "Slot 0 item is incorrect, was " + chestIn.getItem(0));
+            helper.assertTrue(chestIn.getItem(0).isEmpty(), "Slot 0 item is incorrect, was " + chestIn.getItem(0)
+                    + ", " + describeCraftingState(helper, positions.interfaceStates().get(0), POS.west()));
         });
     }
 

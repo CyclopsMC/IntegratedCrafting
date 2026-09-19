@@ -1,8 +1,16 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.7.2"></a>
+## [1.21.1-1.7.2](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.7.1...1.21.1-1.7.2) - 2026-09-19 09:08:27
+
+
+### Fixed
+* Fix crash when opening the crafting interface on dedicated servers (#240)
+  Closes CyclopsMC/IntegratedDynamics#1736
+
 <a name="1.21.1-1.7.1"></a>
-## [1.21.1-1.7.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.7.0...1.21.1-1.7.1) - 2026-09-11 21:49:52
+## [1.21.1-1.7.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.7.0...1.21.1-1.7.1) - 2026-09-11 21:49:52 +0200
 
 
 ### Fixed
