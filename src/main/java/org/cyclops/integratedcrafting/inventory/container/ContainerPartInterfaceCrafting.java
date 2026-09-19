@@ -8,7 +8,6 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import org.cyclops.cyclopscore.helper.IModHelpers;
 import org.cyclops.cyclopscore.helper.ValueNotifierHelpers;
 import org.cyclops.cyclopscore.inventory.SimpleInventory;
 import org.cyclops.integratedcrafting.RegistryEntries;
@@ -35,6 +34,8 @@ public class ContainerPartInterfaceCrafting<P extends PartTypeInterfaceCraftingV
         extends ContainerMultipart<P, S> {
 
     public static final int GUI_WIDTH = 176;
+    // Value of GuiHelpers.SLOT_SIZE, duplicated because GuiHelpers is client-only.
+    public static final int SLOT_SIZE = 18;
 
     private final List<Integer> readSlotValidIds;
     private final List<Integer> readSlotErrorIds;
@@ -83,7 +84,7 @@ public class ContainerPartInterfaceCrafting<P extends PartTypeInterfaceCraftingV
      * @return The x position of the first variable slot, so that the slots are horizontally centered.
      */
     public static int getVariableSlotsX(int slotCount) {
-        return (GUI_WIDTH - slotCount * IModHelpers.get().getGuiHelpers().getSlotSize()) / 2 + 1;
+        return (GUI_WIDTH - slotCount * SLOT_SIZE) / 2 + 1;
     }
 
     public boolean isRecipeSlotValid(int slot) {
