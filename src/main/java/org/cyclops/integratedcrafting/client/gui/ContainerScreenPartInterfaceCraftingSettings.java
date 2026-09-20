@@ -28,7 +28,7 @@ import org.cyclops.integrateddynamics.client.gui.image.Images;
 import org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown;
 import org.cyclops.integrateddynamics.core.client.gui.container.ContainerScreenPartSettings;
 import org.cyclops.integrateddynamics.core.inventory.container.ContainerPartSettings;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.Arrays;
 import java.util.List;
@@ -162,7 +162,7 @@ public class ContainerScreenPartInterfaceCraftingSettings extends ContainerScree
 
     @Override
     public boolean keyPressed(KeyEvent evt) {
-        if (evt.key() != GLFW.GLFW_KEY_ESCAPE) {
+        if (evt.key() != InputConstants.KEY_ESCAPE) {
             if (this.numberFieldChannelInterfaceCrafting.keyPressed(evt)) {
                 return true;
             }
