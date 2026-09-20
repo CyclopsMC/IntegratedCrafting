@@ -6,7 +6,7 @@ import net.minecraft.world.entity.player.Inventory;
 import org.cyclops.integratedcrafting.inventory.container.ContainerPartInterfaceCraftingAttunedOffsets;
 import org.cyclops.integrateddynamics.core.client.gui.container.ContainerScreenPartOffset;
 import org.cyclops.integrateddynamics.core.inventory.container.ContainerPartOffset;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 /**
  * Offsets gui for the attuned crafting interface.
@@ -25,7 +25,7 @@ public class ContainerScreenPartInterfaceCraftingAttunedOffsets extends Containe
 
     @Override
     public boolean keyPressed(KeyEvent keyEvent) {
-        if (keyEvent.key() == GLFW.GLFW_KEY_ESCAPE) {
+        if (keyEvent.key() == InputConstants.KEY_ESCAPE) {
             // Don't close all guis, but go back to the gui of the part.
             exitToPartGui();
             return true;

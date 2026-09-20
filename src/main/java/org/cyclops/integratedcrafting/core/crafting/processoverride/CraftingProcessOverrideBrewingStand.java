@@ -2,6 +2,7 @@ package org.cyclops.integratedcrafting.core.crafting.processoverride;
 
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipePropertySet;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.transfer.ResourceHandler;
@@ -62,7 +63,7 @@ public class CraftingProcessOverrideBrewingStand implements ICraftingProcessOver
                         int ingredientSlotIndex = 0;
                         int bottleSlotIndex = 0;
                         for (ItemStack instance : instances) {
-                            if (tile.getLevel().potionBrewing().isIngredient(instance)) {
+                            if (tile.getLevel().recipeAccess().propertySet(RecipePropertySet.BREWING_REAGENTS).test(instance)) {
                                 // The instance is for the ingredient slot
                                 int inserted;
                                 try (var tx = Transaction.openRoot()) {

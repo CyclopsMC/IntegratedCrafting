@@ -204,13 +204,14 @@ public class GameTestHelpersIntegratedCrafting {
             PlaceRecipeHelper.placeRecipe(width, height, recipeCrafting, recipeCrafting.placementInfo().slotsToIngredientIndex(), (ingredientSlot, slot, x, y) -> {
                 // This is a bit hacky, see VanillaRecipeTypeRecipeHandler for a better implementation.
                 // First check if the ingredient is a tag.
+                // TagSlotDisplay also carries direct item sets, so only a named holder set is an actual tag.
                 String tag = null;
                 if (ingredientSlot >= 0 && slot >= 0) {
                     RecipeDisplay display = recipeCrafting.display().get(0);
                     if (display instanceof ShapelessCraftingRecipeDisplay displayCrafting && displayCrafting.ingredients().get(ingredientSlot) instanceof SlotDisplay.TagSlotDisplay slotTag) {
-                        tag = slotTag.tag().location().toString();
+                        tag = slotTag.tag().unwrapKey().map(tagKey -> tagKey.location().toString()).orElse(null);
                     } else if (display instanceof ShapedCraftingRecipeDisplay displayCrafting && slot < displayCrafting.ingredients().size() && displayCrafting.ingredients().get(slot) instanceof SlotDisplay.TagSlotDisplay slotTag) {
-                        tag = slotTag.tag().location().toString();
+                        tag = slotTag.tag().unwrapKey().map(tagKey -> tagKey.location().toString()).orElse(null);
                     }
                 }
 
