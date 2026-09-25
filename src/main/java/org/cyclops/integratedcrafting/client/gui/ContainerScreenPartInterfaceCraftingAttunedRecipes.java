@@ -2,6 +2,7 @@ package org.cyclops.integratedcrafting.client.gui;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Util;
@@ -212,7 +213,7 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
 
     @Override
     public boolean mouseClicked(MouseButtonEvent mouse, boolean isDoubleClick) {
-        if (mouse.button() == 0) {
+        if (mouse.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             IRecipeDefinition recipe = getRecipeAt(mouse.x(), mouse.y());
             if (recipe != null) {
                 // The recipe that is clicked first determines the state that the whole drag applies,
@@ -228,7 +229,7 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
 
     @Override
     public boolean mouseDragged(MouseButtonEvent mouse, double dragX, double dragY) {
-        if (this.draggedRecipes != null && mouse.button() == 0) {
+        if (this.draggedRecipes != null && mouse.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             // The mouse can move over several cells between two events,
             // so the whole path since the previous position is walked over.
             int steps = Mth.clamp((int) Math.ceil(Math.max(Math.abs(dragX), Math.abs(dragY)) / DRAG_STEP),
@@ -243,7 +244,7 @@ public class ContainerScreenPartInterfaceCraftingAttunedRecipes extends Containe
 
     @Override
     public boolean mouseReleased(MouseButtonEvent mouse) {
-        if (this.draggedRecipes != null && mouse.button() == 0) {
+        if (this.draggedRecipes != null && mouse.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             this.draggedRecipes = null;
             return true;
         }
