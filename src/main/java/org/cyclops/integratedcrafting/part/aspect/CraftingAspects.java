@@ -19,6 +19,7 @@ import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeItem
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeInteger;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeList;
+import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeOperator;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
 import org.cyclops.integrateddynamics.part.aspect.read.AspectReadBuilders;
 
@@ -38,6 +39,11 @@ public class CraftingAspects {
 
         public static final IAspectWrite<ValueObjectTypeRecipe.ValueRecipe, ValueObjectTypeRecipe> RECIPE_CRAFT =
                 CraftingAspectWriteBuilders.BUILDER_RECIPE
+                        .withProperties(CraftingAspectWriteBuilders.PROPERTIES_CRAFTING_RECIPE)
+                        .handle(CraftingAspectWriteBuilders.PROP_CRAFT_RECIPE)
+                        .buildWrite();
+        public static final IAspectWrite<ValueTypeOperator.ValueOperator, ValueTypeOperator> OPERATOR_CRAFT =
+                CraftingAspectWriteBuilders.BUILDER_OPERATOR
                         .withProperties(CraftingAspectWriteBuilders.PROPERTIES_CRAFTING_RECIPE)
                         .handle(CraftingAspectWriteBuilders.PROP_CRAFT_RECIPE)
                         .buildWrite();

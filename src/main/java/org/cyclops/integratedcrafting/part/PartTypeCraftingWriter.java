@@ -22,7 +22,8 @@ public class PartTypeCraftingWriter extends PartTypeWriteBase<PartTypeCraftingWr
                 CraftingAspects.Write.RECIPE_CRAFT,
                 CraftingAspects.Write.ITEMSTACK_CRAFT,
                 CraftingAspects.Write.FLUIDSTACK_CRAFT,
-                CraftingAspects.Write.ENERGY_CRAFT
+                CraftingAspects.Write.ENERGY_CRAFT,
+                CraftingAspects.Write.OPERATOR_CRAFT
         ));
     }
 
