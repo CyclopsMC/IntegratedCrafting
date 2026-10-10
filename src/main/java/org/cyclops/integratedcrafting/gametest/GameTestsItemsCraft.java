@@ -36,13 +36,18 @@ import org.cyclops.integratedcrafting.part.PartTypes;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspectWriteBuilders;
 import org.cyclops.integratedcrafting.part.aspect.CraftingAspects;
 import org.cyclops.integrateddynamics.RegistryEntries;
+import org.cyclops.integrateddynamics.api.evaluate.operator.IOperator;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.write.IPartStateWriter;
 import org.cyclops.integrateddynamics.core.block.IgnoredBlockStatus;
+import org.cyclops.integrateddynamics.core.evaluate.operator.CurriedOperator;
+import org.cyclops.integrateddynamics.core.evaluate.operator.Operators;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeItemStack;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeBoolean;
+import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeOperator;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
+import org.cyclops.integrateddynamics.core.evaluate.variable.Variable;
 import org.cyclops.integrateddynamics.core.helper.NetworkHelpers;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 import org.cyclops.integratedtunnels.part.aspect.TunnelAspects;
@@ -98,6 +103,80 @@ public class GameTestsItemsCraft {
             helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.CHEST, "Slot 1 item is incorrect");
             helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, "Slot 1 amount is incorrect");
         });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftChestOneOperator(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
+
+        // Add chest recipe to crafting interface
+        ResourceLocation recipeName = ResourceLocation.fromNamespaceAndPath("minecraft", "chest");
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, recipeName));
+
+        // Enable operator crafting aspect in crafting writer, with an operator that returns the chest recipe
+        placeOperatorInWriter(helper, positions.writer(), new CurriedOperator(Operators.GENERAL_IDENTITY,
+                new Variable<>(ValueTypes.OBJECT_RECIPE, ValueObjectTypeRecipe.ValueRecipe.of(createRecipeDefinition(helper.getLevel(), RecipeType.CRAFTING, recipeName)))));
+
+        helper.succeedWhen(() -> {
+            IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(positions.writer()).getState();
+            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.OPERATOR_CRAFT, "Active aspect is incorrect");
+            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.OPERATOR_CRAFT).isEmpty(), "Active aspect has errors");
+
+            // Check if items have been crafted
+            helper.assertValueEqual(chestIn.getItem(0).getItem(), Items.OAK_PLANKS, "Slot 0 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 56, "Slot 0 amount is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.CHEST, "Slot 1 item is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getCount(), 1, "Slot 1 amount is incorrect");
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftChestOneOperatorEmptyRecipe(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS);
+
+        // Insert items in interface chest
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
+
+        // Add chest recipe to crafting interface
+        positions.interfaceRecipeAdders().get(0).accept(Triple.of(0, RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "chest")));
+
+        // Enable operator crafting aspect in crafting writer, with an operator that returns an empty recipe
+        placeOperatorInWriter(helper, positions.writer(), new CurriedOperator(Operators.GENERAL_IDENTITY,
+                new Variable<>(ValueTypes.OBJECT_RECIPE, ValueObjectTypeRecipe.ValueRecipe.of(null))));
+
+        helper.runAfterDelay(100, () -> {
+            IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(positions.writer()).getState();
+            helper.assertValueEqual(partStateWriter.getActiveAspect(), CraftingAspects.Write.OPERATOR_CRAFT, "Active aspect is incorrect");
+            helper.assertTrue(partStateWriter.getErrors(CraftingAspects.Write.OPERATOR_CRAFT).isEmpty(), "Active aspect has errors");
+
+            // Check that nothing has been crafted
+            helper.assertValueEqual(chestIn.getItem(0).getCount(), 64, "Slot 0 amount is incorrect");
+            helper.assertTrue(chestIn.getItem(1).isEmpty(), "Slot 1 is not empty");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftOperatorWithInputs(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCrafting.State> positions = createBasicNetwork(helper, POS);
+
+        // Enable operator crafting aspect in crafting writer, with an operator that still requires an input
+        placeOperatorInWriter(helper, positions.writer(), Operators.GENERAL_IDENTITY);
+
+        helper.succeedWhen(() -> {
+            IPartStateWriter partStateWriter = (IPartStateWriter) PartHelpers.getPart(positions.writer()).getState();
+            helper.assertFalse(partStateWriter.getErrors(CraftingAspects.Write.OPERATOR_CRAFT).isEmpty(), "Active aspect has no errors");
+        });
+    }
+
+    private static void placeOperatorInWriter(GameTestHelper helper, PartPos writerPos, IOperator operator) {
+        placeVariableInWriter(helper.getLevel(), writerPos, CraftingAspects.Write.OPERATOR_CRAFT,
+                createVariableForValue(helper.getLevel(), ValueTypes.OPERATOR, ValueTypeOperator.ValueOperator.of(operator)));
     }
 
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)

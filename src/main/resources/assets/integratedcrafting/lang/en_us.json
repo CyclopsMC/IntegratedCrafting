@@ -76,6 +76,8 @@
   "_comment": "# Crafting",
   "aspect.integratedcrafting.write.recipe.craft": "Craft Recipe",
   "aspect.integratedcrafting.write.recipe.craft.info": "Craft the given recipe",
+  "aspect.integratedcrafting.write.operator.craft": "Craft Recipe from Operator",
+  "aspect.integratedcrafting.write.operator.craft.info": "Craft the recipe returned by the given operator without inputs. If the operator returns an empty recipe, nothing is crafted.",
   "aspect.integratedcrafting.write.itemstack.craft": "Craft Item",
   "aspect.integratedcrafting.write.itemstack.craft.info": "Craft the given item",
   "aspect.integratedcrafting.write.fluidstack.craft": "Craft Fluid",
