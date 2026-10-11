@@ -1,6 +1,7 @@
 package org.cyclops.integratedcrafting.part.aspect;
 
 import com.google.common.collect.ImmutableList;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
 import org.apache.commons.lang3.tuple.Triple;
@@ -11,18 +12,26 @@ import org.cyclops.integratedcrafting.IntegratedCrafting;
 import org.cyclops.integratedcrafting.api.network.ICraftingNetwork;
 import org.cyclops.integratedcrafting.core.CraftingHelpers;
 import org.cyclops.integratedcrafting.part.PartTypeCraftingWriter;
+import org.cyclops.integrateddynamics.api.evaluate.EvaluationException;
+import org.cyclops.integrateddynamics.api.evaluate.operator.IOperator;
+import org.cyclops.integrateddynamics.api.evaluate.variable.IValue;
+import org.cyclops.integrateddynamics.api.evaluate.variable.IValueType;
+import org.cyclops.integrateddynamics.api.evaluate.variable.IVariable;
 import org.cyclops.integrateddynamics.api.network.INetwork;
 import org.cyclops.integrateddynamics.api.network.IPositionedAddonsNetworkIngredients;
 import org.cyclops.integrateddynamics.api.part.PartPos;
 import org.cyclops.integrateddynamics.api.part.PartTarget;
 import org.cyclops.integrateddynamics.api.part.aspect.property.IAspectProperties;
 import org.cyclops.integrateddynamics.api.part.aspect.property.IAspectPropertyTypeInstance;
+import org.cyclops.integrateddynamics.core.evaluate.variable.ValueHelpers;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeFluidStack;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeItemStack;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueObjectTypeRecipe;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeBoolean;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeInteger;
+import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypeOperator;
 import org.cyclops.integrateddynamics.core.evaluate.variable.ValueTypes;
+import org.cyclops.integrateddynamics.core.helper.L10NValues;
 import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 import org.cyclops.integrateddynamics.core.part.aspect.build.AspectBuilder;
 import org.cyclops.integrateddynamics.core.part.aspect.build.IAspectValuePropagator;
@@ -85,6 +94,25 @@ public class CraftingAspectWriteBuilders {
     public static final AspectBuilder<ValueTypeInteger.ValueInteger, ValueTypeInteger, Triple<PartTarget, IAspectProperties, Integer>>
             BUILDER_INTEGER = AspectWriteBuilders.BUILDER_INTEGER.byMod(IntegratedCrafting._instance)
             .appendKind("craft").handle(AspectWriteBuilders.PROP_GET_INTEGER);
+
+    public static final IAspectValuePropagator<Triple<PartTarget, IAspectProperties, ValueTypeOperator.ValueOperator>, Triple<PartTarget, IAspectProperties, IRecipeDefinition>>
+            PROP_GET_OPERATOR_RECIPE = input -> {
+        IOperator operator = input.getRight().getRawValue();
+        if (operator.getRequiredInputLength() == 0
+                && ValueHelpers.correspondsTo(operator.getOutputType(), ValueTypes.OBJECT_RECIPE)) {
+            IValue result = ValueHelpers.evaluateOperator(operator, new IVariable[0]);
+            if (result instanceof ValueObjectTypeRecipe.ValueRecipe valueRecipe) {
+                return Triple.of(input.getLeft(), input.getMiddle(), valueRecipe.getRawValue().orElse(null));
+            }
+        }
+        Component current = ValueTypeOperator.getSignature(operator);
+        Component expected = ValueTypeOperator.getSignature(new IValueType[0], ValueTypes.OBJECT_RECIPE);
+        throw new EvaluationException(Component.translatable(L10NValues.ASPECT_ERROR_INVALIDTYPE,
+                expected, current));
+    };
+    public static final AspectBuilder<ValueTypeOperator.ValueOperator, ValueTypeOperator, Triple<PartTarget, IAspectProperties, IRecipeDefinition>>
+            BUILDER_OPERATOR = AspectWriteBuilders.BUILDER_OPERATOR.byMod(IntegratedCrafting._instance)
+            .appendKind("craft").handle(PROP_GET_OPERATOR_RECIPE);
 
     public static final IAspectValuePropagator<Triple<PartTarget, IAspectProperties, ItemStack>, CraftingJobData<ItemStack, Integer>>
             PROP_ITEMSTACK_CRAFTINGDATA = input -> {
