@@ -548,6 +548,14 @@ public class CraftingJobHandler {
                 // Start the actual crafting
                 boolean couldCraft = consumeAndInsertCrafting(blockingMode, network, channel, targetPos, startingCraftingJob);
 
+                // Other jobs that the target refused were tested against its previous state,
+                // so they are only waiting for this handler now, until they are tested again.
+                if (couldCraft) {
+                    for (CraftingJob pendingCraftingJob : getPendingCraftingJobs()) {
+                        pendingCraftingJob.setInvalidInputs(false);
+                    }
+                }
+
                 // Keep inserting as much as possible if non-blocking
                 if (couldCraft && !blockingMode) {
                     nonBlockingJobsRunningAmount.put(startingCraftingJob.getId(), 1);
