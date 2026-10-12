@@ -542,6 +542,14 @@ public class CraftingJobHandler {
 
             // Start the crafting job
             if (startingCraftingJob != null) {
+                // Other jobs that the target refused were tested against its previous state,
+                // so they are only waiting for this handler now, until they are tested again.
+                for (CraftingJob pendingCraftingJob : getPendingCraftingJobs()) {
+                    if (pendingCraftingJob != startingCraftingJob) {
+                        pendingCraftingJob.setInvalidInputs(false);
+                    }
+                }
+
                 // Check if the job was started while blocking mode was enabled in this handler
                 boolean blockingMode = !nonBlockingJobsRunningAmount.containsKey(startingCraftingJob.getId()) || startingCraftingJob.getAmount() == 1;
 
