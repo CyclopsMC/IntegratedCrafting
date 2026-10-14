@@ -153,7 +153,10 @@ public class CraftingJobDependencyGraph {
             jobDependencies = new IntArrayList();
             dependencies.put(craftingJob.getId(), jobDependencies);
         }
-        jobDependencies.add(dependency);
+        // An edge is only stored once, as crafting interfaces add the edges of their jobs again when they re-register
+        if (!jobDependencies.contains(dependency)) {
+            jobDependencies.add(dependency);
+        }
 
         // Save reverse link
         IntCollection jobDependents = dependents.get(dependency);
@@ -161,7 +164,9 @@ public class CraftingJobDependencyGraph {
             jobDependents = new IntArrayList();
             dependents.put(dependency, jobDependents);
         }
-        jobDependents.add(craftingJob.getId());
+        if (!jobDependents.contains(craftingJob.getId())) {
+            jobDependents.add(craftingJob.getId());
+        }
     }
 
     public void removeDependency(int craftingJob, int dependency) {
