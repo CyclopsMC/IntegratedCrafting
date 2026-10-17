@@ -1,8 +1,22 @@
 # Changelog for Minecraft 26.1.2
 All notable changes to this project will be documented in this file.
 
+<a name="26.1.2-1.8.0"></a>
+## [26.1.2-1.8.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.7.1...26.1.2-1.8.0) - 2026-10-17 08:48:55
+
+
+### Added
+* Add translations through Crowdin (#242)
+* Add operator aspect to crafting writer, Closes #76 (#245)
+
+### Fixed
+* Fix duplicate crafting job dependencies when interfaces re-register (#248)
+* Don't reload attuned interfaces when target blocks updates (#250)
+* Stop reporting invalid inputs for jobs that only wait for their interface (#246)
+* Fix parallel crafting jobs all completing on a single produced output (#229)
+
 <a name="26.1.2-1.7.1"></a>
-## [26.1.2-1.7.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.7.0...26.1.2-1.7.1) - 2026-09-19 09:13:32
+## [26.1.2-1.7.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.7.0...26.1.2-1.7.1) - 2026-09-19 09:13:32 +0200
 
 
 ### Fixed
