@@ -1,8 +1,17 @@
 # Changelog for Minecraft 1.20.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.20.1-1.4.9"></a>
+## [1.20.1-1.4.9](/compare/1.20.1-1.4.8...1.20.1-1.4.9) - 2026-10-17 08:39:22
+
+
+### Fixed
+* Fix duplicate crafting job dependencies when interfaces re-register (#249)
+* Don't reload attuned interfaces when target blocks updates (#251)
+* Stop reporting invalid inputs for jobs that only wait for their interface (#247)
+
 <a name="1.20.1-1.4.8"></a>
-## [1.20.1-1.4.8](/compare/1.20.1-1.4.7...1.20.1-1.4.8) - 2026-09-11 21:44:18
+## [1.20.1-1.4.8](/compare/1.20.1-1.4.7...1.20.1-1.4.8) - 2026-09-11 21:44:19 +0200
 
 
 ### Fixed
