@@ -26,10 +26,13 @@ import org.cyclops.integratedcrafting.core.CraftingProcessOverrideRegistry;
 import org.cyclops.integratedcrafting.core.CraftingProcessOverrides;
 import org.cyclops.integratedcrafting.gametest.GameTestsAdvancements;
 import org.cyclops.integratedcrafting.gametest.GameTestsAttunedRecipes;
+import org.cyclops.integratedcrafting.gametest.GameTestsAttunedTarget;
 import org.cyclops.integratedcrafting.gametest.GameTestsCraftingInterfaceTargetMachine;
+import org.cyclops.integratedcrafting.gametest.GameTestsCraftingJobDependencies;
 import org.cyclops.integratedcrafting.gametest.GameTestsCraftingJobFinishedEvent;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsCraft;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsCraftBlockedOutput;
+import org.cyclops.integratedcrafting.gametest.GameTestsItemsCraftBusyTarget;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsCraftEnumerated;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsMechanicalDryingBasin;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsMechanicalSqueezer;
@@ -154,10 +157,13 @@ public class IntegratedCrafting extends ModBaseNeoForge<IntegratedCrafting> {
         return new Class<?>[]{
                 GameTestsAdvancements.class,
                 GameTestsAttunedRecipes.class,
+                GameTestsAttunedTarget.class,
                 GameTestsCraftingInterfaceTargetMachine.class,
+                GameTestsCraftingJobDependencies.class,
                 GameTestsCraftingJobFinishedEvent.class,
                 GameTestsItemsCraft.class,
                 GameTestsItemsCraftBlockedOutput.class,
+                GameTestsItemsCraftBusyTarget.class,
                 GameTestsItemsCraftEnumerated.class,
                 GameTestsItemsMechanicalDryingBasin.class,
                 GameTestsItemsSmithing.class,

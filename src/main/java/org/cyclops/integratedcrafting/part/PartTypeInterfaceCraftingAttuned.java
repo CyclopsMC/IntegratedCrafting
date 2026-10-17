@@ -177,7 +177,10 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
 
     @Override
     public void onBlockNeighborChange(INetwork network, IPartNetwork partNetwork, PartTarget target, State state, BlockGetter world, @Nullable Direction side) {
-        boolean isNeighbourTarget = side == null || target.getCenter().getPos().getBlockPos().relative(side).equals(target.getTarget().getPos().getBlockPos());
+        // Targets such as furnaces notify their neighbours on every operation, while their recipes remain the same.
+        // Only re-register if the target really changed, as this temporarily removes our crafting jobs from the network.
+        boolean isNeighbourTarget = (side == null || target.getCenter().getPos().getBlockPos().relative(side).equals(target.getTarget().getPos().getBlockPos()))
+                && state.hasTargetChanged();
         boolean hadValidTarget = false;
         if (isNeighbourTarget) {
             hadValidTarget = state.hasValidTarget();
@@ -279,6 +282,21 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
 
         public boolean hasValidTarget() {
             return this.hasValidTarget;
+        }
+
+        /**
+         * @return If the target gained or lost its recipe handler, or exposes other recipes than the ones that were last read.
+         */
+        public boolean hasTargetChanged() {
+            if (getTarget() == null || this.recipes == null) {
+                return true;
+            }
+            Optional<IRecipeHandler> recipeHandler = getTargetRecipeHandler();
+            if (recipeHandler.isPresent() != this.hasValidTarget) {
+                return true;
+            }
+            return recipeHandler.isPresent() && !Lists.newArrayList(recipeHandler.get().getRecipes())
+                    .equals(Lists.newArrayList(this.recipes));
         }
 
         @Override

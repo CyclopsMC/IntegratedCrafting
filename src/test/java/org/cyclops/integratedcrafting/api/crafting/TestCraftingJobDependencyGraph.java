@@ -72,6 +72,23 @@ public class TestCraftingJobDependencyGraph {
     }
 
     @Test
+    public void testSingleDependencyDoubleStoredOnce() {
+        g.addDependency(J0, J1);
+        g.addDependency(J0, J1.getId());
+        assertThat(Lists.newArrayList(g.getDependencies(J0)), equalTo(Lists.newArrayList(J1)));
+        assertThat(Lists.newArrayList(g.getDependents(J1)), equalTo(Lists.newArrayList(J0)));
+    }
+
+    @Test
+    public void testSingleDependencyDoubleRemove() {
+        g.addDependency(J0, J1);
+        g.addDependency(J0, J1);
+        g.removeDependency(0, 1);
+        assertThat(Sets.newHashSet(g.getCraftingJobs()), equalTo(Sets.newHashSet()));
+        assertThat(g.hasDependencies(J0), equalTo(false));
+    }
+
+    @Test
     public void testSingleDependencyRemove() {
         g.addDependency(J0, J1);
         g.removeDependency(0, 1);

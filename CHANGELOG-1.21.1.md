@@ -1,8 +1,21 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.8.0"></a>
+## [1.21.1-1.8.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.7.2...1.21.1-1.8.0) - 2026-10-17 08:43:44
+
+
+### Added
+* Add operator aspect to crafting writer, Closes #76 (#245)
+
+### Fixed
+* Fix duplicate crafting job dependencies when interfaces re-register (#248)
+* Don't reload attuned interfaces when target blocks updates (#250)
+* Stop reporting invalid inputs for jobs that only wait for their interface (#246)
+* Fix parallel crafting jobs all completing on a single produced output (#229)
+
 <a name="1.21.1-1.7.2"></a>
-## [1.21.1-1.7.2](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.7.1...1.21.1-1.7.2) - 2026-09-19 09:08:27
+## [1.21.1-1.7.2](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.7.1...1.21.1-1.7.2) - 2026-09-19 09:08:27 +0200
 
 
 ### Fixed
