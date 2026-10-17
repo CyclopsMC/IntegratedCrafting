@@ -289,14 +289,15 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
          * @return If the target gained or lost its recipe handler, or exposes other recipes than the ones that were last read.
          */
         public boolean hasTargetChanged() {
-            if (getTarget() == null) {
+            if (getTarget() == null || this.recipes == null) {
                 return true;
             }
             Optional<IRecipeHandler> recipeHandler = getTargetRecipeHandler();
             if (recipeHandler.isPresent() != this.hasValidTarget) {
                 return true;
             }
-            return recipeHandler.isPresent() && !Lists.newArrayList(recipeHandler.get().getRecipes()).equals(this.recipes);
+            return recipeHandler.isPresent() && !Lists.newArrayList(recipeHandler.get().getRecipes())
+                    .equals(Lists.newArrayList(this.recipes));
         }
 
         @Override
