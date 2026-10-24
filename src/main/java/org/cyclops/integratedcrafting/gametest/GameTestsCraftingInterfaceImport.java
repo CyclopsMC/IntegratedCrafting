@@ -9,7 +9,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
+import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.HopperBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.FurnaceBlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -46,6 +48,7 @@ import org.cyclops.integrateddynamics.core.helper.PartHelpers;
 
 import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.createVariableForRecipe;
 import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.enableRecipeInWriter;
+import static org.cyclops.integratedcrafting.gametest.GameTestHelpersIntegratedCrafting.setPartOffset;
 import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedDynamics.createVariableForValue;
 import static org.cyclops.integrateddynamics.gametest.GameTestHelpersIntegratedDynamics.placeVariableInWriter;
 
@@ -111,6 +114,54 @@ public class GameTestsCraftingInterfaceImport {
                 }
             }
         });
+
+        enableRecipeInWriter(helper, writer, new ItemStack(Items.IRON_INGOT, amount));
+
+        helper.succeedWhen(() -> {
+            helper.assertValueEqual(chest.getItem(0).getItem(), Items.IRON_INGOT, "Slot 0 item is incorrect");
+            helper.assertValueEqual(chest.getItem(0).getCount(), amount, "Slot 0 amount is incorrect");
+            helper.assertFalse(interfaceState.getCraftingJobs().hasNext(), "The crafting job should be finished");
+        });
+    }
+
+    /**
+     * A vanilla hopper pulls results out of the furnace, and pushes them into the crafting interface.
+     * The interface reaches the furnace above the hopper via an offset.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsHopperIntoInterfaceFinishJob(GameTestHelper helper) {
+        int amount = 4;
+
+        // Storage
+        helper.setBlock(POS, RegistryEntries.BLOCK_CABLE.value());
+        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(POS), Direction.EAST, org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_ITEM, new ItemStack(org.cyclops.integratedtunnels.part.PartTypes.INTERFACE_ITEM.getItem()));
+        helper.setBlock(POS.east(), Blocks.CHEST);
+        ChestBlockEntity chest = helper.getBlockEntity(POS.east());
+        chest.setItem(0, new ItemStack(Items.RAW_IRON, amount));
+
+        // Crafting writer
+        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH, PartTypes.CRAFTING_WRITER, new ItemStack(PartTypes.CRAFTING_WRITER.getItem()));
+        PartPos writer = PartPos.of(helper.getLevel(), helper.absolutePos(POS), Direction.NORTH);
+
+        // Hopper pointing into the crafting interface, with the furnace on top of the hopper
+        BlockPos posInterface = POS.above().west();
+        BlockPos posHopper = posInterface.west();
+        BlockPos posFurnace = posHopper.above();
+        helper.setBlock(posHopper, Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING, Direction.EAST));
+        helper.setBlock(posFurnace, Blocks.FURNACE);
+        FurnaceBlockEntity furnace = helper.getBlockEntity(posFurnace);
+        furnace.setItem(1, new ItemStack(Items.COAL, 64));
+
+        // Crafting interface facing the hopper, targeting the top of the furnace
+        helper.setBlock(POS.above(), RegistryEntries.BLOCK_CABLE.value());
+        helper.setBlock(posInterface, RegistryEntries.BLOCK_CABLE.value());
+        PartHelpers.addPart(helper.getLevel(), helper.absolutePos(posInterface), Direction.WEST, PartTypes.INTERFACE_CRAFTING, new ItemStack(PartTypes.INTERFACE_CRAFTING.getItem()));
+        PartPos interfacePos = PartPos.of(helper.getLevel(), helper.absolutePos(posInterface), Direction.WEST);
+        PartTypeInterfaceCrafting.State interfaceState = (PartTypeInterfaceCrafting.State) PartHelpers.getPart(interfacePos).getState();
+        setPartOffset(interfacePos, new Vec3i(0, 1, 0));
+        interfaceState.setIngredientComponentTargetSideOverride(IngredientComponents.ITEMSTACK, Direction.UP);
+        interfaceState.getInventoryVariables().setItem(0, createVariableForRecipe(helper.getLevel(), RecipeType.SMELTING,
+                ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot_from_smelting_raw_iron")));
 
         enableRecipeInWriter(helper, writer, new ItemStack(Items.IRON_INGOT, amount));
 
