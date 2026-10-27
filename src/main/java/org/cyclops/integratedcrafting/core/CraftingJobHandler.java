@@ -321,6 +321,28 @@ public class CraftingJobHandler {
         }
     }
 
+    /**
+     * Undo a single crafting operation that was added via {@link #addCraftingJobProcessingPendingIngredientsEntry}.
+     * Other operations of the same job, which may still be running in non-blocking mode, are kept.
+     * If no operations remain, the job is moved back to the pending jobs.
+     * @param craftingJob The crafting job.
+     * @param pendingIngredients The exact pending ingredients entry that was added for the operation.
+     * @return If the operation was still running.
+     */
+    protected boolean removeCraftingJobProcessingPendingIngredientsEntry(CraftingJob craftingJob,
+                                                                         Map<IngredientComponent<?, ?>,
+                                                                            List<IPrototypedIngredient<?, ?>>> pendingIngredients) {
+        List<Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>>> pendingIngredientsEntries =
+                this.processingCraftingJobsPendingIngredients.get(craftingJob.getId());
+        if (pendingIngredientsEntries == null || !pendingIngredientsEntries.removeIf(entry -> entry == pendingIngredients)) {
+            return false;
+        }
+        if (pendingIngredientsEntries.isEmpty()) {
+            unmarkCraftingJobProcessing(craftingJob);
+        }
+        return true;
+    }
+
     public void addCraftingJobProcessingPendingIngredientsEntry(CraftingJob craftingJob,
                                                                 Map<IngredientComponent<?, ?>,
                                                                    List<IPrototypedIngredient<?, ?>>> pendingIngredients) {
@@ -578,8 +600,9 @@ public class CraftingJobHandler {
             }
         }
 
-        // Fallback to default crafting insertion
-        return CraftingHelpers.insertCrafting(targetGetter, ingredients, network, channel, simulate);
+        // Fallback to default crafting insertion, failed ingredients go back to the job
+        return CraftingHelpers.insertCrafting(targetGetter, ingredients,
+                CraftingHelpers.getCraftingJobBufferStorageGetter(craftingJob), simulate);
     }
 
     protected void insertLoopNonBlocking(INetwork network, int channel, PartPos targetPos, CraftingJob craftingJob) {
@@ -609,8 +632,9 @@ public class CraftingJobHandler {
             this.pendingCraftingJobs.remove(startingCraftingJob.getId());
 
             // Update state with expected outputs
-            addCraftingJobProcessingPendingIngredientsEntry(startingCraftingJob,
-                    CraftingHelpers.getRecipeOutputs(startingCraftingJob.getRecipe()));
+            Map<IngredientComponent<?, ?>, List<IPrototypedIngredient<?, ?>>> pendingIngredients =
+                    CraftingHelpers.getRecipeOutputs(startingCraftingJob.getRecipe());
+            addCraftingJobProcessingPendingIngredientsEntry(startingCraftingJob, pendingIngredients);
 
             // Register listeners for pending ingredients
             for (IngredientComponent<?, ?> component : startingCraftingJob.getRecipe().getOutput().getComponents()) {
@@ -619,17 +643,19 @@ public class CraftingJobHandler {
 
             // Push the ingredients to the crafting interface
             if (!insertCrafting(targetPos, ingredients, recipe, startingCraftingJob, network, channel, false)) {
-                // Unregister listeners again for pending ingredients
-                for (IngredientComponent<?, ?> component : startingCraftingJob.getRecipe().getOutput().getComponents()) {
-                    unregisterIngredientObserver(component, network);
-                }
-
                 // If we reach this point, the target does not accept the recipe inputs,
                 // even though they were acceptable in simulation mode.
-                // The failed ingredients were already re-inserted into the network at this point,
-                // so we mark the job as failed, and add it again to the queue.
+                // The failed ingredients were already put back into the job's buffer at this point.
+                // Only this operation is undone, as others of this job may still be running in non-blocking mode.
+                if (removeCraftingJobProcessingPendingIngredientsEntry(startingCraftingJob, pendingIngredients)) {
+                    // Unregister listeners again for pending ingredients
+                    for (IngredientComponent<?, ?> component : startingCraftingJob.getRecipe().getOutput().getComponents()) {
+                        unregisterIngredientObserver(component, network);
+                    }
+                }
+
+                // Mark the job as failed, it will be added again to the queue once no operations are running.
                 startingCraftingJob.setInvalidInputs(true);
-                unmarkCraftingJobProcessing(startingCraftingJob);
                 return false;
             } else {
                 return true;
