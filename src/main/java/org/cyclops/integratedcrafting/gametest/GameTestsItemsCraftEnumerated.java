@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.apache.commons.lang3.tuple.Pair;
+import org.cyclops.integratedcrafting.GeneralConfig;
 import org.cyclops.integratedcrafting.Reference;
 import org.cyclops.integratedcrafting.part.PartTypeInterfaceCraftingEnumerated;
 import org.cyclops.integratedcrafting.part.PartTypes;
@@ -96,6 +97,37 @@ public class GameTestsItemsCraftEnumerated {
         helper.succeedWhen(() -> {
             helper.assertTrue(positions.interfaceStates().get(0).isRecipeSlotValid(0), "Recipe list in crafting interface is not valid");
             helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.CRAFTING_TABLE, "Slot 1 item is incorrect");
+        });
+    }
+
+    /**
+     * The enumerated interface uses its own minimum update interval,
+     * as only reloads of its list are throttled.
+     */
+    @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
+    public void testItemsCraftEnumeratedMinUpdateInterval(GameTestHelper helper) {
+        GameTestHelpersIntegratedCrafting.INetworkPositions<PartTypeInterfaceCraftingEnumerated.State> positions =
+                createBasicNetwork(helper, POS, PartTypes.INTERFACE_CRAFTING_ENUMERATED, Blocks.CRAFTING_TABLE);
+        PartTypeInterfaceCraftingEnumerated.State state = positions.interfaceStates().get(0);
+
+        helper.assertValueEqual(PartTypes.INTERFACE_CRAFTING_ENUMERATED.getMinimumUpdateInterval(state),
+                GeneralConfig.minCraftingInterfaceEnumeratedUpdateFreq, "Minimum update interval is incorrect");
+        GameTestHelpersIntegratedCrafting.setCraftingInterfaceUpdateInterval(positions.interfaces().get(0),
+                GeneralConfig.minCraftingInterfaceEnumeratedUpdateFreq);
+
+        ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
+        chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
+
+        state.getInventoryVariables().setItem(0, createVariableForRecipeList(helper.getLevel(), List.of(
+                Pair.of(RecipeType.CRAFTING, ResourceLocation.fromNamespaceAndPath("minecraft", "chest"))
+        )));
+
+        enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.CHEST));
+
+        helper.succeedWhen(() -> {
+            helper.assertValueEqual(state.getUpdateInterval(), GeneralConfig.minCraftingInterfaceEnumeratedUpdateFreq,
+                    "Update interval is incorrect");
+            helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.CHEST, "Slot 1 item is incorrect");
         });
     }
 

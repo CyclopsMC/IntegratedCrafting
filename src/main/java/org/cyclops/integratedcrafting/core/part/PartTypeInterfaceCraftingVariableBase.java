@@ -156,7 +156,9 @@ public abstract class PartTypeInterfaceCraftingVariableBase<P extends PartTypeIn
 
         // Reload recipes if needed
         IntSet slots = state.getDelayedRecipeReloads();
-        if (!slots.isEmpty()) {
+        long gameTime = target.getCenter().getPos().getLevel(true).getGameTime();
+        if (!slots.isEmpty() && state.canReloadDelayedRecipes(gameTime)) {
+            state.lastDelayedRecipeReloadTick = gameTime;
             ICraftingNetwork craftingNetwork = network.getCapability(getNetworkCapability()).orElse(null);
             if (craftingNetwork != null) {
                 IntSet slotsCopy = new IntOpenHashSet(slots); // Create a copy, to allow insertion into slots during this loop
@@ -219,6 +221,7 @@ public abstract class PartTypeInterfaceCraftingVariableBase<P extends PartTypeIn
             extends PartTypeInterfaceCraftingBase.State<P, S> {
 
         protected int ticksAfterReload = 0;
+        protected long lastDelayedRecipeReloadTick = Integer.MIN_VALUE;
 
         private final SimpleInventory inventoryVariables;
         private final List<InventoryVariableEvaluator<IValue>> variableEvaluators;
@@ -461,6 +464,19 @@ public abstract class PartTypeInterfaceCraftingVariableBase<P extends PartTypeIn
             } else {
                 this.recipeSlotMessages.put(slot, getRecipesValidMessage(slot, validRecipes.size()));
             }
+        }
+
+        /**
+         * @return The minimal number of ticks between two reloads of invalidated recipe variables.
+         */
+        protected int getMinDelayedRecipeReloadInterval() {
+            return 0;
+        }
+
+        protected boolean canReloadDelayedRecipes(long gameTime) {
+            // Never throttle during initialization, as dependency variables may still be loading.
+            return ticksAfterReload <= 1
+                    || gameTime - lastDelayedRecipeReloadTick >= getMinDelayedRecipeReloadInterval();
         }
 
         protected void delayedReloadRecipe(int slot) {
