@@ -22,6 +22,9 @@ public class GeneralConfig extends DummyConfig {
     @ConfigurableProperty(category = "machine", comment = "The minimal update frequency in ticks to use for crafting interfaces.", minimalValue = 1, configLocation = ModConfig.Type.SERVER)
     public static int minCraftingInterfaceUpdateFreq = 5;
 
+    @ConfigurableProperty(category = "machine", comment = "The minimal update frequency in ticks to use for attuned crafting interfaces.", minimalValue = 1, configLocation = ModConfig.Type.SERVER)
+    public static int minCraftingInterfaceAttunedUpdateFreq = 5;
+
     @ConfigurableProperty(category = "machine", comment = "If the crafting interface should validate recipes on insertion.", isCommandable = true, configLocation = ModConfig.Type.SERVER)
     public static boolean validateRecipesCraftingInterface = true;
 
@@ -40,8 +43,11 @@ public class GeneralConfig extends DummyConfig {
     @ConfigurableProperty(category = "machine", comment = "The maximum number of recipes that will be read from a list inside an enumerated crafting interface. Set to 0 for no limit.", minimalValue = 0, isCommandable = true, configLocation = ModConfig.Type.SERVER)
     public static int maxCraftingInterfaceEnumeratedRecipes = 4096;
 
-    @ConfigurableProperty(category = "machine", comment = "The minimal number of ticks between two recipe list reloads in enumerated crafting interfaces, which happen when the list variable changes. Reading a list of recipes is more expensive than reading a single recipe, so this defaults higher than the regular crafting interface update frequency.", minimalValue = 1, configLocation = ModConfig.Type.SERVER)
-    public static int minCraftingInterfaceEnumeratedUpdateFreq = 20;
+    @ConfigurableProperty(category = "machine", comment = "The minimal update frequency in ticks to use for enumerated crafting interfaces.", minimalValue = 1, configLocation = ModConfig.Type.SERVER)
+    public static int minCraftingInterfaceEnumeratedUpdateFreq = 5;
+
+    @ConfigurableProperty(category = "machine", comment = "The minimal number of ticks between two recipe list reloads in enumerated crafting interfaces, which happen when the list variable changes. Reading a list of recipes is more expensive than reading a single recipe, so this defaults higher than the update frequency.", minimalValue = 1, configLocation = ModConfig.Type.SERVER)
+    public static int minCraftingInterfaceEnumeratedRecipeReloadFreq = 20;
 
     @ConfigurableProperty(category = "machine", comment = "The maximum number of recipes that a crafting interface remembers crafting durations for, which are used to estimate the duration of crafting jobs. Set to 0 to disable recipe-specific estimations.", minimalValue = 0, isCommandable = true, configLocation = ModConfig.Type.SERVER)
     public static int craftingInterfaceRecipeDurationEntries = 32;

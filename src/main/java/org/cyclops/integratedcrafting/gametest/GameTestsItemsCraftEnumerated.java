@@ -101,7 +101,7 @@ public class GameTestsItemsCraftEnumerated {
     }
 
     /**
-     * The enumerated interface can process jobs as fast as the regular interface,
+     * The enumerated interface uses its own minimum update interval,
      * as only reloads of its list are throttled.
      */
     @GameTest(template = TEMPLATE_EMPTY, timeoutTicks = TIMEOUT)
@@ -111,9 +111,9 @@ public class GameTestsItemsCraftEnumerated {
         PartTypeInterfaceCraftingEnumerated.State state = positions.interfaceStates().get(0);
 
         helper.assertValueEqual(PartTypes.INTERFACE_CRAFTING_ENUMERATED.getMinimumUpdateInterval(state),
-                GeneralConfig.minCraftingInterfaceUpdateFreq, "Minimum update interval is incorrect");
+                GeneralConfig.minCraftingInterfaceEnumeratedUpdateFreq, "Minimum update interval is incorrect");
         GameTestHelpersIntegratedCrafting.setCraftingInterfaceUpdateInterval(positions.interfaces().get(0),
-                GeneralConfig.minCraftingInterfaceUpdateFreq);
+                GeneralConfig.minCraftingInterfaceEnumeratedUpdateFreq);
 
         ChestBlockEntity chestIn = helper.getBlockEntity(POS.east());
         chestIn.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
@@ -125,7 +125,7 @@ public class GameTestsItemsCraftEnumerated {
         enableRecipeInWriter(helper, positions.writer(), new ItemStack(Items.CHEST));
 
         helper.succeedWhen(() -> {
-            helper.assertValueEqual(state.getUpdateInterval(), GeneralConfig.minCraftingInterfaceUpdateFreq,
+            helper.assertValueEqual(state.getUpdateInterval(), GeneralConfig.minCraftingInterfaceEnumeratedUpdateFreq,
                     "Update interval is incorrect");
             helper.assertValueEqual(chestIn.getItem(1).getItem(), Items.CHEST, "Slot 1 item is incorrect");
         });
