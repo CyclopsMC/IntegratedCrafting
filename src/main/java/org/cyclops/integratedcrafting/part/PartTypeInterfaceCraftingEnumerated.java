@@ -63,9 +63,15 @@ public class PartTypeInterfaceCraftingEnumerated extends PartTypeInterfaceCrafti
 
         @Override
         protected int getDefaultUpdateInterval() {
+            return GeneralConfig.minCraftingInterfaceEnumeratedUpdateFreq;
+        }
+
+        @Override
+        protected int getMinDelayedRecipeReloadInterval() {
             // Reading a whole list of recipes is more expensive than reading a single recipe,
             // and reader-backed list variables are invalidated on every reader tick.
-            return GeneralConfig.minCraftingInterfaceEnumeratedUpdateFreq;
+            // Only reloads are throttled, so static lists can process jobs at the full update rate.
+            return GeneralConfig.minCraftingInterfaceEnumeratedRecipeReloadFreq;
         }
 
         @Override

@@ -1,0 +1,8 @@
+As always, don't forget to backup your world before updating!
+Requires CyclopsCore version 1.30.0 or higher.
+
+Changes:
+* Separate tickrate and reload configs of enumerated crafting interfaces (#256), Closes #253
+
+Fixes:
+* Fix non-blocking jobs losing running operations on insert failure (#254), Closes #252
