@@ -223,6 +223,11 @@ public class PartTypeInterfaceCraftingAttuned extends PartTypeInterfaceCraftingB
         private final Set<RecipeKey> disabledRecipes = Sets.newLinkedHashSet();
         private int recipesVersion = 0;
 
+        @Override
+        protected int getDefaultUpdateInterval() {
+            return GeneralConfig.minCraftingInterfaceAttunedUpdateFreq;
+        }
+
         protected Optional<IRecipeHandler> getTargetRecipeHandler() {
             PartPos target = getTarget().getTarget();
             return IModHelpersNeoForge.get().getCapabilityHelpers().getCapability(target.getPos(), target.getSide(), Capabilities.RecipeHandler.BLOCK);

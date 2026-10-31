@@ -1,8 +1,18 @@
 # Changelog for Minecraft 26.1.2
 All notable changes to this project will be documented in this file.
 
+<a name="26.1.2-1.8.1"></a>
+## [26.1.2-1.8.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.8.0...26.1.2-1.8.1) - 2026-10-31 13:44:13
+
+
+### Changed
+* Separate tickrate and reload configs of enumerated crafting interfaces (#256), Closes #253
+
+### Fixed
+* Fix non-blocking jobs losing running operations on insert failure (#254), Closes #252
+
 <a name="26.1.2-1.8.0"></a>
-## [26.1.2-1.8.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.7.1...26.1.2-1.8.0) - 2026-10-17 08:48:55
+## [26.1.2-1.8.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.7.1...26.1.2-1.8.0) - 2026-10-17 08:48:55 +0200
 
 
 ### Added

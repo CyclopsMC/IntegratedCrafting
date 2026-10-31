@@ -1,8 +1,18 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.8.1"></a>
+## [1.21.1-1.8.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.8.0...1.21.1-1.8.1) - 2026-10-31 13:31:49
+
+
+### Changed
+* Separate tickrate and reload configs of enumerated crafting interfaces (#256), Closes #253
+
+### Fixed
+* Fix non-blocking jobs losing running operations on insert failure (#254), Closes #252
+
 <a name="1.21.1-1.8.0"></a>
-## [1.21.1-1.8.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.7.2...1.21.1-1.8.0) - 2026-10-17 08:43:44
+## [1.21.1-1.8.0](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.7.2...1.21.1-1.8.0) - 2026-10-17 08:43:44 +0200
 
 
 ### Added

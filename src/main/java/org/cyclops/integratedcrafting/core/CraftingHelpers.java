@@ -1688,6 +1688,12 @@ public class CraftingHelpers {
         IIngredientMatcher<T, M> matcher = ingredientComponent.getMatcher();
         IIngredientComponentStorage<T, M> storage = ingredientComponent.getStorage(capabilityType, capabilityGetter, side);
         List<T> instances = ingredients.getInstances(ingredientComponent);
+        if (simulate) {
+            // Compress equal instances, as they must be acceptable all together.
+            Map<IngredientComponent<?, ?>, List<?>> instancesMap = Maps.newIdentityHashMap();
+            instancesMap.put(ingredientComponent, instances);
+            instances = compressMixedIngredients(new MixedIngredients(instancesMap)).getInstances(ingredientComponent);
+        }
         List<T> failedInstances = Lists.newArrayList();
         boolean ok = true;
         for (T instance : instances) {
@@ -1717,18 +1723,17 @@ public class CraftingHelpers {
      * Insert the ingredients of all applicable ingredient component types into the target to make it start crafting.
      *
      * If insertion in non-simulation mode fails,
-     * ingredients will be re-inserted into the network.
+     * ingredients will be inserted into the given fallback storage.
      *
      * @param targetGetter A function to get the target position.
      * @param ingredients The ingredients to insert.
-     * @param network The network.
-     * @param channel The channel.
+     * @param storageFallbackGetter A function to get the storage to insert failed ingredients into.
      * @param simulate If insertion should be simulated.
      * @return If all instances could be inserted.
      */
     public static boolean insertCrafting(Function<IngredientComponent<?, ?>, PartPos> targetGetter,
                                          IMixedIngredients ingredients,
-                                         INetwork network, int channel,
+                                         Function<IngredientComponent<?, ?>, IIngredientComponentStorage> storageFallbackGetter,
                                          boolean simulate) {
         Map<IngredientComponent<?, ?>, BlockEntity> tileMap = Maps.newIdentityHashMap();
 
@@ -1746,11 +1751,11 @@ public class CraftingHelpers {
         // Next, insert the instances into the respective tiles
         boolean ok = true;
         for (Map.Entry<IngredientComponent<?, ?>, BlockEntity> entry : tileMap.entrySet()) {
-            IIngredientComponentStorage<?, ?> storageNetwork = simulate ? null : getNetworkStorage(network, channel, entry.getKey(), false);
+            IIngredientComponentStorage<?, ?> storageFallback = simulate ? null : storageFallbackGetter.apply(entry.getKey());
             if (!insertIngredientCrafting((IngredientComponent) entry.getKey(),
                     Block.class, ICapabilityGetter.forBlockEntity(entry.getValue()), entry.getValue(),
                     targetGetter.apply(entry.getKey()).getSide(), ingredients,
-                    storageNetwork, simulate)) {
+                    storageFallback, simulate)) {
                 ok = false;
             }
         }
