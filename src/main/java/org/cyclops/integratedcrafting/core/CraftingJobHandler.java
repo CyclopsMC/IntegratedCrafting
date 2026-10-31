@@ -720,7 +720,7 @@ public class CraftingJobHandler {
             }
         }
 
-        // Fallback to default crafting insertion, failed ingredients go back to the job
+        // Fallback to default crafting insertion, failed ingredients go back to the job's buffer.
         return CraftingHelpers.insertCrafting(targetGetter, ingredients,
                 CraftingHelpers.getCraftingJobBufferStorageGetter(craftingJob), simulate);
     }

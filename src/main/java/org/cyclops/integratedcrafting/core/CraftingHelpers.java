@@ -1688,8 +1688,7 @@ public class CraftingHelpers {
         IIngredientComponentStorage<T, M> storage = ingredientComponent.getStorage(capabilityType, capabilityGetter, side);
         List<T> instances = ingredients.getInstances(ingredientComponent);
         if (simulate) {
-            // Stack equal instances, as simulated insertions do not take into account each other.
-            // Otherwise, instances that each fit separately could be accepted while they don't fit together.
+            // Compress equal instances, as they must be acceptable all together.
             Map<IngredientComponent<?, ?>, List<?>> instancesMap = Maps.newIdentityHashMap();
             instancesMap.put(ingredientComponent, instances);
             instances = compressMixedIngredients(new MixedIngredients(instancesMap)).getInstances(ingredientComponent);
@@ -1717,26 +1716,6 @@ public class CraftingHelpers {
         }
 
         return ok;
-    }
-
-    /**
-     * Insert the ingredients of all applicable ingredient component types into the target to make it start crafting.
-     *
-     * If insertion in non-simulation mode fails,
-     * ingredients will be re-inserted into the network.
-     *
-     * @param targetGetter A function to get the target position.
-     * @param ingredients The ingredients to insert.
-     * @param network The network.
-     * @param channel The channel.
-     * @param simulate If insertion should be simulated.
-     * @return If all instances could be inserted.
-     */
-    public static boolean insertCrafting(Function<IngredientComponent<?, ?>, PartPos> targetGetter,
-                                         IMixedIngredients ingredients,
-                                         INetwork network, int channel,
-                                         boolean simulate) {
-        return insertCrafting(targetGetter, ingredients, getNetworkStorageGetter(network, channel, false), simulate);
     }
 
     /**
