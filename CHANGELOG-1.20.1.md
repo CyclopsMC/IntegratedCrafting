@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.20.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.20.1-1.4.10"></a>
+## [1.20.1-1.4.10](/compare/1.20.1-1.4.9...1.20.1-1.4.10) - 2026-10-31 13:29:06
+
+
+### Fixed
+* Fix non-blocking jobs losing running operations on insert failure (#255), Closes #252
+
 <a name="1.20.1-1.4.9"></a>
-## [1.20.1-1.4.9](/compare/1.20.1-1.4.8...1.20.1-1.4.9) - 2026-10-17 08:39:22
+## [1.20.1-1.4.9](/compare/1.20.1-1.4.8...1.20.1-1.4.9) - 2026-10-17 08:39:22 +0200
 
 
 ### Fixed
