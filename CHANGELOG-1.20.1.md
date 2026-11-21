@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.20.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.20.1-1.4.11"></a>
+## [1.20.1-1.4.11](/compare/1.20.1-1.4.10...1.20.1-1.4.11) - 2026-11-21 14:46:58
+
+
+### Fixed
+* Fix crafting jobs not detecting outputs after a network rebuild (#261), Closes #258
+
 <a name="1.20.1-1.4.10"></a>
-## [1.20.1-1.4.10](/compare/1.20.1-1.4.9...1.20.1-1.4.10) - 2026-10-31 13:29:06
+## [1.20.1-1.4.10](/compare/1.20.1-1.4.9...1.20.1-1.4.10) - 2026-10-31 13:29:06 +0100
 
 
 ### Fixed
