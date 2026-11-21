@@ -1,8 +1,15 @@
 # Changelog for Minecraft 26.1.2
 All notable changes to this project will be documented in this file.
 
+<a name="26.1.2-1.8.2"></a>
+## [26.1.2-1.8.2](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.8.1...26.1.2-1.8.2) - 2026-11-21 14:58:11
+
+
+### Fixed
+* Fix crafting jobs not detecting outputs after a network rebuild (#261), Closes #258
+
 <a name="26.1.2-1.8.1"></a>
-## [26.1.2-1.8.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.8.0...26.1.2-1.8.1) - 2026-10-31 13:44:13
+## [26.1.2-1.8.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/26.1.2-1.8.0...26.1.2-1.8.1) - 2026-10-31 13:44:13 +0100
 
 
 ### Changed
