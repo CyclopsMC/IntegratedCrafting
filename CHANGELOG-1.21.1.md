@@ -1,8 +1,15 @@
 # Changelog for Minecraft 1.21.1
 All notable changes to this project will be documented in this file.
 
+<a name="1.21.1-1.8.2"></a>
+## [1.21.1-1.8.2](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.8.1...1.21.1-1.8.2) - 2026-11-21 14:49:28
+
+
+### Fixed
+* Fix crafting jobs not detecting outputs after a network rebuild (#261), Closes #258
+
 <a name="1.21.1-1.8.1"></a>
-## [1.21.1-1.8.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.8.0...1.21.1-1.8.1) - 2026-10-31 13:31:49
+## [1.21.1-1.8.1](https://github.com/CyclopsMC/IntegratedCrafting/compare/1.21.1-1.8.0...1.21.1-1.8.1) - 2026-10-31 13:31:49 +0100
 
 
 ### Changed

@@ -34,6 +34,7 @@ import org.cyclops.integratedcrafting.gametest.GameTestsItemsCraft;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsCraftBlockedOutput;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsCraftBusyTarget;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsCraftEnumerated;
+import org.cyclops.integratedcrafting.gametest.GameTestsItemsCraftNetworkRebuild;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsCraftNonBlockingInsertFailure;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsMechanicalDryingBasin;
 import org.cyclops.integratedcrafting.gametest.GameTestsItemsMechanicalSqueezer;
@@ -166,6 +167,7 @@ public class IntegratedCrafting extends ModBaseNeoForge<IntegratedCrafting> {
                 GameTestsItemsCraftBlockedOutput.class,
                 GameTestsItemsCraftBusyTarget.class,
                 GameTestsItemsCraftEnumerated.class,
+                GameTestsItemsCraftNetworkRebuild.class,
                 GameTestsItemsCraftNonBlockingInsertFailure.class,
                 GameTestsItemsMechanicalDryingBasin.class,
                 GameTestsItemsSmithing.class,
