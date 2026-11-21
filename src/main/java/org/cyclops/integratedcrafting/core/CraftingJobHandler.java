@@ -372,12 +372,7 @@ public class CraftingJobHandler {
     protected <T, M> void registerIngredientObserver(IngredientComponent<T, M> ingredientComponent, INetwork network) {
         int count = ingredientObserverCounters.getInt(ingredientComponent);
         if (count == 0) {
-            IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers
-                    .getIngredientsNetworkChecked(network, ingredientComponent);
-            ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetworkChecked(network);
-            PendingCraftingJobResultIndexObserver<T, M> observer = new PendingCraftingJobResultIndexObserver<>(ingredientComponent, this, craftingNetwork);
-            ingredientsNetwork.registerInsertPreConsumer(observer);
-            ingredientObservers.put(ingredientComponent, observer);
+            createIngredientObserver(ingredientComponent, network);
         }
         ingredientObserverCounters.put(ingredientComponent, count + 1);
     }
@@ -387,12 +382,49 @@ public class CraftingJobHandler {
         count--;
         ingredientObserverCounters.put(ingredientComponent, count);
         if (count == 0) {
-            IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers
-                    .getIngredientsNetworkChecked(network, ingredientComponent);
-            PendingCraftingJobResultIndexObserver<T, M> observer =
-                    (PendingCraftingJobResultIndexObserver<T, M>) ingredientObservers
-                            .remove(ingredientComponent);
-            ingredientsNetwork.unregisterInsertPreConsumer(observer);
+            removeIngredientObserver(ingredientComponent, network);
+        }
+    }
+
+    protected <T, M> void createIngredientObserver(IngredientComponent<T, M> ingredientComponent, INetwork network) {
+        IPositionedAddonsNetworkIngredients<T, M> ingredientsNetwork = CraftingHelpers
+                .getIngredientsNetworkChecked(network, ingredientComponent);
+        ICraftingNetwork craftingNetwork = CraftingHelpers.getCraftingNetworkChecked(network);
+        PendingCraftingJobResultIndexObserver<T, M> observer = new PendingCraftingJobResultIndexObserver<>(ingredientComponent, this, craftingNetwork);
+        ingredientsNetwork.registerInsertPreConsumer(observer);
+        ingredientObservers.put(ingredientComponent, observer);
+    }
+
+    protected <T, M> void removeIngredientObserver(IngredientComponent<T, M> ingredientComponent, INetwork network) {
+        PendingCraftingJobResultIndexObserver<T, M> observer =
+                (PendingCraftingJobResultIndexObserver<T, M>) ingredientObservers.remove(ingredientComponent);
+        if (observer != null) {
+            CraftingHelpers.getIngredientsNetworkChecked(network, ingredientComponent)
+                    .unregisterInsertPreConsumer(observer);
+        }
+    }
+
+    /**
+     * Register the observers of running jobs in the network this handler was added to.
+     * @param network The network.
+     */
+    public void onNetworkAddition(INetwork network) {
+        for (Object2IntMap.Entry<IngredientComponent<?, ?>> entry : ingredientObserverCounters.object2IntEntrySet()) {
+            if (entry.getIntValue() > 0 && !ingredientObservers.containsKey(entry.getKey())) {
+                createIngredientObserver(entry.getKey(), network);
+            }
+        }
+    }
+
+    /**
+     * Unregister all observers from the network this handler was removed from.
+     * Counters are retained, so that observers can be registered again in a new network.
+     * This is needed because networks are recreated when they are rebuilt, e.g. when a cable is added or removed.
+     * @param network The network.
+     */
+    public void onNetworkRemoval(INetwork network) {
+        for (IngredientComponent<?, ?> ingredientComponent : Lists.newArrayList(ingredientObservers.keySet())) {
+            removeIngredientObserver(ingredientComponent, network);
         }
     }
 
