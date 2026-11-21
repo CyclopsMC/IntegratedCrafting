@@ -66,12 +66,14 @@ public abstract class PartTypeInterfaceCraftingBase<P extends PartTypeInterfaceC
     public void onNetworkRemoval(INetwork network, IPartNetwork partNetwork, PartTarget target, S state) {
         super.onNetworkRemoval(network, partNetwork, target, state);
         removeTargetFromNetwork(network, target.getTarget(), state);
+        state.getCraftingJobHandler().onNetworkRemoval(network);
     }
 
     @Override
     public void onNetworkAddition(INetwork network, IPartNetwork partNetwork, PartTarget target, S state) {
         super.onNetworkAddition(network, partNetwork, target, state);
         addTargetToNetwork(network, target, state, true);
+        state.getCraftingJobHandler().onNetworkAddition(network);
     }
 
     @Override
